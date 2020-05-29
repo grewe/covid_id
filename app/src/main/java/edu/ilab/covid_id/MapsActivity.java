@@ -20,12 +20,28 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-
+/**
+ * Main Launched Activity that contains our Map for Covid ID project
+ */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    /**
+     * map used in display
+     */
     private GoogleMap mMap;
+
+    /**
+     * current location of the user (Lat, long)
+     */
     Location currentLocation;
+
+    /**
+     * object to handle Location updates/changes from user
+     */
+
     FusedLocationProviderClient fusedLocationProviderClient;
+
+
     private static final int REQUEST_CODE = 101;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +51,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
     }
@@ -53,16 +71,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        // confirm that either Fine or Coarse permissions are set for app and if not return --nothing can do.
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
             return;
         }
+
+        //Permissions are granted so we can now grab the last known location to initialize the currentLocation and use it to
+        // locate our map display
+        // note: call to get last known location is asynchronous so response is done in the onSucces callback method
         Task<Location> task = fusedLocationProviderClient.getLastLocation();
         task.addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
@@ -71,10 +90,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocation = location;
                     Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
                     LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                    MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("I am here!");
+                    //make a marker for user's current location and set map to this location
+                    MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You");
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
                     mMap.addMarker(markerOptions);
+                    Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
+
                 }
             }
         });
