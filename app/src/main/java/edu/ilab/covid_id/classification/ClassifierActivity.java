@@ -81,6 +81,26 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
         rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
     }
 
+    /**
+     * processImage = method that will process each Image
+     *
+     * NOTE: This ClassifierActivity extends CameraActivity that  gets the camera input using the functions defined in the file CameraActivity.java.
+     * This file depends on AndroidManifest.xml to set the camera orientation.
+     *
+     * CameraActivity also contains code to capture user preferences from the UI and make them available to other classes via convenience methods.
+     *
+     * model = Model.valueOf(modelSpinner.getSelectedItem().toString().toUpperCase());
+     * device = Device.valueOf(deviceSpinner.getSelectedItem().toString());
+     * numThreads = Integer.parseInt(threadsTextView.getText().toString().trim());
+     *
+     * NOTE 2: The file Classifier.java contains most of the complex logic for processing the camera input and running inference.
+     *      *
+     *      * A subclasses of the file exist, in ClassifierFloatMobileNet.java (in other Tensorflowlite examples there is ClassifierQuantizedMobileNet.java), to demonstrate the use of
+     *      * floating point (and quantized) models.
+     *      *
+     *      * The Classifier class implements a static method, create, which is used to instantiate the appropriate subclass based on the supplied model type (quantized vs floating point).
+     *      *
+     */
     @Override
     protected void processImage() {
         rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
@@ -92,15 +112,23 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                     public void run() {
                         if (classifier != null) {
                             final long startTime = SystemClock.uptimeMillis();
+
+                            //COVID_ID:  ADD any OTHER preprocessing here
+
+
+                            //Calling the Classifier
                             final List<Classifier.Recognition> results =
                                     classifier.recognizeImage(rgbFrameBitmap, sensorOrientation);
                             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
                             LOGGER.v("Detect: %s", results);
 
+                            //COVID_ID:  ADD  Any Post Processing (after recognition)  code here
+                            //Following code creates  display that shows results
                             runOnUiThread(
                                     new Runnable() {
                                         @Override
                                         public void run() {
+                                            //DISPLAY information including recognition results
                                             showResultsInBottomSheet(results);
                                             showFrameInfo(previewWidth + "x" + previewHeight);
                                             showCropInfo(imageSizeX + "x" + imageSizeY);

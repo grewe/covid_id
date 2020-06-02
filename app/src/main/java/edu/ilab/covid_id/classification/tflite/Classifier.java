@@ -44,7 +44,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-/** A classifier specialized to label images using TensorFlow Lite. */
+/** A classifier specialized to label images using TensorFlow Lite.
+ *
+ *    NOTE 2: Classifier contains most of the complex logic for processing the camera input and running inference.
+ *
+ *       A subclasses of the file exist, in ClassifierFloatMobileNet.java (in other Tensorflowlite examples there is ClassifierQuantizedMobileNet.java), to demonstrate the use of
+ *       floating point (and quantized) models.
+ *
+ *       The Classifier class implements a static method, create, which is used to instantiate the appropriate subclass based on the supplied model type (quantized vs floating point).
+ *
+ *
+ */
+
 public abstract class Classifier {
   private static final Logger LOGGER = new Logger();
 
@@ -174,13 +185,22 @@ public abstract class Classifier {
     }
   }
 
-  /** Initializes a {@code Classifier}. */
+  /** Initializes a {@code Classifier}.
+   *
+   *
+   * To perform inference, we need to load a model file and instantiate an Interpreter.
+   * This happens in the constructor of the Classifier class, along with loading the list of class labels.
+   * Information about the device type and number of threads is used to configure the Interpreter via the
+   * Interpreter.Options instance passed into its constructor. Note how that in the case of a GPU being
+   * available, a Delegate is created using GpuDelegateHelper.
+   *
+   * */
   protected Classifier(Activity activity, Device device, int numThreads) throws IOException {
     tfliteModel = FileUtil.loadMappedFile(activity, getModelPath());
     switch (device) {
       case GPU:
         //TODO: create a GPU delegate instance and add it to the interpreter options ?????
-        //tflite = new Interpreter(tfliteModel, tfliteOptions);
+       //currently not implemented
 
         break;
       case CPU:
@@ -268,7 +288,7 @@ public abstract class Classifier {
 
 
     }
-    // TODO: Close the GPU delegate ????
+    // TODO: Close the GPU delegate ???? not implemented
 
 
     tfliteModel = null;
