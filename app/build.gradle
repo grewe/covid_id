@@ -7,6 +7,11 @@ assert file(project.ext.ASSET_DIR + "/labels.txt").exists()
 
 
 android {
+
+    apply plugin: 'com.android.application'
+    // Add this line
+    apply plugin: 'com.google.gms.google-services'
+
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
@@ -38,6 +43,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation 'com.google.firebase:firebase-firestore:21.4.3'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
@@ -50,5 +56,8 @@ dependencies {
     implementation('org.tensorflow:tensorflow-lite:0.0.0-nightly') { changing = true }
     implementation('org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly') { changing = true }
     implementation('org.tensorflow:tensorflow-lite-support:0.0.0-nightly') { changing = true }
+
+    // for Firebase
+    implementation 'com.google.firebase:firebase-analytics:17.2.2'
 
 }

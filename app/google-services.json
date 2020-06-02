@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "802235742369",
+    "firebase_url": "https://hale-carport-278621.firebaseio.com",
+    "project_id": "hale-carport-278621",
+    "storage_bucket": "hale-carport-278621.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:802235742369:android:047a825dcaba757c8d98e0",
+        "android_client_info": {
+          "package_name": "edu.ilab.covid_id"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "802235742369-8950b7ksp8upovlfaqg8cb0hieei4b2h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjf4oBQngUYa92yOijNxVAFHJICD0E4Bc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "802235742369-8950b7ksp8upovlfaqg8cb0hieei4b2h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

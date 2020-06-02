@@ -24,16 +24,27 @@ import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
+
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
+import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.R;
 import edu.ilab.covid_id.classification.env.BorderedText;
 import edu.ilab.covid_id.classification.env.Logger;
 import edu.ilab.covid_id.classification.tflite.Classifier;
 import edu.ilab.covid_id.classification.tflite.Classifier.Device;
+import edu.ilab.covid_id.data.CovidRecord;
 
 public class ClassifierActivity extends CameraActivity implements OnImageAvailableListener {
+
+    int flag = 0;
+
     private static final Logger LOGGER = new Logger();
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
     private static final float TEXT_SIZE_DIP = 10;
@@ -135,6 +146,14 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             showCameraResolution(cropSize + "x" + cropSize);
                                             showRotationInfo(String.valueOf(sensorOrientation));
                                             showInference(lastProcessingTimeMs + "ms");
+                                            flag++;
+                                            if(flag < 10) {
+                                                Date d = new Date();
+                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                                                       new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                                                         Timestamp.now());
+
+                                            }
                                         }
                                     });
                         }

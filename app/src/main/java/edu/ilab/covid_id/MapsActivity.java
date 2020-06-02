@@ -2,8 +2,6 @@ package edu.ilab.covid_id;
 
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
-
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -25,12 +23,18 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import edu.ilab.covid_id.classification.ClassifierActivity;
+import edu.ilab.covid_id.data.FirestoreHelper;
 
 
 /**
  * Main Launched Activity that contains our Map for Covid ID project
  */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    /**
+     * Initializes a single helper to be used by all activities
+     */
+    public static FirestoreHelper myHelper;
 
     /**
      * map used in display
@@ -40,19 +44,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * current location of the user (Lat, long)
      */
-    Location currentLocation;
+    public static Location currentLocation;
 
     /**
      * object to handle Location updates/changes from user
      */
-
     FusedLocationProviderClient fusedLocationProviderClient;
 
     /**
-     * Buttons used to Launch Classsification Activities
+     * Buttons used to Launch Classification Activities
      */
     Button flowersClassificationActivityButton;
-
 
     /**
      * Activities to perform different kinds of Classification
@@ -61,6 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private static final int REQUEST_CODE = 101;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,10 +76,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-
         //grab handles to the various buttons to launch different classification activities
         this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
-
 
         //create event handler for each classification button to launch the corresponding activity
         flowersClassificationActivityButton.setOnClickListener(new View.OnClickListener() {
@@ -84,15 +85,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 //Launch classifier --here stupid default flowers classifier
                 Intent intent = new Intent("edu.ilab.covid_id.classification.ClassifierActivity");
-               startActivity(intent);
-
-
+                startActivity(intent);
             }
         });
-
     }
 
-    
+
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -131,12 +131,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
                     mMap.addMarker(markerOptions);
                     Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
-
                 }
             }
         });
-
     }
-
-
 }
