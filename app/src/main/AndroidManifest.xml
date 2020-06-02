@@ -9,6 +9,14 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <!-- must add permission to use camer
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -38,7 +46,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".classification.DummyActivity"
+            android:parentActivityName="edu.ilab.covid_id.MapsActivity"
+            android:label="@string/covid_id_flowers">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.classification.DummyActivity" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".classification.ClassifierActivity"
+            android:parentActivityName="edu.ilab.covid_id.MapsActivity"
+            android:label="@string/covid_id_flowers">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.classification.ClassifierActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

@@ -3,10 +3,14 @@ package edu.ilab.covid_id;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
+
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.location.Location;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,6 +23,9 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
+import edu.ilab.covid_id.classification.ClassifierActivity;
+
 
 /**
  * Main Launched Activity that contains our Map for Covid ID project
@@ -41,6 +48,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     FusedLocationProviderClient fusedLocationProviderClient;
 
+    /**
+     * Buttons used to Launch Classsification Activities
+     */
+    Button flowersClassificationActivityButton;
+
+
+    /**
+     * Activities to perform different kinds of Classification
+     */
+    ClassifierActivity flowersClassifierActivity;
+
 
     private static final int REQUEST_CODE = 101;
     @Override
@@ -54,6 +72,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+
+        //grab handles to the various buttons to launch different classification activities
+        this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
+
+
+        //create event handler for each classification button to launch the corresponding activity
+        flowersClassificationActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.classification.ClassifierActivity");
+               startActivity(intent);
+
+
+            }
+        });
 
     }
 
