@@ -12,10 +12,16 @@
         <item>Float_MobileNet</item>
     </string-array>
     <string name="covid_id_flowers" translatable="false">Flowers</string>
+    <string name="covid_id_localize" translatable="false">Localize</string>
     <string name="tfe_ic_device" translatable="false">Device:</string>
     <string-array name="tfe_ic_devices" translatable="false">
         <item>CPU</item>
         <!-- TODO: Add GPU  -->
 
     </string-array>
+
+
+
+    <string name="tfe_od_app_name" translation_description="Object Detection demo app [CHAR_LIMIT=40]">TFL Detect</string>
+    <string name="tfe_od_camera_error" translation_description="Error regarding camera support[CHAR_LIMIT=40]">This device doesn\'t support Camera2 API.</string>
 </resources>

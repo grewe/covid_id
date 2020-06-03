@@ -23,7 +23,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme.ObjectDetection">
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -46,12 +46,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
         <activity
-            android:name=".classification.DummyActivity"
+            android:name=".localize.DetectorActivity"
             android:parentActivityName="edu.ilab.covid_id.MapsActivity"
-            android:label="@string/covid_id_flowers">
+            android:label="@string/covid_id_localize">
             <intent-filter>
-                <action android:name="edu.ilab.covid_id.classification.DummyActivity" />
+                <action android:name="edu.ilab.covid_id.localize.DetectorActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -67,6 +69,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+
     </application>
 
 </manifest>

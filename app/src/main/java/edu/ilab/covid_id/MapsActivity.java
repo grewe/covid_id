@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.Task;
 
 import edu.ilab.covid_id.classification.ClassifierActivity;
 import edu.ilab.covid_id.data.FirestoreHelper;
+import edu.ilab.covid_id.localize.DetectorActivity;
 
 
 /**
@@ -56,11 +57,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     Button flowersClassificationActivityButton;
 
+    Button exampleDetectorActivityButton;
+
     /**
      * Activities to perform different kinds of Classification
      */
     ClassifierActivity flowersClassifierActivity;
 
+    /**
+     * Activity to perform localition (detection)
+     */
+    DetectorActivity exampleDetectorActivity;
 
     private static final int REQUEST_CODE = 101;
 
@@ -88,6 +95,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent);
             }
         });
+
+        //grab handle to the example detector/localization Activity
+        this.exampleDetectorActivityButton  = (Button) findViewById(R.id.objectDetectButton);
+        //create event handler for the object Detetor to launch DetectorActvity
+        exampleDetectorActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.localize.DetectorActivity");
+                startActivity(intent);
+            }
+        });
+
+
+
+
     }
 
 
