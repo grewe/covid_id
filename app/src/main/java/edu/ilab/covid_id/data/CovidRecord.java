@@ -84,6 +84,7 @@ public class CovidRecord {
     /**
      * Default constructor with default values for orientation angles and altitude
      */
+
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox) {
         this.risk = risk;

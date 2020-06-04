@@ -230,9 +230,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   angles.add(0, 0.0f);
                   angles.add(1, 0.0f);
                   angles.add(2, 0.0f);
-                  CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
-                          new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                          Timestamp.now(), null, result.getTitle(), angles, 0.0f);
+
+                  ArrayList<Float> boundingBox = new ArrayList<Float>();
+                  boundingBox.add(0, location.left);
+                  boundingBox.add(1, location.top);
+                  boundingBox.add(2, location.right);
+                  boundingBox.add( 3, location.bottom);
+
+                  CovidRecord myRecord = new CovidRecord(80.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), null, result.getTitle(),boundingBox, angles, 0.0f);
+                  
 
                   // ask helper to push record to db
                   MapsActivity.myHelper.addRecord(myRecord);
