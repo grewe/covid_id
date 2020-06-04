@@ -18,5 +18,14 @@ public class FirestoreHelper {
         mFirestore = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * adds a record to the firestore CovidRecord document collection
+     * @param record
+     * @return an error code (0: success, -1: failure)
+     */
+    public int addRecord(CovidRecord record) {
+        mFirestore.collection("CovidRecord").add(record);
+        return 0;
+    }
 
 }

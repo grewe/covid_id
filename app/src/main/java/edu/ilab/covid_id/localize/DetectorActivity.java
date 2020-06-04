@@ -31,7 +31,12 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
 
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.GeoPoint;
+
+import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.R;
+import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.localize.customview.OverlayView;
 import edu.ilab.covid_id.localize.customview.OverlayView.DrawCallback;
 import edu.ilab.covid_id.localize.env.BorderedText;
@@ -42,6 +47,8 @@ import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,6 +57,10 @@ import java.util.List;
  * objects.
  */
 public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
+
+  // temporary flag for determining when to create/push records to the db
+  int flag = 0;
+
   private static final Logger LOGGER = new Logger();
 
   // Configuration values for the prepackaged SSD model.
@@ -210,6 +221,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+
+                // Dummy code to create and store a covid record to the firestore
+                flag++;
+                if(flag < 3) {
+                  Date d = new Date();
+                  ArrayList<Float> angles = new ArrayList<Float>();
+                  angles.add(0, 0.0f);
+                  angles.add(1, 0.0f);
+                  angles.add(2, 0.0f);
+                  CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                          new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                          Timestamp.now(), null, result.getTitle(), angles, 0.0f);
+
+                  // ask helper to push record to db
+                  MapsActivity.myHelper.addRecord(myRecord);
+                }
+
               }
             }
 

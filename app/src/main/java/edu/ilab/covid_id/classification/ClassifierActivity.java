@@ -30,6 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -43,6 +44,7 @@ import edu.ilab.covid_id.data.CovidRecord;
 
 public class ClassifierActivity extends CameraActivity implements OnImageAvailableListener {
 
+    // flag for pushing records
     int flag = 0;
 
     private static final Logger LOGGER = new Logger();
@@ -147,12 +149,18 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             showRotationInfo(String.valueOf(sensorOrientation));
                                             showInference(lastProcessingTimeMs + "ms");
                                             flag++;
-                                            if(flag < 10) {
+                                            if(flag < 3) {
                                                 Date d = new Date();
+                                                ArrayList<Float> angles = new ArrayList<Float>();
+                                                angles.add(0, 0.0f);
+                                                angles.add(1, 0.0f);
+                                                angles.add(2, 0.0f);
                                                 CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
                                                        new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                         Timestamp.now());
+                                                         Timestamp.now(), null, results.get(0).getTitle(), angles, 0.0f);
 
+                                                // ask helper to push record to db
+                                                MapsActivity.myHelper.addRecord(myRecord);
                                             }
                                         }
                                     });

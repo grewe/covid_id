@@ -109,7 +109,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
 
-
+        // initialize our db helper object
+        myHelper = new FirestoreHelper();
 
     }
 

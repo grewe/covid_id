@@ -3,6 +3,8 @@ package edu.ilab.covid_id.data;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
+import java.util.ArrayList;
+
 /**
  * Base class for all Covid recognition modules to report Covid instance records
  * Known Subclasses:
@@ -31,6 +33,11 @@ public class CovidRecord {
     private Timestamp timestamp;
 
     /**
+     * Contains URL to cloud storage containing image associated with this record
+     */
+    private String filenameURL;
+
+    /**
      * Represents the estimated altitude (height) of the device when record was taken
      * -1.0: unknown altitude
      */
@@ -42,49 +49,147 @@ public class CovidRecord {
      * orientationAngles[1] = pitch (x-axis)
      * orientationAngles[2] = roll (y-axis)
      */
-    private float[] orientationAngles;
+    private ArrayList<Float> orientationAngles;
+
+    /**
+     * Represents the four corners of the bounding box
+     * 0: x, upper left
+     * 1: y, upper left
+     * 2: x, lower right
+     * 3: y, lower right
+     */
+    private ArrayList<Float> boundingBox;
+
+    /**
+     * For storing any misc info we might want to tack onto an object
+     */
+    private String info;
 
     /**
      * Default constructor with all values given
      */
-    public CovidRecord(float risk, float certainty,
-                       GeoPoint location, Timestamp timestamp, float[] orientationAngles, float altitude) {
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
         this.timestamp = timestamp;
         this.orientationAngles = orientationAngles;
         this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
     }
 
     /**
      * Default constructor with default values for orientation angles and altitude
      */
-    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp) {
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
         this.timestamp = timestamp;
-        this.orientationAngles = new float[3];
-        this.orientationAngles[0] = 0.0f;
-        this.orientationAngles[1] = 0.0f;
-        this.orientationAngles[2] = 0.0f;
+        this.orientationAngles = new ArrayList<Float>();
+        this.orientationAngles.add(0, 0.0f);
+        this.orientationAngles.add(1, 0.0f);
+        this.orientationAngles.add(2, 0.0f);
         this.altitude = -1.0f;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
     }
 
+    /**
+     * Constructor that may be used for classification only
+     * (default values for bounding box -1 on all coordinates)
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = new ArrayList<Float>();
+        this.boundingBox.add(0, -1.0f);
+        this.boundingBox.add(1, -1.0f);
+        this.boundingBox.add(2, -1.0f);
+        this.boundingBox.add(3, -1.0f);
+    }
 
+    public float getRisk() {
+        return risk;
+    }
 
+    public void setRisk(float risk) {
+        this.risk = risk;
+    }
 
+    public float getCertainty() {
+        return certainty;
+    }
 
-    /*
-    x Time Stamp
-    x GeoPoint
-    Altitude ?
-    xRoll
-    xPitch
-    xYaw (Azimuth)
-    x Certainty (0-100)
-    x Risk (0-100)
-    */
+    public void setCertainty(float certainty) {
+        this.certainty = certainty;
+    }
 
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
+    }
+
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getFilenameURL() {
+        return filenameURL;
+    }
+
+    public void setFilenameURL(String filenameURL) {
+        this.filenameURL = filenameURL;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public float getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(float altitude) {
+        this.altitude = altitude;
+    }
+
+    public ArrayList<Float> getOrientationAngles() {
+        return orientationAngles;
+    }
+
+    public void setOrientationAngles(ArrayList<Float> orientationAngles) {
+        this.orientationAngles = orientationAngles;
+    }
+
+    public ArrayList<Float> getBoundingBox() {
+        return boundingBox;
+    }
+
+    public void setBoundingBox(ArrayList<Float> boundingBox) {
+        this.boundingBox = boundingBox;
+    }
 }
