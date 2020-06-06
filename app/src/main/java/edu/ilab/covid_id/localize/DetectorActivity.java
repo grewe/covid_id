@@ -26,6 +26,7 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
@@ -46,6 +47,8 @@ import edu.ilab.covid_id.localize.tflite.Classifier;
 import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -104,6 +107,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     borderedText = new BorderedText(textSizePx);
     borderedText.setTypeface(Typeface.MONOSPACE);
 
+
+    //class to contain detection results with bounding box information
     tracker = new MultiBoxTracker(this);
 
     int cropSize = TF_OD_API_INPUT_SIZE;
@@ -130,7 +135,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     previewWidth = size.getWidth();
     previewHeight = size.getHeight();
 
-    sensorOrientation = rotation - getScreenOrientation();
+    sensorOrientation =  rotation - getScreenOrientation();   //sensorOreintation will be 0 for horizontal and 90 for portrait
     LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
     LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
@@ -143,8 +148,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             cropSize, cropSize,
             sensorOrientation, MAINTAIN_ASPECT);
 
-    cropToFrameTransform = new Matrix();
-    frameToCropTransform.invert(cropToFrameTransform);
+    cropToFrameTransform = new Matrix();  //identity matrix initially
+    frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
 
     trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
     trackingOverlay.addCallback(
@@ -180,7 +185,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     readyForNextImage();
 
     final Canvas canvas = new Canvas(croppedBitmap);
-    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+    //why working in portrait mode and not horizontal
+    //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
+   // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
+    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///IS THIS WHERE DRAWING THE IMAGE??  using frameToCropTransform --GUESS frameToCropTransform is not rotating correct???
     // For examining the actual TF input.
     if (SAVE_PREVIEW_BITMAP) {
       ImageUtils.saveBitmap(croppedBitmap);
@@ -192,11 +200,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           public void run() {
             LOGGER.i("Running detection on image " + currTimestamp);
             final long startTime = SystemClock.uptimeMillis();
-            final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+            final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
+
             cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-            final Canvas canvas = new Canvas(cropCopyBitmap);
+            final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
             final Paint paint = new Paint();
             paint.setColor(Color.RED);
             paint.setStyle(Style.STROKE);
@@ -212,17 +221,49 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final List<Classifier.Recognition> mappedRecognitions =
                 new LinkedList<Classifier.Recognition>();
 
+            int saveImageOnceFlag = 1;
+            String imageFileURL = "";
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= minimumConfidence) {
-                canvas.drawRect(location, paint);
+                canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes--> where is this used???? nowhere???
 
-                cropToFrameTransform.mapRect(location);
 
-                result.setLocation(location);
-                mappedRecognitions.add(result);
+                //==============================================================
+                //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
+                //  ONLY store one time regardless of number of recognition results.
+                if(saveImageOnceFlag == 1){
 
-                // Dummy code to create and store a covid record to the firestore
+                  //set flag so know have already stored this image
+                  saveImageOnceFlag = 0;
+
+                  //CEMIL: code to store image (croppedBitmap) in CloudStore
+                  //imageFileURL store the URL
+
+
+                  //**************************************************
+                  //try writing out the image being processed to a FILE
+                  File sd = Environment.getExternalStorageDirectory();
+                  File dest = new File(sd, "croppedImage.png");
+
+                  try {
+                    dest.createNewFile();
+                    FileOutputStream out = new FileOutputStream(dest);
+                    croppedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+                    out.flush();
+                    out.close();
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                  //**************************************************
+
+                }
+
+                //==========================================================================
+
+                //###################################################################
+                //COVID: Dummy code to create and store 3 covid records to the firestore
+                //QUESTION 1:  should I save the bounding box BELOW after it is transfromed cropToFramTransform???
                 flag++;
                 if(flag < 3) {
                   Date d = new Date();
@@ -237,17 +278,26 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   boundingBox.add(2, location.right);
                   boundingBox.add( 3, location.bottom);
 
-                  CovidRecord myRecord = new CovidRecord(80.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), null, result.getTitle(),boundingBox, angles, 0.0f);
-                  
+                  CovidRecord myRecord = new CovidRecord(80.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f);
+
 
                   // ask helper to push record to db
                   MapsActivity.myHelper.addRecord(myRecord);
                 }
+                //###############################################
+
+                cropToFrameTransform.mapRect(location);  //transforms using Matrix the bounding box to the correct transformed coordinates
+
+                result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
+                mappedRecognitions.add(result);  //add the result to a linked list
+
+                //QUESTION 1:   DO I DO THE Firestore save here instead??????
+
 
               }
             }
 
-            tracker.trackResults(mappedRecognitions, currTimestamp);
+            tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
             trackingOverlay.postInvalidate();
 
             computingDetection = false;

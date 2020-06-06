@@ -21,6 +21,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
@@ -29,6 +30,8 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -148,20 +151,48 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             showCameraResolution(cropSize + "x" + cropSize);
                                             showRotationInfo(String.valueOf(sensorOrientation));
                                             showInference(lastProcessingTimeMs + "ms");
-                                            flag++;
-                                            if(flag < 3) {
-                                                Date d = new Date();
-                                                ArrayList<Float> angles = new ArrayList<Float>();
-                                                angles.add(0, 0.0f);
-                                                angles.add(1, 0.0f);
-                                                angles.add(2, 0.0f);
-                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
-                                                       new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                         Timestamp.now(), null, results.get(0).getTitle(), angles, 0.0f);
 
-                                                // ask helper to push record to db
-                                                MapsActivity.myHelper.addRecord(myRecord);
+
+
+                                            //==============================================================
+                                            //COVID: code to store image to CloudStore  AND store record in database
+
+                                            String imageFileURL = "";
+                                            //**************************************************
+                                            //CEMIL: code to store image (rgbFrameBitmap) in CloudStore
+                                            //imageFileURL store the URL
+
+
+                                            //**************************************************
+                                            //try writing out the image being processed to a FILE
+                                            File sd = Environment.getExternalStorageDirectory();
+                                            File dest = new File(sd, "classifiedImage.png");
+
+                                            try {
+                                                    dest.createNewFile();
+                                                    FileOutputStream out = new FileOutputStream(dest);
+                                                    rgbFrameBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+                                                    out.flush();
+                                                    out.close();
+                                            } catch (Exception e) {
+                                                    e.printStackTrace();
                                             }
+
+                                            //**************************************************
+                                            //Store to FIrebase Database
+                                            Date d = new Date();
+                                            ArrayList<Float> angles = new ArrayList<Float>();
+                                            angles.add(0, 0.0f);
+                                            angles.add(1, 0.0f);
+                                            angles.add(2, 0.0f);
+                                            CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                                                new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                                                Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
+
+                                            // ask helper to push record to db
+                                            MapsActivity.myHelper.addRecord(myRecord);
+
+                                            //=========================================================================
                                         }
                                     });
                         }

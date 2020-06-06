@@ -325,6 +325,7 @@ public abstract class Classifier {
 
     //Image processor that resizes to cropSizeXcropSize or to imageSizeX X imageSizeY, and that can rotate 90 decrees, and
     // perform normalization on the image (basic filtering)
+    //THIS LOOKS CORRECT - based on tests
     ImageProcessor imageProcessor =
             new ImageProcessor.Builder()
                     .add(new ResizeWithCropOrPadOp(cropSize, cropSize))
