@@ -17,6 +17,8 @@ package edu.ilab.covid_id.classification;
  */
 
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
@@ -165,8 +167,12 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                                             //**************************************************
                                             //try writing out the image being processed to a FILE
-                                            File sd = Environment.getExternalStorageDirectory();
-                                            File dest = new File(sd, "classifiedImage.png");
+
+                                            //File sd = Environment.getExternalStorageDirectory();
+                                            //File dest = new File(sd, "classifiedImage.png");
+                                            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+                                            File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+                                            File dest = new File(directory, "croppedImage.png");
 
                                             try {
                                                     dest.createNewFile();

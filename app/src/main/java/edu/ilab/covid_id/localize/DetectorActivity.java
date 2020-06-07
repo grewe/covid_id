@@ -16,6 +16,8 @@
 
 package edu.ilab.covid_id.localize;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -243,8 +245,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   //**************************************************
                   //try writing out the image being processed to a FILE
-                  File sd = Environment.getExternalStorageDirectory();
-                  File dest = new File(sd, "croppedImage.png");
+                  // File directory = Environment.getExternalStorageDirectory();
+                  ContextWrapper cw = new ContextWrapper(getApplicationContext());
+                  File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+                  File dest = new File(directory, "croppedImage.png");
 
                   try {
                     dest.createNewFile();
