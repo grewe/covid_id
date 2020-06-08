@@ -96,6 +96,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
             int orientation = getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
               camera.setDisplayOrientation(0);
+           //   parameters.setPreviewSize(previewSize.getHeight(), previewSize.getWidth()); //failed
             } else {
               // In portrait
               camera.setDisplayOrientation(90);

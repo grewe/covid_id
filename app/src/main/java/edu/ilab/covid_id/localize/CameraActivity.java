@@ -426,6 +426,11 @@ public abstract class CameraActivity extends AppCompatActivity
             (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
                 || isHardwareLevelSupported(
                     characteristics, CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+
+        //NOTE: when forced use of camera2 api the underlying CameraConnectorFragment properly rotated
+        // and scaled the preview of image in the associated TextureView widget.
+        // LegacyCameraConnection made alterations to code to get rotation to work currently working on
+        //   resize
         LOGGER.i("Camera API lv2?: %s", useCamera2API);
         return cameraId;
       }

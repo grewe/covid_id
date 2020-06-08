@@ -138,7 +138,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     previewHeight = size.getHeight();
 
 
-  
+
     sensorOrientation =  rotation - getScreenOrientation();   //sensorOreintation will be 0 for horizontal and 90 for portrait
 
 
@@ -292,7 +292,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   boundingBox.add(2, location.right);
                   boundingBox.add( 3, location.bottom);
 
-                  CovidRecord myRecord = new CovidRecord(80.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f);
+                  CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f);
 
 
                   // ask helper to push record to db

@@ -24,6 +24,8 @@ import android.os.Trace;
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
 import edu.ilab.covid_id.classification.env.Logger;
+
+import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.support.common.FileUtil;
 import org.tensorflow.lite.support.common.TensorOperator;
 import org.tensorflow.lite.support.common.TensorProcessor;
@@ -79,7 +81,7 @@ public abstract class Classifier {
   private final int imageSizeY;
 
   /** Optional GPU delegate for acceleration. */
-  // TODO: Declare a GPU delegate   ??????
+  private GpuDelegate gpuDelegate = null;
 
 
   /** An instance of the driver class to run model inference with Tensorflow Lite. */
@@ -199,8 +201,9 @@ public abstract class Classifier {
     tfliteModel = FileUtil.loadMappedFile(activity, getModelPath());
     switch (device) {
       case GPU:
-        //TODO: create a GPU delegate instance and add it to the interpreter options ?????
-       //currently not implemented
+        //create a GPU delegate instance and add it to the interpreter options
+        gpuDelegate = new GpuDelegate();
+        tfliteOptions.addDelegate(gpuDelegate);
 
         break;
       case CPU:
@@ -288,7 +291,11 @@ public abstract class Classifier {
 
 
     }
-    // TODO: Close the GPU delegate ???? not implemented
+    // Close the GPU delegate
+    if (gpuDelegate != null) {
+      gpuDelegate.close();
+      gpuDelegate = null;
+    }
 
 
     tfliteModel = null;

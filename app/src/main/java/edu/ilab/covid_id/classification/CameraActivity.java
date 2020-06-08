@@ -447,6 +447,9 @@ public abstract class CameraActivity extends AppCompatActivity
             (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
                 || isHardwareLevelSupported(
                     characteristics, CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+
+
+
         LOGGER.i("Camera API lv2?: %s", useCamera2API);
         return cameraId;
       }
@@ -461,6 +464,7 @@ public abstract class CameraActivity extends AppCompatActivity
     String cameraId = chooseCamera();
 
     Fragment fragment;
+
     if (useCamera2API) {
       CameraConnectionFragment camera2Fragment =
           CameraConnectionFragment.newInstance(

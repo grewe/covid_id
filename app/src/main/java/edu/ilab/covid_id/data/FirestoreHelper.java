@@ -41,6 +41,8 @@ public class FirestoreHelper {
             public void onSuccess(DocumentReference documentReference) {
                 Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
             }
+
+
         })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override

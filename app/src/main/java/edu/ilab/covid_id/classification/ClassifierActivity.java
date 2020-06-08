@@ -123,6 +123,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
     protected void processImage() {
         rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
         final int cropSize = Math.min(previewWidth, previewHeight);
+        flag++;
 
         runInBackground(
                 new Runnable() {
@@ -185,18 +186,20 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             }
 
                                             //**************************************************
-                                            //Store to FIrebase Database
-                                            Date d = new Date();
-                                            ArrayList<Float> angles = new ArrayList<Float>();
-                                            angles.add(0, 0.0f);
-                                            angles.add(1, 0.0f);
-                                            angles.add(2, 0.0f);
-                                            CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
-                                                new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
+                                            //Store to Firebase Database
+                                            if(flag <=3 ) {
+                                                Date d = new Date();
+                                                ArrayList<Float> angles = new ArrayList<Float>();
+                                                angles.add(0, 0.0f);
+                                                angles.add(1, 0.0f);
+                                                angles.add(2, 0.0f);
+                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                                                        new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
 
-                                            // ask helper to push record to db
-                                            MapsActivity.myHelper.addRecord(myRecord);
+                                                // ask helper to push record to db
+                                                MapsActivity.myHelper.addRecord(myRecord);
+                                            }
 
                                             //=========================================================================
                                         }
