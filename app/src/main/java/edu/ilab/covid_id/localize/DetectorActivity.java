@@ -137,7 +137,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     previewWidth = size.getWidth();
     previewHeight = size.getHeight();
 
+
+  
     sensorOrientation =  rotation - getScreenOrientation();   //sensorOreintation will be 0 for horizontal and 90 for portrait
+
+
     LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
     LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
@@ -249,6 +253,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   ContextWrapper cw = new ContextWrapper(getApplicationContext());
                   File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
                   File dest = new File(directory, "croppedImage.png");
+                  File topLabelBox = new File(directory, "topLabelBoxImage.png");
 
                   try {
                     dest.createNewFile();
@@ -256,6 +261,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     croppedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
                     out.flush();
                     out.close();
+                    topLabelBox.createNewFile();
+                    FileOutputStream out2 = new FileOutputStream(topLabelBox);
+                    cropCopyBitmap.compress(Bitmap.CompressFormat.PNG, 90, out2);
+                    out2.flush();
+                    out2.close();
                   } catch (Exception e) {
                     e.printStackTrace();
                   }

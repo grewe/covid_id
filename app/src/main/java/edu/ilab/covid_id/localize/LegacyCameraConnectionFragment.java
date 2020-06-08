@@ -17,6 +17,7 @@ package edu.ilab.covid_id.localize;
  */
 
 import android.app.Fragment;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -88,7 +89,16 @@ public class LegacyCameraConnectionFragment extends Fragment {
                 CameraConnectionFragment.chooseOptimalSize(
                     sizes, desiredSize.getWidth(), desiredSize.getHeight());
             parameters.setPreviewSize(previewSize.getWidth(), previewSize.getHeight());
-            camera.setDisplayOrientation(90);
+            //SHIVALI
+            //camera.setDisplayOrientation(90);
+            //NEW code to alter rotation of display....need to do something about change in aspect ratio
+            int orientation = getResources().getConfiguration().orientation;
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+              camera.setDisplayOrientation(0);
+            } else {
+              // In portrait
+              camera.setDisplayOrientation(90);
+            }
             camera.setParameters(parameters);
             camera.setPreviewTexture(texture);
           } catch (IOException exception) {
