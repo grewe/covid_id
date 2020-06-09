@@ -90,9 +90,9 @@ public class LegacyCameraConnectionFragment extends Fragment {
                 CameraConnectionFragment.chooseOptimalSize(
                     sizes, desiredSize.getWidth(), desiredSize.getHeight());
             parameters.setPreviewSize(previewSize.getWidth(), previewSize.getHeight());
-            //SHIVALI
-             //camera.setDisplayOrientation(90);
-            //NEW code to alter rotation of display....need to do something about change in aspect ratio
+            //COVID - CHANGED base code so would rotate the camera display appropriate to device orientation
+            //camera.setDisplayOrientation(90);  //old hard coded value for portrait mode only
+            //NEW code to alter rotation of display....below further adjust aspect ratio (w,h) depending on screen orientation
             int orientation = getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
               camera.setDisplayOrientation(0);
@@ -110,10 +110,24 @@ public class LegacyCameraConnectionFragment extends Fragment {
 
           camera.setPreviewCallbackWithBuffer(imageListener);
           Camera.Size s = camera.getParameters().getPreviewSize();
-          camera.addCallbackBuffer(
-              new byte[ImageUtils.getYUVByteSize(/* width= */ s.height, /* height= */ s.width)]);
 
-          textureView.setAspectRatio(/* width= */ s.height, /* height= */ s.width);
+
+          //COVID - CHANGED base code so would alter width & height the camera display appropriate to device orientation
+          ///ORIGINAL
+          //camera.addCallbackBuffer(new byte[ImageUtils.getYUVByteSize(s.height, s.width)]);
+          //textureView.setAspectRatio(s.height, s.width);
+          //NEW code to alter based on orientation of device
+          int orientation = getResources().getConfiguration().orientation;
+          if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            camera.addCallbackBuffer(new byte[edu.ilab.covid_id.localize.env.ImageUtils.getYUVByteSize(s.width, s.height)]);
+            textureView.setAspectRatio(s.width, s.height);
+
+          } else {
+            // In portrait
+            camera.addCallbackBuffer(new byte[edu.ilab.covid_id.localize.env.ImageUtils.getYUVByteSize(s.height, s.width)]);
+            textureView.setAspectRatio(s.height, s.width);
+
+          }
 
           camera.startPreview();
         }
