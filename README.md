@@ -10,7 +10,7 @@ developed by [![image](https://user-images.githubusercontent.com/11790686/826289
 
 Project Modules  
 
- <[Mask Detection](https://github.com/grewe/covidID_mask)>   |    <[Crowd Density Estimation](https://github.com/grewe/covidID_crowd)>   |  <[IR Fever detection](https://github.com/grewe/covidID_fever)>   |   <[Social Distancing](https://github.com/grewe/covidID_SocDist)>    |  <[Visualization & Infrastructure](https://github.com/grewe/covid_id)>
+ <[Mask Detection](https://github.com/grewe/covidID_mask)>   |    <[Crowd Density Estimation](https://github.com/grewe/covidID_crowd)>   |  <[IR Fever detection](https://github.com/grewe/covidID_fever)>   |   <[Social Distancing](https://github.com/grewe/covidID_SocDist)>    |  <[Visualization & Infrastructure](https://github.com/grewe/covid_id)> 
 
 
 
