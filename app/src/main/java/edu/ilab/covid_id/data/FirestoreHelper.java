@@ -6,6 +6,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import androidx.annotation.NonNull;
 
@@ -21,28 +22,33 @@ public class FirestoreHelper {
     private FirebaseFirestore mFirestore;
 
     /**
+     * handle for manipulating firestore settings
+     */
+    FirebaseFirestoreSettings settings;
+
+    /**
      * Constructor that initializes a connection to the firestore
      */
     public FirestoreHelper() {
+        // init handle to firestore
         mFirestore = FirebaseFirestore.getInstance();
-       // mFirestore = FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        // set firestore offline persistence to true
+        settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .build();
+        mFirestore.setFirestoreSettings(settings);
     }
 
     /**
      * adds a record to the firestore CovidRecord document collection
-     * @param record
-     * @return an error code (0: success, -1: failure)
+     * @param record to add
      */
-    public int addRecord(CovidRecord record) {
-       // mFirestore.collection("CovidRecord").add(record);
-
+    public void addRecord(CovidRecord record) {
         mFirestore.collection("CovidRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
                 Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
             }
-
-
         })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -50,7 +56,6 @@ public class FirestoreHelper {
                         Log.w("DBSTORE", "Error adding document", e);
                     }
                 });
-        return 0;
+        return;
     }
-
 }
