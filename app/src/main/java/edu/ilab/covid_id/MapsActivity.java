@@ -35,7 +35,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * Initializes a single helper to be used by all activities
      */
-    public static FirestoreHelper myHelper;
+    public static FirestoreHelper myFirestoreHelper;
 
     /**
      * map used in display
@@ -70,6 +70,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DetectorActivity exampleDetectorActivity;
 
     private static final int REQUEST_CODE = 101;
+
+
+    /**
+     * flag to indicate that system is ready to store a new recognition result based on enough time elapsed
+     * since last stored record OR user movement is great enough to have the record indicate it is in a new location
+     */
+    public static boolean flagStoreRecognitionResults =true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +117,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         // initialize our db helper object
-        myHelper = new FirestoreHelper();
+        myFirestoreHelper = new FirestoreHelper();
+
+
+        //determine if user location and last record storage merits storage of new records
+
 
     }
 

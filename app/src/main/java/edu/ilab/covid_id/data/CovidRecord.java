@@ -65,8 +65,24 @@ public class CovidRecord {
      */
     private String info;
 
+
     /**
-     * Default constructor with all values given
+     * Default constructor with null or impossible values.
+     */
+    public CovidRecord() {
+        this.risk = -1.0f;
+        this.certainty = -1.0f;
+        this.location = null;
+        this.timestamp = null;
+        this.orientationAngles = null;
+        this.altitude = -1.0f;
+        this.filenameURL = null;
+        this.info = null;
+        this.boundingBox = null;
+    }
+
+    /**
+     *  constructor with all values given
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude) {

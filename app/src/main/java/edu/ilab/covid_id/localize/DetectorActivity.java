@@ -296,7 +296,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
                   // ask helper to push record to db
-                  MapsActivity.myHelper.addRecord(myRecord);
+                  MapsActivity.myFirestoreHelper.addRecord(myRecord);
                 }
                 //###############################################
 

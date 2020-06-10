@@ -198,7 +198,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                         Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
 
                                                 // ask helper to push record to db
-                                                MapsActivity.myHelper.addRecord(myRecord);
+                                                MapsActivity.myFirestoreHelper.addRecord(myRecord);
                                             }
 
                                             //=========================================================================
