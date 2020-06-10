@@ -6,7 +6,7 @@ import com.google.firebase.Timestamp;
 
 /**
  * THis class deals with determining the status of the User relative to records made in the various Covid ID databases.
- * It contains mostly a series of static utility methods.
+ * It contains mostly a series of static utility methods.  UNDER CONSTRUCTION
  */
 public class UserRecordStatus {
 
