@@ -4,6 +4,9 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
+import java.util.Map;
+
+import edu.ilab.covid_id.MapsActivity;
 
 /**
  * Base class for all Covid recognition modules to report Covid instance records
@@ -208,5 +211,30 @@ public class CovidRecord {
 
     public void setBoundingBox(ArrayList<Float> boundingBox) {
         this.boundingBox = boundingBox;
+    }
+
+
+    /**
+     * determines if we are ready to store a new record based on either location moved or time duration since last record storage is enough
+     * @return true if ready to store next record, false otherwise
+     * @param lastStoredTimeMS time in MS of last stored record of this type
+     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
+     */
+    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS){
+
+        //first test if ANY CovidRecord has been stored, if not then say yes!
+        if( lastStoredTimeMS == -1) //nothing has been store yet
+            return true;
+
+        //based on time we are ready to store new record
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
+            return true;
+
+
+        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough---do like time.
+
+
+        return false;
+
     }
 }

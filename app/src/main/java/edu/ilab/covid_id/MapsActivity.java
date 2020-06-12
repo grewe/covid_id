@@ -4,6 +4,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.location.Location;
@@ -21,6 +22,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 
 import edu.ilab.covid_id.classification.ClassifierActivity;
 import edu.ilab.covid_id.data.FirestoreHelper;
@@ -73,6 +75,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     /**
+     * used to store any app preferences and persistent data like the last record storage timestamp
+     * for MaskRecord, FeverRecord, CrowdRecord and SocDistRecord
+     */
+    public static SharedPreferences appPrefs;
+
+    /**
+     * following Timestamps (represented using System.getCurrentTimeInMillis()) indicate the last time that kind of record (i.e. maskRecord) was stored to FireStore
+     */
+    public static long maskRecordLastStoreTimestamp;
+    public static long crowdRecordLastStoreTimestamp;
+    public static long socDistRecordLastStoreTimestamp;
+    public static long feverRecordLastStoreTimestamp;
+    public static long covidRecordLastStoreTimestamp;  //for generic CovidRecord
+
+
+    /**
+     * variables representing deltas in time and location necessary to allow a new related record (i.e. MaskRecord) to be stored
+     * represented in milliseconds
+     */
+    public static long deltaCovidRecordStoreTimeMS;
+    public static long deltaMaskRecordStoreTimeMS;
+    public static long deltaFeverRecordStoreTimeMS;
+    public static long deltaCrowdRecordStoreTimeMS;
+    public static long deltaSocDistRecordStoreTimeMS;
+
+
+    /**
      * flag to indicate that system is ready to store a new recognition result based on enough time elapsed
      * since last stored record OR user movement is great enough to have the record indicate it is in a new location
      */
@@ -120,9 +149,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         myFirestoreHelper = new FirestoreHelper();
 
 
-        //determine if user location and last record storage merits storage of new records
+        //grab shared preferences associated with this app
+        appPrefs =  getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
 
 
+        //retrieve for integers.xml the hard coded values for the delta times between record storage necessary
+        deltaCovidRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaCovidRecordStoreTimeMS);
+        deltaCrowdRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaCrowdRecordStoreTimeMS);
+        deltaMaskRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaMaskRecordStoreTimeMS);
+        deltaFeverRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaFeverRecordStoreTimeMS);
+        deltaSocDistRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaSocDistRecordStoreTimeMS);
+
+
+        //retrieve any of the following fields if present: maskRecordLastStoreTimestamp, crowdReocrdLastStoreTimestamp, socDistRecordLastStoreTimestamp, feverRecordLastStoreTimestamp
+        // will be -1 if not yet set
+        covidRecordLastStoreTimestamp = appPrefs.getLong("covidRecordLastStoreTimestamp", -1);
+        maskRecordLastStoreTimestamp = appPrefs.getLong("maskRecordLastStoreTimestamp", -1);
+        feverRecordLastStoreTimestamp = appPrefs.getLong("feverRecordLastStoreTimestamp", -1);
+        crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
+        socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
+
+
+
+
+
+
+
+    }
+
+    /**
+     * before destropying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        //make sure to update the SharedPreferences so when app restarts it will now the last timestamp
+        appPrefs.edit().putLong("maskRecordLastStoreTimestamp", maskRecordLastStoreTimestamp)
+                .putLong("feverRecordLastStoreTimestamp",feverRecordLastStoreTimestamp)
+                .putLong("crowdRecordLastStoreTimestamp",crowdRecordLastStoreTimestamp)
+                .putLong("socDistRecordLastStoreTimestamp",socDistRecordLastStoreTimestamp)
+                .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
     }
 
 

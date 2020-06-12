@@ -275,11 +275,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 //==========================================================================
 
-                //###################################################################
-                //COVID: Dummy code to create and store 3 covid records to the firestore
-                //QUESTION 1:  should I save the bounding box BELOW after it is transfromed cropToFramTransform???
-                flag++;
-                if(flag < 3) {
+                //##################################################################
+                //Store to Firebase Database  -- if we are ready since last record storage to make a new record
+                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS)) {
                   Date d = new Date();
                   ArrayList<Float> angles = new ArrayList<Float>();
                   angles.add(0, 0.0f);
@@ -297,6 +295,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   // ask helper to push record to db
                   MapsActivity.myFirestoreHelper.addRecord(myRecord);
+
+                  //update the last time record stored
+                  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
                 }
                 //###############################################
 

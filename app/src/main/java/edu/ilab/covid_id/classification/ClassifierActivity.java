@@ -186,8 +186,8 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             }
 
                                             //**************************************************
-                                            //Store to Firebase Database
-                                            if(flag <=3 ) {
+                                            //Store to Firebase Database  -- if we are ready since last record storage to make a new record
+                                            if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS)) {
                                                 Date d = new Date();
                                                 ArrayList<Float> angles = new ArrayList<Float>();
                                                 angles.add(0, 0.0f);
@@ -199,13 +199,16 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                                                 // ask helper to push record to db
                                                 MapsActivity.myFirestoreHelper.addRecord(myRecord);
+
+                                                //update the last time record stored
+                                                MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
                                             }
 
                                             //=========================================================================
                                         }
                                     });
                         }
-                        readyForNextImage();
+                       readyForNextImage();
                     }
                 });
     }
