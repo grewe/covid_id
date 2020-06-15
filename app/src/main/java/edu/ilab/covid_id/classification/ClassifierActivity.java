@@ -185,7 +185,12 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                     e.printStackTrace();
                                             }
 
-                                            //**************************************************
+                                            /**
+                                             * SUBHANGI, DIVYA, ROHAN
+                                             * if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
+                                             * */
+
+                                                //**************************************************
                                             //Store to Firebase Database  -- if we are ready since last record storage to make a new record
                                             if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS)) {
                                                 Date d = new Date();

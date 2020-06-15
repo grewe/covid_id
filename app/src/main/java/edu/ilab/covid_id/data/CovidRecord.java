@@ -1,5 +1,7 @@
 package edu.ilab.covid_id.data;
 
+import android.location.Location;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
@@ -219,6 +221,41 @@ public class CovidRecord {
      * @return true if ready to store next record, false otherwise
      * @param lastStoredTimeMS time in MS of last stored record of this type
      * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
+     * @param lastStoredLocation This is location of the last stored record of this type
+     * @param currentLocation This is the lcoation that is updated and represents the current location of this device (should be same as MapsActivity.currentLcoation
+     */
+    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS, Location lastStoredLocation, Location currentLocation, long deltaLocationM ){
+
+        //first test if ANY CovidRecord has been stored, if not then say yes!
+        if( lastStoredTimeMS == -1) //nothing has been store yet
+            return true;
+
+        //based on time we are ready to store new record
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
+            return true;
+
+
+        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough- OR ENOUGH TIME elapsed
+        /*
+        replace ABOVE
+        //Distance is calcuated on the globe using 2 Lat/Long values
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  || (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
+           return true;
+
+         */
+
+
+        return false;
+
+    }
+
+
+
+    /**
+     * determines if we are ready to store a new record based on ONLY time duration since last record storage is enough
+     * @return true if ready to store next record, false otherwise
+     * @param lastStoredTimeMS time in MS of last stored record of this type
+     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
      */
     public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS){
 
@@ -232,6 +269,13 @@ public class CovidRecord {
 
 
         //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough---do like time.
+        /*
+        replace ABOVE
+        //Distance is calcuated on the globe using 2 Lat/Long values
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  && (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
+           return true;
+
+         */
 
 
         return false;

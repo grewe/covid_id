@@ -91,7 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     /**
-     * variables representing deltas in time and location necessary to allow a new related record (i.e. MaskRecord) to be stored
+     * variables representing deltas in time necessary to allow a new related record (i.e. MaskRecord) to be stored
      * represented in milliseconds
      */
     public static long deltaCovidRecordStoreTimeMS;
@@ -100,6 +100,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaCrowdRecordStoreTimeMS;
     public static long deltaSocDistRecordStoreTimeMS;
 
+
+
+    /**
+     * following Locations indicate the last Location that kind of record (i.e. maskRecord) was stored to FireStore
+     */
+    public static Location maskRecordLastStoreLocation;
+    public static Location crowdRecordLastStoreLocation;
+    public static Location socDistRecordLastStoreLocation;
+    public static Location feverRecordLastStoreLocation;
+    public static Location covidRecordLastStoreLocation;  //for generic CovidRecord
+
+
+    /**
+     * variables representing deltas in location distance necessary to allow a new related record (i.e. MaskRecord) to be stored
+     * represented in ????
+     */
+    public static long deltaCovidRecordStoreLocationM;
+    public static long deltaMaskRecordStoreLocationM;
+    public static long deltaFeverRecordStoreLocationM;
+    public static long deltaCrowdRecordStoreLocationM;
+    public static long deltaSocDistRecordStoreLocationM;
 
     /**
      * flag to indicate that system is ready to store a new recognition result based on enough time elapsed
@@ -153,6 +174,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         appPrefs =  getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
 
 
+        //retrieve for integers.xml the hard coded values for the delta distances  between record storage necessary
+        deltaCovidRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaCovidRecordStoreLocationM);
+        deltaCrowdRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaCrowdRecordStoreLocationM);
+        deltaMaskRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaMaskRecordStoreLocationM);
+        deltaFeverRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaFeverRecordStoreLocationM);
+        deltaSocDistRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaSocDistRecordStoreLocationM);
+
         //retrieve for integers.xml the hard coded values for the delta times between record storage necessary
         deltaCovidRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaCovidRecordStoreTimeMS);
         deltaCrowdRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaCrowdRecordStoreTimeMS);
@@ -176,6 +204,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
+
+
+    /**
+     * SUBHANGI, DIVYA, ROHAN
+     * you will have a update callback for location and the ONLY thing you do in it is to set
+     * this.currentLocation = newLocaiton you will retrieve from the LocationResults
+     *
+     * NOTE: investigate why a LocationResults recieves more than one location (getLocations() method)...wierd --should be only 1???
+     * */
+
+
+
+
 
     /**
      * before destropying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
