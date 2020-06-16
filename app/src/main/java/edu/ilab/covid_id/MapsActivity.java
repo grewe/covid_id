@@ -1,28 +1,29 @@
 package edu.ilab.covid_id;
 
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.location.Location;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -83,6 +84,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DetectorActivity exampleDetectorActivity;
 
     private static final int REQUEST_CODE = 101;
+
 
 
     /**
@@ -250,6 +252,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+
+
+
     /**
      * takes user to login activity (for use in login button onClick listener)
      */
@@ -257,18 +262,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent login = new Intent(this, LoginActivity.class);
         startActivity(login);
     }
-
-
-    /**
-     * SUBHANGI, DIVYA, ROHAN
-     * you will have a update callback for location and the ONLY thing you do in it is to set
-     * this.currentLocation = newLocaiton you will retrieve from the LocationResults
-     *
-     * NOTE: investigate why a LocationResults recieves more than one location (getLocations() method)...wierd --should be only 1???
-     * */
-
-
-
 
 
     /**
@@ -286,7 +279,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
     }
 
+    public void updateMapLocation(Location location ){
+        if (location != null) {
 
+            Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+            //make a marker for user's current location and set map to this location
+            MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You");
+            mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
+            mMap.addMarker(markerOptions);
+            Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
+        }
+    }
 
 
     /**
@@ -301,6 +306,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        /**
+         * SUBHANGI, DIVYA, ROHAN
+         * you will have a update callback for location and the ONLY thing you do in it is to set
+         * this.currentLocation = newLocaiton you will retrieve from the LocationResults
+         *
+         * NOTE: ***investigate why a LocationResults recieves more than one location (getLocations() method)...wierd --should be only 1???
+         * */
+
+        LocationCallback mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+                    // ...
+                    MapsActivity.currentLocation = location;
+                    updateMapLocation(location);
+
+                }
+            }
+
+        };
 
         // confirm that either Fine or Coarse permissions are set for app and if not return --nothing can do.
         if (ActivityCompat.checkSelfPermission(
@@ -313,7 +342,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Permissions are granted so we can now grab the last known location to initialize the currentLocation and use it to
         // locate our map display
         // note: call to get last known location is asynchronous so response is done in the onSucces callback method
-        Task<Location> task = fusedLocationProviderClient.getLastLocation();
+        //Task<Location> task = fusedLocationProviderClient.getLastLocation();
+        fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), mLocationCallback,
+                null /* Looper */);
+        /*
         task.addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
@@ -329,6 +361,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
                 }
             }
-        });
+        });*/
     }
+
+    private LocationRequest getLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        return locationRequest;
+    }
+
+
+
 }

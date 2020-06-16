@@ -23,13 +23,11 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.io.File;
@@ -189,6 +187,22 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                              * SUBHANGI, DIVYA, ROHAN
                                              * if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
                                              * */
+                                            if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
+                                                Date d = new Date();
+                                                ArrayList<Float> angles = new ArrayList<Float>();
+                                                angles.add(0, 0.0f);
+                                                angles.add(1, 0.0f);
+                                                angles.add(2, 0.0f);
+                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                                                        new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
+
+                                                // ask helper to push record to db
+                                                MapsActivity.myFirestoreHelper.addRecord(myRecord);
+
+                                                //update the last time record stored
+                                                MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+                                            }
 
                                                 //**************************************************
                                             //Store to Firebase Database  -- if we are ready since last record storage to make a new record
