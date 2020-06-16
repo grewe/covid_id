@@ -23,7 +23,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
+import edu.ilab.covid_id.auth.LoginActivity;
 import edu.ilab.covid_id.classification.ClassifierActivity;
 import edu.ilab.covid_id.data.FirestoreHelper;
 import edu.ilab.covid_id.localize.DetectorActivity;
@@ -59,7 +62,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     Button flowersClassificationActivityButton;
 
+    /**
+     * Handle to the detector activity button
+     */
     Button exampleDetectorActivityButton;
+
+    /**
+     * Handle to the login/logout button
+     */
+    Button loginButton;
 
     /**
      * Activities to perform different kinds of Classification
@@ -196,13 +207,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         feverRecordLastStoreTimestamp = appPrefs.getLong("feverRecordLastStoreTimestamp", -1);
         crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
         socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
+    }
 
+    /**
+     * on start, set login button view
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setLoginButtonUI();
+    }
 
+    /**
+     * Sets up the login/logout button to take user to google authentication service
+     */
+    private void setLoginButtonUI() {
+        loginButton = findViewById(R.id.loginButton);
+        // check if user is logged in
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        // if the user is logged in, set button text to logout
+        if (user != null) {
+            loginButton.setText(R.string.logout);
+        }
+        else {
+            loginButton.setText(R.string.login);
+        }
 
+        // set the listener
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                // if the user is logged in, sign them out, set button text to login
+                if (user != null) {
+                    FirebaseAuth.getInstance().signOut();
+                    loginButton.setText(R.string.login);
+                }   // else take them to the login activity
+                else {
+                    goToLogin();
+                }
+            }
+        });
+    }
 
-
-
-
+    /**
+     * takes user to login activity (for use in login button onClick listener)
+     */
+    private void goToLogin() {
+        Intent login = new Intent(this, LoginActivity.class);
+        startActivity(login);
     }
 
 
