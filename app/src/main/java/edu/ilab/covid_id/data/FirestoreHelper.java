@@ -35,7 +35,7 @@ public class FirestoreHelper {
      */
     public FirestoreHelper() {
         mFirestore = FirebaseFirestore.getInstance();
-       // mFirestore = FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        // mFirestore = FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         // set firestore offline persistence to true
         settings = new FirebaseFirestoreSettings.Builder()
                 .setPersistenceEnabled(true)
@@ -44,28 +44,24 @@ public class FirestoreHelper {
     }
 
     /**
-     * adds a record to the firestore CovidRecord document collection
-     * @param record
-     *
+     * adds a record to the firestore CovidRecord document collection with some success/failure
+     * listeners for logging
+     * @param record to add
      */
     public void addRecord(CovidRecord record) {
-       // mFirestore.collection("CovidRecord").add(record);
-
-        mFirestore.collection("CovidRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
-            }
-
-
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("DBSTORE", "Error adding document", e);
-                    }
-                });
-
+        mFirestore.collection("CovidRecord").add(record)
+            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                @Override
+                public void onSuccess(DocumentReference documentReference) {
+                    Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w("DBSTORE", "Error adding document", e);
+                }
+            });
     }
 
     /**
