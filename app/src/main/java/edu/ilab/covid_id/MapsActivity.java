@@ -141,6 +141,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     public static boolean flagStoreRecognitionResults =true;
 
+
+    /**
+     * email as specified when logging into Firebase by user
+     */
+    public static String userEmailFirebase;
+    /**
+     * ID associated with user in Firebase
+     */
+    public static String userIdFirebase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -222,6 +232,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     /**
      * Sets up the login/logout button to take user to google authentication service
+     * ALso, if user already logged in grab their Firebase email and ID
      */
     private void setLoginButtonUI() {
         loginButton = findViewById(R.id.loginButton);
@@ -229,6 +240,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         // if the user is logged in, set button text to logout
         if (user != null) {
+            //grab users Firebase email and userID previously entered
+            MapsActivity.userEmailFirebase = user.getEmail();
+            MapsActivity.userIdFirebase = user.getUid();
             loginButton.setText(R.string.logout);
         }
         else {

@@ -72,6 +72,17 @@ public class CovidRecord {
 
 
     /**
+     * UserID retrieved after a Firebase Authentication of user
+     */
+    private String userIDFirebase;
+
+    /**
+     * User Email retrieved after a Firebase Authentication of user
+     */
+    private String userEmailFirebase;
+
+
+    /**
      * Default constructor with null or impossible values.
      */
     public CovidRecord() {
@@ -84,10 +95,29 @@ public class CovidRecord {
         this.filenameURL = null;
         this.info = null;
         this.boundingBox = null;
+        this.userEmailFirebase = null;
+        this.userIDFirebase = null;
     }
 
     /**
      *  constructor with all values given
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+    }
+    /**
+     *  constructor with all values except user info given --ANONYMOUS storage
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude) {
@@ -107,6 +137,28 @@ public class CovidRecord {
      */
 
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = new ArrayList<Float>();
+        this.orientationAngles.add(0, 0.0f);
+        this.orientationAngles.add(1, 0.0f);
+        this.orientationAngles.add(2, 0.0f);
+        this.altitude = -1.0f;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userEmailFirebase = userEmailFirebase;
+        this.userIDFirebase = userIDFirebase;
+    }
+
+    /**
+     * Default constructor with default values for orientation angles and altitude - ANONYMOUS
+     */
+
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox) {
         this.risk = risk;
         this.certainty = certainty;
@@ -121,10 +173,31 @@ public class CovidRecord {
         this.info = info;
         this.boundingBox = boundingBox;
     }
-
     /**
      * Constructor that may be used for classification only
      * (default values for bounding box -1 on all coordinates)
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude,String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = new ArrayList<Float>();
+        this.boundingBox.add(0, -1.0f);
+        this.boundingBox.add(1, -1.0f);
+        this.boundingBox.add(2, -1.0f);
+        this.boundingBox.add(3, -1.0f);
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+    }
+    /**
+     * Constructor that may be used for classification only
+     * (default values for bounding box -1 on all coordinates)  -- ANONYMOUS
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude) {
@@ -214,6 +287,16 @@ public class CovidRecord {
     public void setBoundingBox(ArrayList<Float> boundingBox) {
         this.boundingBox = boundingBox;
     }
+
+
+
+    public String getUserIDFirebase(){ return userIDFirebase; }
+
+    public void setUserIDFirebase(String userIDFirebase) { this.userIDFirebase = userIDFirebase;}
+
+    public String getUserEmailFirebase() { return userEmailFirebase;}
+
+    public void setUserEmailFirebase(String userEmailFirebase) { this.userEmailFirebase = userEmailFirebase;}
 
 
     /**

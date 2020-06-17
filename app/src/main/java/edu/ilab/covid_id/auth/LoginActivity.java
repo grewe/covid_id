@@ -18,6 +18,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.collect.Maps;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -88,6 +89,7 @@ public class LoginActivity extends AppCompatActivity {
      * updates the UI to reflect whether user is logged in or not
      *      if 'account' is null, user is not signed in and we want to show the Google sign in button
      *      otherwise, the user is already signed in and we can hide the button or launch the maps activity
+     *   Also,  set the static variables in main MapsActivity associated with user email and ID
      * NOTE: If account is NOT null, the following methods are callable:
      *      account.getEmail(), account.getID(), account.getIdToken()
      * @param account - is either null or not
@@ -107,6 +109,11 @@ public class LoginActivity extends AppCompatActivity {
             });
         }
         else {
+
+            //succesfully signed in so set up the appropriate user identifiers in our main MapsActivity class
+            MapsActivity.userEmailFirebase = account.getEmail();
+            MapsActivity.userIdFirebase = account.getUid();
+
             // hide sign in button
             signInButton.setVisibility(View.INVISIBLE);
             // go to maps application
@@ -115,6 +122,10 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * method to authenticate user is signed in via Firebase Sign in With Google
+     * @param idToken
+     */
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
@@ -143,6 +154,7 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Method called once user completes google sign in activity to extract the user GoogleSignInAccount
      * object (in the form of a <GoogleSignInAccount> Task)
+     *
      * @param requestCode
      * @param resultCode
      * @param data
@@ -160,8 +172,13 @@ public class LoginActivity extends AppCompatActivity {
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
-                Log.w("LOGIN", "Google sign in failed", e);
+                Log.d("LOGIN", "Google sign in failed", e);
+            } catch (Exception e){
+                Log.d("LOGIN", e.getMessage());
             }
+        }
+        else{
+            Log.d("LOGIN", "RC_SIGN_IN FAILED");
         }
     }
 }

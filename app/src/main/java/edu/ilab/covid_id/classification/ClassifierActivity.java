@@ -195,7 +195,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                 angles.add(2, 0.0f);
                                                 CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
                                                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
+                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
                                                 // ask helper to push record to db
                                                 MapsActivity.myFirestoreHelper.addRecord(myRecord);

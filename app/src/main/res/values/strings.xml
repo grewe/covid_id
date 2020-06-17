@@ -35,5 +35,5 @@
     <string name="login_failed">"Login failed"</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
-    <!--<string name="default_web_client_id">802235742369-sl1eqodlskke06p44r0oq4maae5grds3.apps.googleusercontent.com</string>-->
+
 </resources>

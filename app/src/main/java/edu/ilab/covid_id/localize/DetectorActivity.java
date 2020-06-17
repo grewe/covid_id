@@ -273,30 +273,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
 
                 //==========================================================================
-
-                /**
-                 * SUBHANGI, DIVYA, ROHAN
-                 * if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                 * */
-                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                  Date d = new Date();
-                  ArrayList<Float> angles = new ArrayList<Float>();
-                  angles.add(0, 0.0f);
-                  angles.add(1, 0.0f);
-                  angles.add(2, 0.0f);
-                  CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
-                          new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                          Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
-
-                  // ask helper to push record to db
-                  MapsActivity.myFirestoreHelper.addRecord(myRecord);
-
-                  //update the last time record stored
-                  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
-                }
                 //##################################################################
                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS)) {
+                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
                   Date d = new Date();
                   ArrayList<Float> angles = new ArrayList<Float>();
                   angles.add(0, 0.0f);
@@ -309,7 +288,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   boundingBox.add(2, location.right);
                   boundingBox.add( 3, location.bottom);
 
-                  CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100, new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()), Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f);
+                  CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
+                          new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                          Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
+                          MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
+
 
 
                   // ask helper to push record to db
@@ -325,7 +308,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
                 mappedRecognitions.add(result);  //add the result to a linked list
 
-                //QUESTION 1:   DO I DO THE Firestore save here instead??????
+
 
 
               }
