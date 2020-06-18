@@ -26,6 +26,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import edu.ilab.covid_id.auth.LoginActivity;
 import edu.ilab.covid_id.classification.ClassifierActivity;
@@ -47,6 +49,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * map used in display
      */
     private GoogleMap mMap;
+
+
+    /**
+     * Firebase Storage used to store image files
+     */
+    public static FirebaseStorage storageFirebase;
+
+
+    /**
+     * Create a storage reference from our app
+     */
+    public static StorageReference storageFirebaseRef;
+
+    /**
+     * Create a child reference ---imagesRef now points to "images"
+     */
+    public static StorageReference imagesFirebaseRef;
 
     /**
      * current location of the user (Lat, long)
@@ -143,6 +162,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     /**
+     * flag to indicate if should store images to Firebase Storage
+     */
+    public static boolean flagStoreImageFiles = true;
+
+    /**
      * email as specified when logging into Firebase by user
      */
     public static String userEmailFirebase;
@@ -219,6 +243,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         feverRecordLastStoreTimestamp = appPrefs.getLong("feverRecordLastStoreTimestamp", -1);
         crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
         socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
+
+
+        // connect to get instance of FirebaseStorage used to store image files
+        storageFirebase = FirebaseStorage.getInstance();
+
+        // Create a storage reference from our app
+        storageFirebaseRef = storageFirebase.getReference();
+
+        //create reference to images location
+        imagesFirebaseRef = storageFirebaseRef.child("images");
+
     }
 
     /**

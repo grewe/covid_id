@@ -23,13 +23,22 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.R;
 import edu.ilab.covid_id.classification.env.BorderedText;
@@ -44,8 +54,11 @@ import edu.ilab.covid_id.classification.env.Logger;
 import edu.ilab.covid_id.classification.tflite.Classifier;
 import edu.ilab.covid_id.classification.tflite.Classifier.Device;
 import edu.ilab.covid_id.data.CovidRecord;
+import edu.ilab.covid_id.storage.FirebaseStorageUtil;
 
 public class ClassifierActivity extends CameraActivity implements OnImageAvailableListener {
+
+    public static String imageFileURL;
 
     // flag for pushing records
     int flag = 0;
@@ -158,15 +171,9 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             //==============================================================
                                             //COVID: code to store image to CloudStore  AND store record in database
 
-                                            String imageFileURL = "";
-                                            //**************************************************
-                                            //CEMIL: code to store image (rgbFrameBitmap) in CloudStore
-                                            //imageFileURL store the URL
-
 
                                             //**************************************************
-                                            //try writing out the image being processed to a FILE
-
+                                            //try writing out the image being processed to a FILE locally on Android
                                             //File sd = Environment.getExternalStorageDirectory();
                                             //File dest = new File(sd, "classifiedImage.png");
                                             ContextWrapper cw = new ContextWrapper(getApplicationContext());
@@ -183,44 +190,28 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                     e.printStackTrace();
                                             }
 
-                                            /**
-                                             * SUBHANGI, DIVYA, ROHAN
-                                             * if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                                             * */
-                                            if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                                                Date d = new Date();
-                                                ArrayList<Float> angles = new ArrayList<Float>();
-                                                angles.add(0, 0.0f);
-                                                angles.add(1, 0.0f);
-                                                angles.add(2, 0.0f);
-                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
-                                                        new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
-                                                // ask helper to push record to db
-                                                MapsActivity.myFirestoreHelper.addRecord(myRecord);
-
-                                                //update the last time record stored
-                                                MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
-                                            }
-
-                                                //**************************************************
+                                            //**************************************************
                                             //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                            if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS)) {
+                                            if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
+
+
                                                 Date d = new Date();
+
+                                                //setup variables for CovidRecord to store to FireStore
                                                 ArrayList<Float> angles = new ArrayList<Float>();
                                                 angles.add(0, 0.0f);
                                                 angles.add(1, 0.0f);
                                                 angles.add(2, 0.0f);
+
                                                 CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
                                                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), imageFileURL, results.get(0).getTitle(), angles, 0.0f);
+                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
-                                                // ask helper to push record to db
-                                                MapsActivity.myFirestoreHelper.addRecord(myRecord);
+                                                //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
+                                                FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord);
 
-                                                //update the last time record stored
-                                                MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
                                             }
 
                                             //=========================================================================

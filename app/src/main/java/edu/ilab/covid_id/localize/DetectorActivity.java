@@ -55,6 +55,7 @@ import edu.ilab.covid_id.localize.env.Logger;
 import edu.ilab.covid_id.localize.tflite.Classifier;
 import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
+import edu.ilab.covid_id.storage.FirebaseStorageUtil;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -294,12 +295,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                           MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
 
+                  FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord);
 
+/*
                   // ask helper to push record to db
                   MapsActivity.myFirestoreHelper.addRecord(myRecord);
 
                   //update the last time record stored
                   MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+                  */
+
                 }
                 //###############################################
 
