@@ -23,22 +23,13 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
-import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.R;
 import edu.ilab.covid_id.classification.env.BorderedText;
@@ -209,7 +199,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                         Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
-                                                FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord);
+                                                FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation );
 
 
                                             }

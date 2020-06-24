@@ -1,23 +1,21 @@
 package edu.ilab.covid_id.storage;
 
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
+
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.Date;
 
-import androidx.annotation.NonNull;
 import edu.ilab.covid_id.MapsActivity;
-import edu.ilab.covid_id.classification.ClassifierActivity;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.data.CrowdRecord;
 import edu.ilab.covid_id.data.FeverRecord;
@@ -39,8 +37,9 @@ public class FirebaseStorageUtil {
      * Store image (if flag set MapsActivity.flagStoreImageFiles) to Firebase Storage AND store the myRecord to the appopriate FireStore database
      * @param rgbFrameBitmap
      * @param myRecord
+     * @param location
      */
-    public static void storeImageAndCovidRecord(Bitmap rgbFrameBitmap, CovidRecord myRecord  ){
+    public static void storeImageAndCovidRecord(Bitmap rgbFrameBitmap, CovidRecord myRecord , Location location){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
@@ -93,6 +92,9 @@ public class FirebaseStorageUtil {
 
                         //update the last time record stored
                         MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
+                        //update the last location record stored
+                        MapsActivity.covidRecordLastStoreLocation = location;
                     }
                 });
             }//end case of storing Images
@@ -107,6 +109,9 @@ public class FirebaseStorageUtil {
 
                 //update the last time record stored
                 MapsActivity.covidRecordLastStoreTimestamp = System.currentTimeMillis();
+
+                //update the last location record stored
+                MapsActivity.covidRecordLastStoreLocation = location;
             }
         }
 
@@ -119,8 +124,9 @@ public class FirebaseStorageUtil {
      * Store image (if flag set MapsActivity.flagStoreImageFiles) to Firebase Storage AND store the MASK myRecord to the appopriate FireStore database
      * @param rgbFrameBitmap
      * @param myRecord
+     * @param location  is the loaction where the record was created
      */
-    public static void storeImageAndMaskRecord(Bitmap rgbFrameBitmap, MaskRecord myRecord  ){
+    public static void storeImageAndMaskRecord(Bitmap rgbFrameBitmap, MaskRecord myRecord, Location location  ){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
@@ -173,6 +179,10 @@ public class FirebaseStorageUtil {
 
                         //update the last time record stored
                         MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
+
+                        //update the last location record stored
+                        MapsActivity.covidRecordLastStoreLocation = location;
                     }
                 });
             }//end case of storing Images
@@ -187,6 +197,9 @@ public class FirebaseStorageUtil {
 
                 //update the last time record stored
                 MapsActivity.covidRecordLastStoreTimestamp = System.currentTimeMillis();
+
+                //update the last location record stored
+                MapsActivity.covidRecordLastStoreLocation = location;
             }
         }
 
@@ -199,8 +212,9 @@ public class FirebaseStorageUtil {
      * Store image (if flag set MapsActivity.flagStoreImageFiles) to Firebase Storage AND store the FEVER myRecord to the appopriate FireStore database
      * @param rgbFrameBitmap
      * @param myRecord
+     * @param location
      */
-    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, FeverRecord myRecord  ){
+    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, FeverRecord myRecord ,Location location ){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
@@ -253,6 +267,9 @@ public class FirebaseStorageUtil {
 
                         //update the last time record stored
                         MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
+                        //update the last location record stored
+                        MapsActivity.covidRecordLastStoreLocation = location;
                     }
                 });
             }//end case of storing Images
@@ -267,6 +284,9 @@ public class FirebaseStorageUtil {
 
                 //update the last time record stored
                 MapsActivity.covidRecordLastStoreTimestamp = System.currentTimeMillis();
+
+                //update the last location record stored
+                MapsActivity.covidRecordLastStoreLocation = location;
             }
         }
 
@@ -279,8 +299,9 @@ public class FirebaseStorageUtil {
      * Store image (if flag set MapsActivity.flagStoreImageFiles) to Firebase Storage AND store the SocDist myRecord to the appopriate FireStore database
      * @param rgbFrameBitmap
      * @param myRecord
+     * @param location
      */
-    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, SocDistRecord myRecord  ){
+    public static void storeImageAndSocDistRecord(Bitmap rgbFrameBitmap, SocDistRecord myRecord, Location location  ){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
@@ -333,6 +354,9 @@ public class FirebaseStorageUtil {
 
                         //update the last time record stored
                         MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
+                        //update the last location record stored
+                        MapsActivity.covidRecordLastStoreLocation = location;
                     }
                 });
             }//end case of storing Images
@@ -347,6 +371,9 @@ public class FirebaseStorageUtil {
 
                 //update the last time record stored
                 MapsActivity.covidRecordLastStoreTimestamp = System.currentTimeMillis();
+
+                //update the last location record stored
+                MapsActivity.covidRecordLastStoreLocation = location;
             }
         }
 
@@ -358,8 +385,9 @@ public class FirebaseStorageUtil {
      * Store image (if flag set MapsActivity.flagStoreImageFiles) to Firebase Storage AND store the Crowd myRecord to the appopriate FireStore database
      * @param rgbFrameBitmap
      * @param myRecord
+     * @param location
      */
-    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, CrowdRecord myRecord  ){
+    public static void storeImageAndCrowdRecord(Bitmap rgbFrameBitmap, CrowdRecord myRecord, Location location  ){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
@@ -412,6 +440,9 @@ public class FirebaseStorageUtil {
 
                         //update the last time record stored
                         MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
+                        //update the last location record stored
+                        MapsActivity.covidRecordLastStoreLocation = location;
                     }
                 });
             }//end case of storing Images
@@ -426,6 +457,9 @@ public class FirebaseStorageUtil {
 
                 //update the last time record stored
                 MapsActivity.covidRecordLastStoreTimestamp = System.currentTimeMillis();
+
+                //update the last location record stored
+                MapsActivity.covidRecordLastStoreLocation = location;
             }
         }
 

@@ -6,7 +6,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 import edu.ilab.covid_id.MapsActivity;
 
@@ -313,8 +312,14 @@ public class CovidRecord {
         if( lastStoredTimeMS == -1) //nothing has been store yet
             return true;
 
+        //the current location will be null before the first record is stored
+        if(MapsActivity.currentLocation == null)
+            return true;
+
+        float deltaTimeEquals = Math.abs(lastStoredTimeMS- System.currentTimeMillis());
+        float deltaDistanceEquals = lastStoredLocation.distanceTo(currentLocation);
         //based on time we are ready to store new record
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS || lastStoredLocation.distanceTo(currentLocation) > deltaLocationM )
             return true;
 
 

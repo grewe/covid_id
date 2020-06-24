@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <integer name="deltaCovidRecordStoreTimeMS">60000</integer>
+    <integer name="deltaCovidRecordStoreTimeMS">600000</integer>
 
     <integer name="deltaMaskRecordStoreTimeMS">60000</integer>
 

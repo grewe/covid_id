@@ -295,7 +295,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                           MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
 
-                  FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord);
+                  FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
 
 /*
                   // ask helper to push record to db
