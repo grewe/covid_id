@@ -7,8 +7,6 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 
-import edu.ilab.covid_id.MapsActivity;
-
 /**
  * Base class for all Covid recognition modules to report Covid instance records
  * Known Subclasses:
@@ -307,13 +305,15 @@ public class CovidRecord {
      * @param currentLocation This is the lcoation that is updated and represents the current location of this device (should be same as MapsActivity.currentLcoation
      */
     public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS, Location lastStoredLocation, Location currentLocation, long deltaLocationM ){
-
+        //safety check - on the weird situation they are asking for location on the phone
+        if(currentLocation == null)
+            return false;
         //first test if ANY CovidRecord has been stored, if not then say yes!
         if( lastStoredTimeMS == -1) //nothing has been store yet
             return true;
 
         //the current location will be null before the first record is stored
-        if(MapsActivity.currentLocation == null)
+        if(lastStoredLocation == null)
             return true;
 
         float deltaTimeEquals = Math.abs(lastStoredTimeMS- System.currentTimeMillis());
