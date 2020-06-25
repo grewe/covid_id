@@ -6,9 +6,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
-import java.util.Map;
-
-import edu.ilab.covid_id.MapsActivity;
 
 /**
  * Base class for all Covid recognition modules to report Covid instance records
@@ -72,6 +69,17 @@ public class CovidRecord {
 
 
     /**
+     * UserID retrieved after a Firebase Authentication of user
+     */
+    private String userIDFirebase;
+
+    /**
+     * User Email retrieved after a Firebase Authentication of user
+     */
+    private String userEmailFirebase;
+
+
+    /**
      * Default constructor with null or impossible values.
      */
     public CovidRecord() {
@@ -84,10 +92,29 @@ public class CovidRecord {
         this.filenameURL = null;
         this.info = null;
         this.boundingBox = null;
+        this.userEmailFirebase = null;
+        this.userIDFirebase = null;
     }
 
     /**
      *  constructor with all values given
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+    }
+    /**
+     *  constructor with all values except user info given --ANONYMOUS storage
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude) {
@@ -107,6 +134,28 @@ public class CovidRecord {
      */
 
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = new ArrayList<Float>();
+        this.orientationAngles.add(0, 0.0f);
+        this.orientationAngles.add(1, 0.0f);
+        this.orientationAngles.add(2, 0.0f);
+        this.altitude = -1.0f;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userEmailFirebase = userEmailFirebase;
+        this.userIDFirebase = userIDFirebase;
+    }
+
+    /**
+     * Default constructor with default values for orientation angles and altitude - ANONYMOUS
+     */
+
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox) {
         this.risk = risk;
         this.certainty = certainty;
@@ -121,10 +170,31 @@ public class CovidRecord {
         this.info = info;
         this.boundingBox = boundingBox;
     }
-
     /**
      * Constructor that may be used for classification only
      * (default values for bounding box -1 on all coordinates)
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude,String userEmailFirebase, String userIDFirebase) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = new ArrayList<Float>();
+        this.boundingBox.add(0, -1.0f);
+        this.boundingBox.add(1, -1.0f);
+        this.boundingBox.add(2, -1.0f);
+        this.boundingBox.add(3, -1.0f);
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+    }
+    /**
+     * Constructor that may be used for classification only
+     * (default values for bounding box -1 on all coordinates)  -- ANONYMOUS
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude) {
@@ -216,6 +286,16 @@ public class CovidRecord {
     }
 
 
+
+    public String getUserIDFirebase(){ return userIDFirebase; }
+
+    public void setUserIDFirebase(String userIDFirebase) { this.userIDFirebase = userIDFirebase;}
+
+    public String getUserEmailFirebase() { return userEmailFirebase;}
+
+    public void setUserEmailFirebase(String userEmailFirebase) { this.userEmailFirebase = userEmailFirebase;}
+
+
     /**
      * determines if we are ready to store a new record based on either location moved or time duration since last record storage is enough
      * @return true if ready to store next record, false otherwise
@@ -225,13 +305,21 @@ public class CovidRecord {
      * @param currentLocation This is the lcoation that is updated and represents the current location of this device (should be same as MapsActivity.currentLcoation
      */
     public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS, Location lastStoredLocation, Location currentLocation, long deltaLocationM ){
-
+        //safety check - on the weird situation they are asking for location on the phone
+        if(currentLocation == null)
+            return false;
         //first test if ANY CovidRecord has been stored, if not then say yes!
         if( lastStoredTimeMS == -1) //nothing has been store yet
             return true;
 
+        //the current location will be null before the first record is stored
+        if(lastStoredLocation == null)
+            return true;
+
+        float deltaTimeEquals = Math.abs(lastStoredTimeMS- System.currentTimeMillis());
+        float deltaDistanceEquals = lastStoredLocation.distanceTo(currentLocation);
         //based on time we are ready to store new record
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS || lastStoredLocation.distanceTo(currentLocation) > deltaLocationM )
             return true;
 
 

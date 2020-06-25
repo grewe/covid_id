@@ -62,6 +62,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:21.4.3'
     implementation 'com.google.firebase:firebase-auth:19.3.1'
 
+    //for Firebase storage
+    implementation 'com.google.firebase:firebase-storage:19.1.1'
+
     // for Google Play services
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
