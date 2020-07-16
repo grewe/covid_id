@@ -93,6 +93,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Button loginButton;
 
     /**
+     * Handle to the IR activity launching button
+     */
+    Button IRButton;
+
+    /**
      * Activities to perform different kinds of Classification
      */
     ClassifierActivity flowersClassifierActivity;
@@ -211,6 +216,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent);
             }
         });
+
+
+        //grab handle to the launch the IRStaticDataExploreActivity
+        //IMPORTANT:  CHANGE: later will chante to launch the runtime IRActivity
+        this.IRButton  = (Button) findViewById(R.id.IRButton);
+        //create event handler for the object Detetor to launch DetectorActvity
+        IRButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.ir.IRStaticDataExploreActivity");
+                startActivity(intent);
+            }
+        });
+
 
 
         // initialize our db helper object

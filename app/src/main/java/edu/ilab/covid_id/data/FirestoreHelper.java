@@ -10,8 +10,6 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import androidx.annotation.NonNull;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * Class to facilitate connections to the Firestore DB
  */
@@ -94,7 +92,7 @@ public class FirestoreHelper {
      * @param record
      *
      */
-    public void addRecord(FeverRecord record) {
+    public void addRecord(IRRecord record) {
         // mFirestore.collection("CovidRecord").add(record);
 
         mFirestore.collection("FeverRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {

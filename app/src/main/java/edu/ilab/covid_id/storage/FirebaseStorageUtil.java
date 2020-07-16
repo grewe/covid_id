@@ -18,7 +18,7 @@ import java.util.Date;
 import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.data.CrowdRecord;
-import edu.ilab.covid_id.data.FeverRecord;
+import edu.ilab.covid_id.data.IRRecord;
 import edu.ilab.covid_id.data.MaskRecord;
 import edu.ilab.covid_id.data.SocDistRecord;
 
@@ -214,7 +214,7 @@ public class FirebaseStorageUtil {
      * @param myRecord
      * @param location
      */
-    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, FeverRecord myRecord ,Location location ){
+    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, IRRecord myRecord , Location location ){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
         if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
