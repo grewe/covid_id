@@ -380,7 +380,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * you will have a update callback for location and the ONLY thing you do in it is to set
          * this.currentLocation = newLocaiton you will retrieve from the LocationResults
          *
-         * NOTE: ***investigate why a LocationResults recieves more than one location (getLocations() method)...wierd --should be only 1???
+         * NOTE: ***investigate why a LocationResults recieves more than one location (getLocations() method)...weird --should be only 1???
          * */
 
         LocationCallback mLocationCallback = new LocationCallback() {
