@@ -226,7 +226,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 //Launch classifier --here stupid default flowers classifier
-                Intent intent = new Intent("edu.ilab.covid_id.ir.IRStaticDataExploreActivity");
+                Intent intent = new Intent("edu.ilab.covid_id.ir.ConnectFlirActivity");
                 startActivity(intent);
             }
         });

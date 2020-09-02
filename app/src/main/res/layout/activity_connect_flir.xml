@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ir.ConnectFlirActivity"
+    android:orientation="vertical"
+    android:layout_margin="10dp">
+
+    <!-- Title -->
+
+    <!-- Show SDK version -->
+
+    <!-- Start / Stop discovery buttons -->
+    <Button
+        android:text="Start Discovery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="startDiscovery"
+        android:id="@+id/start_discovery"/>
+
+    <Button
+        android:id="@+id/stop_discovery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="stopDiscovery"
+        android:text="Stop Discovery" />
+
+    <TextView
+        android:id="@+id/discovery_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="dicovery status"
+        android:textSize="18sp" />
+
+    <!-- Connect to FLIR ONE / Emulators buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/connect_flir_one"
+            android:onClick="connectFlirOne"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect" />
+
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/disconnect_any"
+        android:onClick="disconnect"
+        android:text="Disconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/connection_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CONNECTION STATUS"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/msx_image"
+            android:layout_width="202dp"
+            android:layout_height="match_parent"
+            android:contentDescription="image with IR "
+            android:maxWidth="50dp"
+            android:minWidth="50dp" />
+
+        <ImageView
+            android:id="@+id/photo_image"
+            android:layout_width="202dp"
+            android:layout_height="match_parent"
+            android:contentDescription="image with only visual image"
+            android:maxWidth="50dp"
+            android:minWidth="50dp" />
+    </LinearLayout>
+
+
+</LinearLayout>

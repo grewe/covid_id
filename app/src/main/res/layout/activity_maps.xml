@@ -44,11 +44,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/flowersClassificationButton"
-        android:layout_marginBottom="0dp"
-        android:layout_marginEnd="323dp"
-        android:layout_marginTop="635dp"
+        android:layout_marginBottom="12dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="12dp"
         android:text="IR" />
 
 
