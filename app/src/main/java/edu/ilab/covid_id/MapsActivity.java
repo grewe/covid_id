@@ -36,7 +36,7 @@ import edu.ilab.covid_id.localize.DetectorActivity;
 
 
 /**
- * Main Launched Activity that contains our Map for Covid ID project
+ * Main Launched Activity that contains our Map for Covid ID project --
  */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 

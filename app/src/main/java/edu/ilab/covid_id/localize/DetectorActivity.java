@@ -69,24 +69,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final Logger LOGGER = new Logger();
 
   // Configuration values for the prepackaged SSD model.
-  private static final int TF_OD_API_INPUT_SIZE = 300;
-  private static final boolean TF_OD_API_IS_QUANTIZED = true;
-  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";
-  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
-  private static final DetectorMode MODE = DetectorMode.TF_OD_API;
+  private static final int TF_OD_API_INPUT_SIZE = 300;    //this is the wxh of square input size to MODEL
+  private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
+  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";   //name of input file for MODEL must be tflite format
+                                                                        //TIP: if creating subclass for say mask detection make your detector
+                                                                        //   file called maskdetect.flite and put in assets folder
+  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";  //LabelMap file listed classes--same order as training
+                                                                                            //TIP: if creating subclass for say mask detector then make a
+                                                                                            //   file called masklabelmap.txt and put in assets folder
+  private static final DetectorMode MODE = DetectorMode.TF_OD_API;   //Using Object Detection API
   // Minimum detection confidence to track a detection.
-  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
-  private static final boolean MAINTAIN_ASPECT = false;
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
-  private static final boolean SAVE_PREVIEW_BITMAP = false;
-  private static final float TEXT_SIZE_DIP = 10;
-  OverlayView trackingOverlay;
-  private Integer sensorOrientation;
+  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;   //a detected prediction must have value > threshold to be displayed
+  private static final boolean MAINTAIN_ASPECT = false;  //if you want to keep aspect ration or not --THIS must be same as what is expected in model,done in training
+  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480); //for display ONLY specific to THIS activity
+  private static final boolean SAVE_PREVIEW_BITMAP = false;  //specific to THIS activity
+  private static final float TEXT_SIZE_DIP = 10;  //font size for dipsaly of bounding boxes
+  OverlayView trackingOverlay;   //boudning box and prediction info is drawn on screen using an OverlayView
+  private Integer sensorOrientation;  //this Activity does rotation for different Orientations
 
-  private Classifier detector;
+  private Classifier detector;  //class variable representing the actual model loaded up
+                                // note this is  edu.ilab.covid_id.localize.tflite.Classifier;
 
-  private long lastProcessingTimeMs;
-  private Bitmap rgbFrameBitmap = null;
+  private long lastProcessingTimeMs;   //last time processed a frame
+  private Bitmap rgbFrameBitmap = null;  //various bitmap variables used in code below
   private Bitmap croppedBitmap = null;
   private Bitmap cropCopyBitmap = null;
 
@@ -97,10 +102,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Matrix frameToCropTransform;
   private Matrix cropToFrameTransform;
 
-  private MultiBoxTracker tracker;
+  private MultiBoxTracker tracker; // this class assists with tracking bounding boxes - represents results
+                                   //note this is instance of edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
   private BorderedText borderedText;
 
+
+  /**
+   * The PARENT class of this class CameraActivity is responsible for connecting to camera on Device
+   * it has a callback method when the camera is ready that will call this method.
+   * This method creaets the tracker (to store bounding box info), and the detector (the actual model
+   * loaded from a tflite used for detection) and sets up various GUI elements and bitmaps for displaying results.
+   * THis is really just a SETUP method
+   **/
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
@@ -113,8 +127,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     //class to contain detection results with bounding box information
     tracker = new MultiBoxTracker(this);
 
+    //specifying the size you want as input to your model...which will be used later in image processing of input images to resize them.
     int cropSize = TF_OD_API_INPUT_SIZE;
 
+    //load up the detector based on the specified parameters include the tflite file in the assets folder, etc.
     try {
       detector =
           TFLiteObjectDetectionAPIModel.create(
@@ -134,6 +150,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       finish();
     }
 
+    //display size
     previewWidth = size.getWidth();
     previewHeight = size.getHeight();
 
@@ -145,18 +162,28 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
     LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
+
+    //seting up the bitmap input image  based on grabing it from the preview display of it.
     rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
+    //setting up the bitmap to store the resized input image to the size that the model expects
     croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
 
+    //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
+    //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
+    //   involves rotation based on sensorOrientation
+    //   invovles if you want aspect to be maintained
     frameToCropTransform =
         ImageUtils.getTransformationMatrix(
             previewWidth, previewHeight,
             cropSize, cropSize,
-            sensorOrientation, MAINTAIN_ASPECT);
+            sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
 
     cropToFrameTransform = new Matrix();  //identity matrix initially
     frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
 
+
+    //grabbing a handle to the tracking_overlay which lets us draw bounding boxes inside of and this is a fragment
+    // that sits on top of the ImageView where the image is displayed.
     trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
     trackingOverlay.addCallback(
         new DrawCallback() {
@@ -169,9 +196,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           }
         });
 
+    //making sure the overlay fragment is same wxh and orientation as the ImageView and its image displayed inside.
     tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
   }
 
+
+  /**
+   * This method is called every time we will to process the CURRENT frame
+   * this means the current frame/image will be processed by our this.detector model
+   * and results are cycled through (can be more than one deteciton in an image) and displayed
+   */
   @Override
   protected void processImage() {
     ++timestamp;
@@ -186,20 +220,26 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     computingDetection = true;
     LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
+    //LOAD the current image --calling getRgbBytes method into the rgbFrameBitmap object
     rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
     readyForNextImage();
 
+    //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
     final Canvas canvas = new Canvas(croppedBitmap);
+
+    //CROP and transform
     //why working in portrait mode and not horizontal
     //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
    // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
-    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///IS THIS WHERE DRAWING THE IMAGE??  using frameToCropTransform --GUESS frameToCropTransform is not rotating correct???
+    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
     // For examining the actual TF input.
     if (SAVE_PREVIEW_BITMAP) {
       ImageUtils.saveBitmap(croppedBitmap);
     }
 
+    //Need to run in separate thread ---to process the iamge --going to call the model to do prediction
+    // because of this must run in own thread.
     runInBackground(
         new Runnable() {
           @Override
@@ -229,10 +269,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             int saveImageOnceFlag = 1;
             String imageFileURL = "";
-            for (final Classifier.Recognition result : results) {
-              final RectF location = result.getLocation();
-              if (location != null && result.getConfidence() >= minimumConfidence) {
-                canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes--> where is this used???? nowhere???
+            //cycling through all of the recognition detections in my image I am currently processing
+            for (final Classifier.Recognition result : results) {  //loop variable is result, represents one detection
+              final RectF location = result.getLocation();  //getting as  a rectangle the bounding box of the result detecgiton
+              if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
+                canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
 
 
                 //==============================================================

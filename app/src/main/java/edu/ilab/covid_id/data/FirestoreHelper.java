@@ -88,14 +88,14 @@ public class FirestoreHelper {
     }
 
     /**
-     * adds a record to the firestore FeverRecord document collection
+     * adds a record to the firestore IRRecord document collection
      * @param record
      *
      */
     public void addRecord(IRRecord record) {
         // mFirestore.collection("CovidRecord").add(record);
 
-        mFirestore.collection("FeverRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+        mFirestore.collection("IRRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
                 Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());

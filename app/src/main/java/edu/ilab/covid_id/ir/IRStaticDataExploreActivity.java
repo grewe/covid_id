@@ -19,7 +19,7 @@ import edu.ilab.covid_id.R;
  *
  * YOU could only load the same static image each time OR have a button in the
  * interface that lets you load up an image from the camera's photo album (store images on camera)
- * 
+ *
  */
 public class IRStaticDataExploreActivity extends FragmentActivity {
 
