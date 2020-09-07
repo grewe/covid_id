@@ -86,6 +86,7 @@ class CameraHandler {
     }
 
     public void connect(Identity identity, ConnectionStatusListener connectionStatusListener) throws IOException {
+        Log.d(TAG, "Hi Lynne3");
         camera = new Camera();
         camera.connect(identity, connectionStatusListener,  new ConnectParameters());
     }
@@ -218,4 +219,11 @@ class CameraHandler {
     };
 
 
+    /**
+     * to return instance of Camera associated with the CameraHandler
+     * @return Camera instance
+     */
+    public Camera getCamera() {
+        return this.camera;
+    }
 }
