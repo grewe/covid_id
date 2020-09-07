@@ -75,7 +75,12 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:18.0.0'
 
     // for IR Flir services
-    implementation(name: 'androidsdk-release',ext: 'aar')
-    implementation(name: 'thermalsdk-release',ext: 'aar')
-    implementation(name: 'flironesdk',ext: 'aar')
+   //using OLD style implementation --depending on which Gradle Build tools you use
+   // implementation(name: 'androidsdk-release',ext: 'aar')
+    //implementation(name: 'thermalsdk-release',ext: 'aar')
+
+    // Dependency on a local library module
+    implementation project(":androidsdk-release")
+    implementation project(":thermalsdk-release")
+
 }

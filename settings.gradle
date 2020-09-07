@@ -1,5 +1,4 @@
-include ':flironesdk'
 include ':thermalsdk-release'
-include ':androidsdk-release'
 include ':app'
+include ':androidsdk-release'
 rootProject.name='Covid_ID'

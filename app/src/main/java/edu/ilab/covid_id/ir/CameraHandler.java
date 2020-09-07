@@ -8,6 +8,7 @@ import com.flir.thermalsdk.image.ThermalImage;
 import com.flir.thermalsdk.image.fusion.FusionMode;
 import com.flir.thermalsdk.live.Camera;
 import com.flir.thermalsdk.live.CommunicationInterface;
+import com.flir.thermalsdk.live.ConnectParameters;
 import com.flir.thermalsdk.live.Identity;
 import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
 import com.flir.thermalsdk.live.discovery.DiscoveryEventListener;
@@ -86,7 +87,7 @@ class CameraHandler {
 
     public void connect(Identity identity, ConnectionStatusListener connectionStatusListener) throws IOException {
         camera = new Camera();
-        camera.connect(identity, connectionStatusListener);
+        camera.connect(identity, connectionStatusListener,  new ConnectParameters());
     }
 
     public void disconnect() {
