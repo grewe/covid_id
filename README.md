@@ -13,4 +13,6 @@ Project Modules
  <[Mask Detection](https://github.com/grewe/covidID_mask)>   |    <[Crowd Density Estimation](https://github.com/grewe/covidID_crowd)>   |  <[IR Fever detection](https://github.com/grewe/covidID_fever)>   |   <[Social Distancing](https://github.com/grewe/covidID_SocDist)>    |  <[Visualization & Infrastructure](https://github.com/grewe/covid_id)> 
 
 
+NOTE: please see [Special Issues](https://github.com/grewe/covid_id/wiki/Special-Issues) in Wiki for any special issues or hardware/software dependencies as this project supports Flir One Pro IR camera
+
 
