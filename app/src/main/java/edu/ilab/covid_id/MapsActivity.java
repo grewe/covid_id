@@ -172,6 +172,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static boolean flagStoreImageFiles = true;
 
     /**
+     * flag to indicate if location should be toasted to user whenever new location is detected
+     */
+    public static boolean TOAST_LOCATION = false;
+
+    /**
      * email as specified when logging into Firebase by user
      */
     public static String userEmailFirebase;
@@ -334,7 +339,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     /**
-     * before destropying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
+     * before destroying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
      */
     @Override
     protected void onDestroy() {
@@ -348,17 +353,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
     }
 
+
     public void updateMapLocation(Location location ){
         if (location != null) {
-
-            Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            // toast location if flag is set to do so
+            if(TOAST_LOCATION) {
+                Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            }
             LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             //make a marker for user's current location and set map to this location
             MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You");
             mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
             mMap.addMarker(markerOptions);
-            Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
+            // toast location if flag is set to do so
+            if(TOAST_LOCATION) {
+                Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
+            }
         }
     }
 
