@@ -14,6 +14,8 @@ import android.os.Bundle;
 import edu.ilab.covid_id.R;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -65,8 +67,18 @@ import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 import edu.ilab.covid_id.storage.FirebaseStorageUtil;
 
 
+import android.os.Handler;
+import android.os.HandlerThread;
+
+
 public class ConnectFlirActivity extends AppCompatActivity {
 
+    //necessary to limit thread generation - one thread per frame gets created --so that do not run out of memory
+    private Handler handler;
+    private HandlerThread handlerThread;
+
+
+    //logging tag
     private static final String TAG = "ConnectFlirActivity";
 
     //Handles Android permission for eg Network
@@ -96,7 +108,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     // Configuration values for the prepackaged SSD model.
     private static final int TF_OD_API_INPUT_SIZE = 300;    //this is the wxh of square input size to MODEL
     private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
-    private static final String TF_OD_API_MODEL_FILE = "IRdetect.tflite";   //name of input file for MODEL must be tflite format
+    private static final String TF_OD_API_MODEL_FILE = "detect.tflite"; //"IRdetect.tflite";   //name of input file for MODEL must be tflite format
     //TIP: if creating subclass for say mask detection make your detector
     //   file called maskdetect.flite and put in assets folder
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/IRlabelmap.txt";  //LabelMap file listed classes--same order as training
@@ -412,6 +424,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                     processImage(poll.msxBitmap);
 
 
+
                 }
             });
 
@@ -507,7 +520,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                             TF_OD_API_LABELS_FILE,
                             TF_OD_API_INPUT_SIZE,
                             TF_OD_API_IS_QUANTIZED);
-            //cropSize = TF_OD_API_INPUT_SIZE;
+            cropSize = TF_OD_API_INPUT_SIZE;
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -541,7 +554,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         previewHeight = 640;
 
 
-        sensorOrientation =  90;   //sensorOreintation will be 0 for horizontal and 90 for portrait
+        sensorOrientation =  0; //90;   //sensorOreintation will be 0 for horizontal and 90 for portrait
 
 
         LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
@@ -631,6 +644,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         rgbFrameBitmap = image;
 
 
+
         //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
         final Canvas canvas = new Canvas(croppedBitmap);
 
@@ -639,14 +653,19 @@ public class ConnectFlirActivity extends AppCompatActivity {
         //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
         // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
         canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
-        // For examining the actual TF input.
+
+        // For examining the actual TF input. to save on local device
+        //LYNNE: look at this method it is failing to make directory
         if (SAVE_PREVIEW_BITMAP) {
             ImageUtils.saveBitmap(croppedBitmap);
         }
 
         //Need to run in separate thread ---to process the image --going to call the model to do prediction
         // because of this must run in own thread.
-        ( new Thread() {
+     //   ( new Thread() {
+     //               @Override
+        runInBackground(
+                new Runnable() {
                     @Override
                     public void run() {
                         LOGGER.i("Running detection on image " + currTimestamp);
@@ -740,16 +759,16 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
-
+                                    //SHIVALI AND PHILLIP --need to fix why this line is failing---due to failed authentication
                                     FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
 
-/*
+
                   // ask helper to push record to db
-                  MapsActivity.myFirestoreHelper.addRecord(myRecord);
+               //   MapsActivity.myFirestoreHelper.addRecord(myRecord);
 
                   //update the last time record stored
-                  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
-                  */
+                //  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
+
 
                                 }
                                 //###############################################
@@ -767,10 +786,11 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         }
 
                    //PHILLIP and SHIVALI you need to add your overlay for dispalying the results in mappedRecognitions
+                        //THE following lines will NOT work for you they are from my other
                    //     tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
                    //     trackingOverlay.postInvalidate();
 
-
+/*
 
                         runOnUiThread(
                                 new Runnable() {
@@ -781,8 +801,15 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                         showInference(lastProcessingTimeMs + "ms");
                                     }
                                 });
+
+ */
+
+
                     }
-                }).start();
+                });
+        //.start();
+
+
     }
 
 
@@ -798,4 +825,77 @@ public class ConnectFlirActivity extends AppCompatActivity {
     protected void showInference(String inferenceTime) {
         //showmehow.inferenceTimeTextView.setText(inferenceTime);
     }
+
+
+
+    protected void setUseNNAPI(final boolean isChecked) {
+        runInBackground(() -> detector.setUseNNAPI(isChecked));
+    }
+
+
+    protected void setNumThreads(final int numThreads) {
+        runInBackground(() -> detector.setNumThreads(numThreads));
+    }
+
+
+    protected synchronized void runInBackground(final Runnable r) {
+        if (handler != null) {
+            handler.post(r);
+        }
+    }
+
+
+    /**
+     * onResume here creates the Thread Handler and starts it.
+     */
+    @Override
+    public synchronized void onResume() {
+        LOGGER.d("onResume " + this);
+        super.onResume();
+
+        handlerThread = new HandlerThread("inference");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+    }
+
+
+    /**
+     * quiting the Thread Handler --see onResume for reinitialization
+     */
+    @Override
+    public synchronized void onPause() {
+        LOGGER.d("onPause " + this);
+
+        handlerThread.quitSafely();
+        try {
+            handlerThread.join();
+            handlerThread = null;
+            handler = null;
+        } catch (final InterruptedException e) {
+            LOGGER.e(e, "Exception!");
+        }
+
+        super.onPause();
+    }
+
+
+    /**
+     * do nothing special --only a log message
+     */
+    @Override
+    public synchronized void onStop() {
+        LOGGER.d("onStop " + this);
+        super.onStop();
+    }
+
+    /**
+     * do nothing special --only a log message
+     */
+    @Override
+    public synchronized void onDestroy() {
+        LOGGER.d("onDestroy " + this);
+        super.onDestroy();
+    }
+
+
 }

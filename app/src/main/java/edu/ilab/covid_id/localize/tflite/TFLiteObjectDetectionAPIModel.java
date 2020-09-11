@@ -160,21 +160,25 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     // on the provided parameters.
     bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
-    imgData.rewind();
-    for (int i = 0; i < inputSize; ++i) {
-      for (int j = 0; j < inputSize; ++j) {
-        int pixelValue = intValues[i * inputSize + j];
-        if (isModelQuantized) {
-          // Quantized model
-          imgData.put((byte) ((pixelValue >> 16) & 0xFF));
-          imgData.put((byte) ((pixelValue >> 8) & 0xFF));
-          imgData.put((byte) (pixelValue & 0xFF));
-        } else { // Float model
-          imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-          imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-          imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+    try {
+      imgData.rewind();
+      for (int i = 0; i < inputSize; ++i) {
+        for (int j = 0; j < inputSize; ++j) {
+          int pixelValue = intValues[i * inputSize + j];
+          if (isModelQuantized) {
+            // Quantized model
+            imgData.put((byte) ((pixelValue >> 16) & 0xFF));
+            imgData.put((byte) ((pixelValue >> 8) & 0xFF));
+            imgData.put((byte) (pixelValue & 0xFF));
+          } else { // Float model
+            imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+            imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+            imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+          }
         }
       }
+    }catch(Exception e) {
+      System.out.println(e.toString());
     }
     Trace.endSection(); // preprocessBitmap
 
