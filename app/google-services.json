@@ -15,6 +15,102 @@
       },
       "oauth_client": [
         {
+          "client_id": "802235742369-eg9sscdfh6it6jjces65kmibqhql1h99.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "bade75b23a95db1cfe841a65019e24323c8fa6b7"
+          }
+        },
+        {
+          "client_id": "802235742369-cjs7q9jtvds045t2prkogifn6tvbbamn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "75c1249268171ddbc5ea2ccd67607383bfa9cc28"
+          }
+        },
+        {
+          "client_id": "802235742369-j1bj8rs3kdlhsgruq3t7fsfn7p3f8o8p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "5dfdc87796daf9b064430bc439414767f8644c6e"
+          }
+        },
+        {
+          "client_id": "802235742369-t1qupl2v5tp8alfcrrj9u8g1oo4c4ruu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "afc1d52d250b04691e4b14e77d5925e0d0b75522"
+          }
+        },
+        {
+          "client_id": "802235742369-934v7e84553vdts1ef7i7a3si6o7otv3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "6a67456992b18e1d36148c95bb3a3787da9c4144"
+          }
+        },
+        {
+          "client_id": "802235742369-oqadp5tkfotvpfmfgm51m47se71tsk1q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "8d2e05c523302899097f2a4fd543594d17eac080"
+          }
+        },
+        {
+          "client_id": "802235742369-n3puifgjqjv80unvlhgccsi28rb3gvi8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "6413049d3077f386f8c248588cd6b3b095ac2a59"
+          }
+        },
+        {
+          "client_id": "802235742369-kirqaeg01i42ce1rr2fhkt2l4p8h82vp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "45cfad3e68f90856fe1ab5445f594e99500e2a1b"
+          }
+        },
+        {
+          "client_id": "802235742369-vje24ck2harejgj5rmibtb9atqfpk3eg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "808b290cd09262d880cd31c20cf98eea69d9bc41"
+          }
+        },
+        {
+          "client_id": "802235742369-2erpp7r6gqv7g1oaig9kv276sebkqdd6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "f9c2ec98945b8faa54d031d463aa11c1094d280c"
+          }
+        },
+        {
+          "client_id": "802235742369-7cooskodti0k77kabnqehuig2gg32t6m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "d1673c5945c812d7545b8aa4f7e9f3cabc202fbc"
+          }
+        },
+        {
+          "client_id": "802235742369-68aoeemomq2j411nj985k97ksnhckedd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ilab.covid_id",
+            "certificate_hash": "b3749eac20ebde7b914d3fed5a8293f1836a6c0e"
+          }
+        },
+        {
           "client_id": "802235742369-8950b7ksp8upovlfaqg8cb0hieei4b2h.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -28,7 +124,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "802235742369-8950b7ksp8upovlfaqg8cb0hieei4b2h.apps.googleusercontent.com",
+              "client_id": "802235742369-sl1eqodlskke06p44r0oq4maae5grds3.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
