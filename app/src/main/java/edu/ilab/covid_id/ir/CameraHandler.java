@@ -51,7 +51,7 @@ class CameraHandler {
 
     public interface StreamDataListener {
         void images(FrameDataHolder dataHolder);
-        void images(Bitmap msxBitmap, Bitmap dcBitmap);
+        void images(Bitmap thermalBitmap, Bitmap dcBitmap);
     }
 
     //Discovered FLIR cameras
@@ -204,17 +204,17 @@ class CameraHandler {
             // extract information on the background thread and send the specific information to the UI thread
 
             //Get a bitmap with only IR data
-            Bitmap msxBitmap;
+            Bitmap thermalBitmap;
             {
                 thermalImage.getFusion().setFusionMode(FusionMode.THERMAL_ONLY);
-                msxBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
+                thermalBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
             }
 
             //Get a bitmap with the visual image, it might have different dimensions then the bitmap from THERMAL_ONLY
             Bitmap dcBitmap = BitmapAndroid.createBitmap(thermalImage.getFusion().getPhoto()).getBitMap();
 
             Log.d(TAG,"adding images to cache");
-            streamDataListener.images(msxBitmap,dcBitmap);
+            streamDataListener.images(thermalBitmap,dcBitmap);
         }
     };
 

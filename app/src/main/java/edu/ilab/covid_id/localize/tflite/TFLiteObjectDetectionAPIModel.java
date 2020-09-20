@@ -20,6 +20,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
+import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 import edu.ilab.covid_id.localize.env.Logger;
@@ -52,7 +53,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   private static final Logger LOGGER = new Logger();
 
   // Only return this many results.
-  private static final int NUM_DETECTIONS = 10;
+  private static final int NUM_DETECTIONS = 100;
   // Float model
   private static final float IMAGE_MEAN = 128.0f;
   private static final float IMAGE_STD = 128.0f;
@@ -126,6 +127,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
     try {
       d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
+      Log.d("MANNY", modelFilename);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -138,9 +140,10 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     } else {
       numBytesPerChannel = 4; // Floating point
     }
-    d.imgData = ByteBuffer.allocateDirect(1 * d.inputSize * d.inputSize * 3 * numBytesPerChannel);
+    // ONLY HAVE ONE COLOR CHANNEL
+    d.imgData = ByteBuffer.allocateDirect(1 * 512 * 512 * 3 * numBytesPerChannel);
     d.imgData.order(ByteOrder.nativeOrder());
-    d.intValues = new int[d.inputSize * d.inputSize];
+    d.intValues = new int[512 * 512];
 
     d.tfLite.setNumThreads(NUM_THREADS);
     d.outputLocations = new float[1][NUM_DETECTIONS][4];
@@ -185,22 +188,49 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     // Copy the input data into TensorFlow.
     Trace.beginSection("feed");
     outputLocations = new float[1][NUM_DETECTIONS][4];
+    float[][][] couldBeOutputLocations = new float[1][NUM_DETECTIONS][4];
+
+    outputScores = new float[1][NUM_DETECTIONS];  // VERIFIED
+
+
     outputClasses = new float[1][NUM_DETECTIONS];
-    outputScores = new float[1][NUM_DETECTIONS];
-    numDetections = new float[1];
+    float[][] detectionAnchorIndeces = new float[1][NUM_DETECTIONS];
+
+
+
+    float[][][] myOutput1 = new float[1][49104][4]; // VERIFIED TRASH
+
+    numDetections = new float[1]; // VERIFIED
+
 
     Object[] inputArray = {imgData};
     Map<Integer, Object> outputMap = new HashMap<>();
-    outputMap.put(0, outputLocations);
-    outputMap.put(1, outputClasses);
-    outputMap.put(2, outputScores);
-    outputMap.put(3, numDetections);
+//    outputMap.put(0, outputLocations);
+//    outputMap.put(1, outputClasses);
+//    outputMap.put(2, outputScores);
+//    outputMap.put(3, numDetections);
+
+    outputMap.put(0, outputScores);     // VERIFIED
+    outputMap.put(1, myOutput1);        // GARBAGE (IGNORE)
+    outputMap.put(2, numDetections);    // VERIFIED
+    outputMap.put(3, outputLocations);  // UNVERIFIED (could be swapped with 6)
+    outputMap.put(4, outputClasses);    // UNVERIFIED (could be swapped with 7) - NO LONGER USED
+    outputMap.put(5, myOutput1);        // GARBAGE (IGNORE)
+    outputMap.put(6, couldBeOutputLocations); // UNVERIFIED (could be swapped with 3)
+    outputMap.put(7, detectionAnchorIndeces); // UNVERIFIED (could be swapped with 4)
+//    outputMap.put(3, numDetections);
+//    outputMap.put(4, myOutput4);
+//    outputMap.put(5, outputClasses);
+
     Trace.endSection();
 
     // Run the inference call.
     Trace.beginSection("run");
     tfLite.runForMultipleInputsOutputs(inputArray, outputMap);
     Trace.endSection();
+
+    // lets see what we're working with
+
 
     // Show the best detections.
     // after scaling them back to the input size.
@@ -212,24 +242,43 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     int numDetectionsOutput = Math.min(NUM_DETECTIONS, (int) numDetections[0]); // cast from float to integer, use min for safety
       
     final ArrayList<Recognition> recognitions = new ArrayList<>(numDetectionsOutput);
+
+
+
+    // SSD Mobilenet V1 Model assumes class 0 is background class
+    // in label file and class labels start from 1 to number_of_classes+1,
+    // while outputClasses correspond to class index from 0 to number_of_classes
+    final int LABEL_OFFSET = -1;
+
+    // TODO: remove this, was just for testing
+    Log.d("MANNY", "~~~~~~~~~~~~~~~~~ NEW FRAME ~~~~~~~~~~~~~~~~~~~~");
+
+
+
     for (int i = 0; i < numDetectionsOutput; ++i) {
+      float score = outputScores[0][i];
+
+      // TODO: remove this, was just for testing
+      if( i < 3 && score > .5) {
+        Log.d("MANNY:", "SCORE: " + String.valueOf(outputScores[0][i]));
+      }
+
       final RectF detection =
           new RectF(
               outputLocations[0][i][1] * inputSize,
               outputLocations[0][i][0] * inputSize,
               outputLocations[0][i][3] * inputSize,
               outputLocations[0][i][2] * inputSize);
-      // SSD Mobilenet V1 Model assumes class 0 is background class
-      // in label file and class labels start from 1 to number_of_classes+1,
-      // while outputClasses correspond to class index from 0 to number_of_classes
-      int labelOffset = 1;
+
       recognitions.add(
           new Recognition(
               "" + i,
-              labels.get((int) outputClasses[0][i] + labelOffset),
+              "head",
               outputScores[0][i],
               detection));
+
     }
+
     Trace.endSection(); // "recognizeImage"
     return recognitions;
   }

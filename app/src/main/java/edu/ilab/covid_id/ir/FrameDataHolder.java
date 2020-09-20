@@ -7,11 +7,11 @@ import android.graphics.Bitmap;
 
 class FrameDataHolder {
 
-    public final Bitmap msxBitmap;
+    public final Bitmap thermalBitmap;
     public final Bitmap dcBitmap;
 
-    FrameDataHolder(Bitmap msxBitmap, Bitmap dcBitmap){
-        this.msxBitmap = msxBitmap;
+    FrameDataHolder(Bitmap thermalBitmap, Bitmap dcBitmap){
+        this.thermalBitmap = thermalBitmap;
         this.dcBitmap = dcBitmap;
     }
 }

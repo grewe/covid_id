@@ -13,7 +13,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import edu.ilab.covid_id.R;
 import android.graphics.Bitmap;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -33,12 +32,10 @@ import com.flir.thermalsdk.live.Identity;
 import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
 import com.flir.thermalsdk.live.discovery.DiscoveryEventListener;
 import com.flir.thermalsdk.log.ThermalLog;
-import org.jetbrains.annotations.NotNull;
 import com.flir.thermalsdk.live.Camera;
 
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
-import androidx.appcompat.app.AppCompatActivity;
 
 //Import necessary for Backend Plus Tensorflow Model Integration
 import com.google.firebase.Timestamp;
@@ -46,18 +43,15 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 import edu.ilab.covid_id.MapsActivity;
-import edu.ilab.covid_id.R;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.localize.DetectorActivity;
 import edu.ilab.covid_id.localize.customview.OverlayView;
-import edu.ilab.covid_id.localize.customview.OverlayView.DrawCallback;
 import edu.ilab.covid_id.localize.env.BorderedText;
 import edu.ilab.covid_id.localize.env.ImageUtils;
 import edu.ilab.covid_id.localize.env.Logger;
@@ -65,10 +59,6 @@ import edu.ilab.covid_id.localize.tflite.Classifier;
 import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 import edu.ilab.covid_id.storage.FirebaseStorageUtil;
-
-
-import android.os.Handler;
-import android.os.HandlerThread;
 
 
 public class ConnectFlirActivity extends AppCompatActivity {
@@ -91,7 +81,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private TextView connectionStatus;
     private TextView discoveryStatus;
 
-    private ImageView msxImage;
+    private ImageView thermalImage;
     private ImageView photoImage;
 
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
@@ -105,23 +95,24 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
     private static final Logger LOGGER = new Logger();
 
+
+    // TODO: fix this value
     // Configuration values for the prepackaged SSD model.
-    private static final int TF_OD_API_INPUT_SIZE = 300;    //this is the wxh of square input size to MODEL
+    private static final int TF_OD_API_INPUT_SIZE = 512;    //this is the wxh of square input size to MODEL
     private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
-    private static final String TF_OD_API_MODEL_FILE = "detect.tflite"; //"IRdetect.tflite";   //name of input file for MODEL must be tflite format
-    //TIP: if creating subclass for say mask detection make your detector
-    //   file called maskdetect.flite and put in assets folder
+    private static final String TF_OD_API_MODEL_FILE = "IRdetect.tflite"; //"IRdetect.tflite";   //name of input file for MODEL must be tflite format
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/IRlabelmap.txt";  //LabelMap file listed classes--same order as training
-    //TIP: if creating subclass for say mask detector then make a
-    //   file called masklabelmap.txt and put in assets folder
+
+
     private static final DetectorActivity.DetectorMode MODE = DetectorActivity.DetectorMode.TF_OD_API;   //Using Object Detection API
+
     // Minimum detection confidence to track a detection.
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;   //a detected prediction must have value > threshold to be displayed
     private static final boolean MAINTAIN_ASPECT = false;  //if you want to keep aspect ration or not --THIS must be same as what is expected in model,done in training
     //PHILLIP below needs to change to adapt to your view size
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480); //for display ONLY specific to THIS activity
     private static final boolean SAVE_PREVIEW_BITMAP = false;  //specific to THIS activity
-    private static final float TEXT_SIZE_DIP = 10;  //font size for dipsaly of bounding boxes
+    private static final float TEXT_SIZE_DIP = 10;  //font size for display of bounding boxes
 
 
 
@@ -385,7 +376,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    msxImage.setImageBitmap(dataHolder.msxBitmap);
+                    thermalImage.setImageBitmap(dataHolder.thermalBitmap);
                     photoImage.setImageBitmap(dataHolder.dcBitmap);
                     Log.d(TAG, "inside CameraHandler.StreamDataListnerener.images(FrameDataHolder ");
                 }
@@ -395,14 +386,14 @@ public class ConnectFlirActivity extends AppCompatActivity {
         /**
          * method that is called to add a new bitmap (image) to be processed by adding it to the
          * framesBuffer, then has a runnable thread that will process the images in the framesBuffer
-         * @param msxBitmap thermal image
+         * @param thermalBitmap thermal image
          * @param dcBitmap  corresponding rgb image
          */
         @Override
-        public void images(Bitmap msxBitmap, Bitmap dcBitmap) {
+        public void images(Bitmap thermalBitmap, Bitmap dcBitmap) {
 
             try {
-                framesBuffer.put(new FrameDataHolder(msxBitmap,dcBitmap));
+                framesBuffer.put(new FrameDataHolder(thermalBitmap,dcBitmap));
             } catch (InterruptedException e) {
                 //if interrupted while waiting for adding a new item in the queue
                 Log.e(TAG,"images(), unable to add incoming images to frames buffer, exception:"+e);
@@ -413,7 +404,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 public void run() {
                     Log.d(TAG,"framebuffer size:"+framesBuffer.size());
                     FrameDataHolder poll = framesBuffer.poll();
-                    msxImage.setImageBitmap(poll.msxBitmap);
+                    thermalImage.setImageBitmap(poll.thermalBitmap);
                     photoImage.setImageBitmap(poll.dcBitmap);
                     //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
                     //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
@@ -421,7 +412,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                     //TODO --get following to work
                     //Preprocess image and pass to TfLite Model here
-                    processImage(poll.msxBitmap);
+                    processImage(poll.thermalBitmap);
 
 
 
@@ -486,7 +477,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         connectionStatus = findViewById(R.id.connection_status_text);
         discoveryStatus = findViewById(R.id.discovery_status);
 
-        msxImage = findViewById(R.id.msx_image);
+        thermalImage = findViewById(R.id.msx_image);
         photoImage = findViewById(R.id.photo_image);
     }
 
@@ -625,10 +616,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     }
 
 
-
-
-
-
     /**
      * This method is called every time we will to process the CURRENT frame
      * this means the current frame/image will be processed by our this.detector model
@@ -642,8 +629,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         //LOAD the current image --calling getRgbBytes method into the rgbFrameBitmap object
         rgbFrameBitmap = image;
-
-
 
         //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
         final Canvas canvas = new Canvas(croppedBitmap);
