@@ -42,8 +42,11 @@ public class FirebaseStorageUtil {
     public static void storeImageAndCovidRecord(Bitmap rgbFrameBitmap, CovidRecord myRecord , Location location){
         //**************************************************
         //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-        if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-
+        if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
+                MapsActivity.deltaCovidRecordStoreTimeMS,
+                MapsActivity.covidRecordLastStoreLocation,
+                MapsActivity.currentLocation,
+                MapsActivity.deltaCovidRecordStoreLocationM)) {
 
             Date d = new Date();
 
@@ -214,12 +217,7 @@ public class FirebaseStorageUtil {
      * @param myRecord
      * @param location
      */
-    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, IRRecord myRecord , Location location ){
-        //**************************************************
-        //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-        if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-
-
+    public static void storeImageAndFeverRecord(Bitmap rgbFrameBitmap, CovidRecord myRecord , Location location ){
             Date d = new Date();
 
             //CEMIL ONLY FOR Classifier Activity --rotate the image if running oNLY in portrait mode 90 degree (or -90) ---test it out.
@@ -261,7 +259,6 @@ public class FirebaseStorageUtil {
                         //alter the CovidRecord to add the ImageURL to myRecord
                         myRecord.setFilenameURL(imageFileURL);
 
-
                         // ask helper to push record to db
                         MapsActivity.myFirestoreHelper.addRecord(myRecord);
 
@@ -288,7 +285,7 @@ public class FirebaseStorageUtil {
                 //update the last location record stored
                 MapsActivity.covidRecordLastStoreLocation = location;
             }
-        }
+
 
     }
 

@@ -44,7 +44,6 @@ import com.google.firebase.firestore.GeoPoint;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -121,7 +120,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     // note this is  edu.ilab.covid_id.localize.tflite.Classifier;
 
     private long lastProcessingTimeMs;   //last time processed a frame
-    private Bitmap rgbFrameBitmap = null;  //various bitmap variables used in code below
+    private Bitmap thermalFrameBitmap = null;  //various bitmap variables used in code below
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
 
@@ -175,9 +174,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
         // event handlers to receive incoming IR images from a live stream
         cameraHandler = new CameraHandler();
 
+        // grab handles to views
         setupViews();
-
-        //showSDKversion(ThermalSdkAndroid.getVersion());
 
         //method to setup for performing ML detection on stream of IR images captured
         setupForDetection();
@@ -223,21 +221,17 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private void connect(Identity identity) {
         //We don't have to stop a discovery but it's nice to do if we have found the camera that we are looking for
         cameraHandler.stopDiscovery(discoveryStatusListener);
-
         if (connectedIdentity != null) {
             Log.d(TAG, "connect(), in *this* code sample we only support one camera connection at the time");
             showMessage.show("connect(), in *this* code sample we only support one camera connection at the time");
             return;
         }
-
         if (identity == null) {
             Log.d(TAG, "connect(), can't connect, no camera  available");
             showMessage.show("connect(), can't connect, no camera available");
             return;
         }
-
         connectedIdentity = identity;
-
         updateConnectionText(identity, "CONNECTING");
         //IF your using "USB_DEVICE_ATTACHED" and "usb-device vendor-id" in the Android Manifest
         // you don't need to request permission, see documentation for more information
@@ -246,7 +240,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         } else {
             doConnect(identity);
         }
-
     }
 
     private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
@@ -254,12 +247,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
         public void permissionGranted(Identity identity) {
             doConnect(identity);
         }
-
         @Override
         public void permissionDenied(Identity identity) {
             ConnectFlirActivity.this.showMessage.show("Permission was denied for identity ");
         }
-
         @Override
         public void error(UsbPermissionHandler.UsbPermissionListener.ErrorType errorType, final Identity identity) {
             ConnectFlirActivity.this.showMessage.show("Error when asking for permission for FLIR ONE, error:"+errorType+ " identity:" +identity);
@@ -275,10 +266,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                     //this is the code that will be invoked once we are connected
                     Log.d(TAG, "Lynne it is connected");
 
-
                     //call method to setup
                     setupForImageProcessingAndOverlay(cameraHandler.getCamera());
-
                     cameraHandler.startStream(streamDataListener);
                 });
             } catch (IOException e) {
@@ -337,7 +326,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
            // discoveryStatus.setText(getString(R.string.connection_status_text, "discovering"));
             discoveryStatus.setText("Discovering");
         }
-
         @Override
         public void stopped() {
             //discoveryStatus.setText(getString(R.string.connection_status_text, "not discovering"));
@@ -354,7 +342,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         @Override
         public void onDisconnected(@org.jetbrains.annotations.Nullable ErrorCode errorCode) {
             Log.d(TAG, "onDisconnected errorCode:" + errorCode);
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -369,10 +356,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
      * Note CameraHandler.StreamDataListener is an Interface and here is the implementation of its methods.
      */
     private final CameraHandler.StreamDataListener streamDataListener = new CameraHandler.StreamDataListener() {
-
         @Override
         public void images(FrameDataHolder dataHolder) {
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -409,13 +394,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                     //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
                     //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
 
-
-                    //TODO --get following to work
                     //Preprocess image and pass to TfLite Model here
                     processImage(poll.thermalBitmap);
-
-
-
                 }
             });
 
@@ -460,12 +440,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         }
     };
 
-//    private void showSDKversion(String version) {
-//        TextView sdkVersionTextView = findViewById(R.id.sdk_version);
-//        String sdkVersionText = getString(R.string.sdk_version_text, version);
-//        sdkVersionTextView.setText(sdkVersionText);
-//    }
-
     /**
      * this method grabs handles to various GUI elements for this activity
      * connectionStatus = the text saying if connected or not
@@ -476,7 +450,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private void setupViews() {
         connectionStatus = findViewById(R.id.connection_status_text);
         discoveryStatus = findViewById(R.id.discovery_status);
-
         thermalImage = findViewById(R.id.msx_image);
         photoImage = findViewById(R.id.photo_image);
     }
@@ -494,7 +467,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
         borderedText = new BorderedText(textSizePx);
         borderedText.setTypeface(Typeface.MONOSPACE);
-
 
         //class to contain detection results with bounding box information
         tracker = new MultiBoxTracker(this);
@@ -536,24 +508,16 @@ public class ConnectFlirActivity extends AppCompatActivity {
      *        previewHeight = c.getResolutionofThermal().getHeight();
      */
     private void setupForImageProcessingAndOverlay(Camera c) {
-        //display size
-      //  previewWidth = c.getWidth();
-      //  previewHeight = c.getHeight();
-
         //hardcoding values for mxsImage options for Flir One Pro camera
-        previewWidth =480;
+        previewWidth = 480;
         previewHeight = 640;
-
-
-        sensorOrientation =  0; //90;   //sensorOreintation will be 0 for horizontal and 90 for portrait
-
+        sensorOrientation =  0; //sensorOreintation will be 0 for horizontal and 90 for portrait
 
         LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
-
         LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
 
         //seting up the bitmap input image  based on grabing it from the preview display of it.
-        rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
         // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
         //setting up the bitmap to store the resized input image to the size that the model expects
         croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
@@ -570,8 +534,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         cropToFrameTransform = new Matrix();  //identity matrix initially
         frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-
-
     }
 
     /**
@@ -584,17 +546,13 @@ public class ConnectFlirActivity extends AppCompatActivity {
         previewWidth = image.getWidth();
         previewHeight = image.getHeight();
 
-
-
         sensorOrientation =  90;   //sensorOreintation will be 0 for horizontal and 90 for portrait
 
-
         LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
-
         LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
 
         //seting up the bitmap input image  based on grabing it from the preview display of it.
-        rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
        // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
         //setting up the bitmap to store the resized input image to the size that the model expects
         croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
@@ -611,8 +569,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         cropToFrameTransform = new Matrix();  //identity matrix initially
         frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-
-
     }
 
 
@@ -628,39 +584,38 @@ public class ConnectFlirActivity extends AppCompatActivity {
         LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
         //LOAD the current image --calling getRgbBytes method into the rgbFrameBitmap object
-        rgbFrameBitmap = image;
+        thermalFrameBitmap = image;
 
-        //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
-        final Canvas canvas = new Canvas(croppedBitmap);
-
-        //CROP and transform
-        //why working in portrait mode and not horizontal
-        //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
-        // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
-        canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
-
-        // For examining the actual TF input. to save on local device
-        //LYNNE: look at this method it is failing to make directory
-        if (SAVE_PREVIEW_BITMAP) {
-            ImageUtils.saveBitmap(croppedBitmap);
-        }
 
         //Need to run in separate thread ---to process the image --going to call the model to do prediction
         // because of this must run in own thread.
-     //   ( new Thread() {
-     //               @Override
         runInBackground(
                 new Runnable() {
                     @Override
                     public void run() {
+                        //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
+                        final Canvas stretchCanvas = new Canvas(croppedBitmap);
+
+                        //CROP and transform
+                        //why working in portrait mode and not horizontal
+                        //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
+                        // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
+                        stretchCanvas.drawBitmap(thermalFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
+
+                        // For examining the actual TF input. to save on local device
+                        //LYNNE: look at this method it is failing to make directory
+                        if (SAVE_PREVIEW_BITMAP) {
+                            ImageUtils.saveBitmap(croppedBitmap);
+                        }
+
+                        // now start detections
                         LOGGER.i("Running detection on image " + currTimestamp);
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                        final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
+                        final Canvas canvas = new Canvas(cropCopyBitmap);   // create canvas to draw bounding boxes inside of which will be displayed in OverlayView
                         final Paint paint = new Paint();
                         paint.setColor(Color.RED);
                         paint.setStyle(Paint.Style.STROKE);
@@ -684,7 +639,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                             if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
                                 canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
 
-
                                 //==============================================================
                                 //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
                                 //  ONLY store one time regardless of number of recognition results.
@@ -692,10 +646,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                                     //set flag so know have already stored this image
                                     saveImageOnceFlag = 0;
-
-                                    //CEMIL: code to store image (croppedBitmap) in CloudStore
-                                    //imageFileURL store the URL
-
 
                                     //**************************************************
                                     //try writing out the image being processed to a FILE
@@ -719,15 +669,17 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
-                                    //**************************************************
-
                                 }
 
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                                    Date d = new Date();
+                                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
+                                        MapsActivity.deltaFeverRecordStoreTimeMS,
+                                        MapsActivity.covidRecordLastStoreLocation,
+                                        MapsActivity.currentLocation,
+                                        MapsActivity.deltaCovidRecordStoreLocationM)) {
+
                                     ArrayList<Float> angles = new ArrayList<Float>();
                                     angles.add(0, 0.0f);
                                     angles.add(1, 0.0f);
@@ -744,16 +696,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
-                                    //SHIVALI AND PHILLIP --need to fix why this line is failing---due to failed authentication
-                                    FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
-
-
-                  // ask helper to push record to db
-               //   MapsActivity.myFirestoreHelper.addRecord(myRecord);
-
-                  //update the last time record stored
-                //  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
-
+                                    FirebaseStorageUtil.storeImageAndFeverRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
 
                                 }
                                 //###############################################
@@ -763,20 +706,14 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
                                 mappedRecognitions.add(result);  //add the result to a linked list
-
-
-
-
                             }
                         }
 
-                   //PHILLIP and SHIVALI you need to add your overlay for dispalying the results in mappedRecognitions
+                   //PHILLIP and SHIVALI you need to add your overlay for displaying the results in mappedRecognitions
                         //THE following lines will NOT work for you they are from my other
                    //     tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
                    //     trackingOverlay.postInvalidate();
-
 /*
-
                         runOnUiThread(
                                 new Runnable() {
                                     @Override
@@ -786,14 +723,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                         showInference(lastProcessingTimeMs + "ms");
                                     }
                                 });
-
  */
-
-
                     }
                 });
         //.start();
-
 
     }
 

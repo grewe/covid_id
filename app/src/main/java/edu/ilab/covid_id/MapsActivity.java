@@ -222,7 +222,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-
         //grab handle to the launch the IRStaticDataExploreActivity
         //IMPORTANT:  CHANGE: later will chante to launch the runtime IRActivity
         this.IRButton  = (Button) findViewById(R.id.IRButton);
@@ -236,15 +235,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-
-
         // initialize our db helper object
         myFirestoreHelper = new FirestoreHelper();
 
-
         //grab shared preferences associated with this app
         appPrefs =  getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
-
 
         //retrieve for integers.xml the hard coded values for the delta distances  between record storage necessary
         deltaCovidRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaCovidRecordStoreLocationM);
@@ -326,9 +321,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
-
-
     /**
      * takes user to login activity (for use in login button onClick listener)
      */
@@ -337,14 +329,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(login);
     }
 
-
     /**
      * before destroying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
      */
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         //make sure to update the SharedPreferences so when app restarts it will now the last timestamp
         appPrefs.edit().putLong("maskRecordLastStoreTimestamp", maskRecordLastStoreTimestamp)
                 .putLong("feverRecordLastStoreTimestamp",feverRecordLastStoreTimestamp)
@@ -352,7 +342,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .putLong("socDistRecordLastStoreTimestamp",socDistRecordLastStoreTimestamp)
                 .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
     }
-
 
     public void updateMapLocation(Location location ){
         if (location != null) {
@@ -372,7 +361,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
-
 
     /**
      * Manipulates the map once available.

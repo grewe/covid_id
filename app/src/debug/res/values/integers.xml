@@ -6,7 +6,7 @@
     <integer name="deltaMaskRecordStoreTimeMS">60000</integer>
 
 
-    <integer name="deltaFeverRecordStoreTimeMS">60000</integer>
+    <integer name="deltaFeverRecordStoreTimeMS">1000</integer>
 
 
     <integer name="deltaCrowdRecordStoreTimeMS">60000</integer>

@@ -316,12 +316,9 @@ public class CovidRecord {
         if(lastStoredLocation == null)
             return true;
 
-        float deltaTimeEquals = Math.abs(lastStoredTimeMS- System.currentTimeMillis());
-        float deltaDistanceEquals = lastStoredLocation.distanceTo(currentLocation);
         //based on time we are ready to store new record
         if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS || lastStoredLocation.distanceTo(currentLocation) > deltaLocationM )
             return true;
-
 
         //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough- OR ENOUGH TIME elapsed
         /*
@@ -329,15 +326,10 @@ public class CovidRecord {
         //Distance is calcuated on the globe using 2 Lat/Long values
         if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  || (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
            return true;
-
          */
 
-
         return false;
-
     }
-
-
 
     /**
      * determines if we are ready to store a new record based on ONLY time duration since last record storage is enough
@@ -346,27 +338,19 @@ public class CovidRecord {
      * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
      */
     public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS){
-
         //first test if ANY CovidRecord has been stored, if not then say yes!
         if( lastStoredTimeMS == -1) //nothing has been store yet
             return true;
-
         //based on time we are ready to store new record
         if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
             return true;
-
-
         //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough---do like time.
         /*
         replace ABOVE
         //Distance is calcuated on the globe using 2 Lat/Long values
         if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  && (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
            return true;
-
          */
-
-
         return false;
-
     }
 }

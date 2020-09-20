@@ -196,8 +196,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     outputClasses = new float[1][NUM_DETECTIONS];
     float[][] detectionAnchorIndeces = new float[1][NUM_DETECTIONS];
 
-
-
     float[][][] myOutput1 = new float[1][49104][4]; // VERIFIED TRASH
 
     numDetections = new float[1]; // VERIFIED
@@ -213,14 +211,11 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     outputMap.put(0, outputScores);     // VERIFIED
     outputMap.put(1, myOutput1);        // GARBAGE (IGNORE)
     outputMap.put(2, numDetections);    // VERIFIED
-    outputMap.put(3, outputLocations);  // UNVERIFIED (could be swapped with 6)
+    outputMap.put(3, outputLocations);  // LIKELY, BUT UNVERIFIED (could be swapped with 6)
     outputMap.put(4, outputClasses);    // UNVERIFIED (could be swapped with 7) - NO LONGER USED
     outputMap.put(5, myOutput1);        // GARBAGE (IGNORE)
     outputMap.put(6, couldBeOutputLocations); // UNVERIFIED (could be swapped with 3)
     outputMap.put(7, detectionAnchorIndeces); // UNVERIFIED (could be swapped with 4)
-//    outputMap.put(3, numDetections);
-//    outputMap.put(4, myOutput4);
-//    outputMap.put(5, outputClasses);
 
     Trace.endSection();
 
@@ -248,12 +243,10 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     // SSD Mobilenet V1 Model assumes class 0 is background class
     // in label file and class labels start from 1 to number_of_classes+1,
     // while outputClasses correspond to class index from 0 to number_of_classes
-    final int LABEL_OFFSET = -1;
+    // final int LABEL_OFFSET = -1;
 
     // TODO: remove this, was just for testing
     Log.d("MANNY", "~~~~~~~~~~~~~~~~~ NEW FRAME ~~~~~~~~~~~~~~~~~~~~");
-
-
 
     for (int i = 0; i < numDetectionsOutput; ++i) {
       float score = outputScores[0][i];
