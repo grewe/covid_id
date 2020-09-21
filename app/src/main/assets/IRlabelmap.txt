@@ -1,1 +1,4 @@
 head
+bicycle
+car
+dog

@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -55,7 +56,7 @@ import edu.ilab.covid_id.localize.env.BorderedText;
 import edu.ilab.covid_id.localize.env.ImageUtils;
 import edu.ilab.covid_id.localize.env.Logger;
 import edu.ilab.covid_id.localize.tflite.Classifier;
-import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
+import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionEfficientDet;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 import edu.ilab.covid_id.storage.FirebaseStorageUtil;
 
@@ -160,6 +161,9 @@ public class ConnectFlirActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect_flir);
+
+        // wont turn sideways
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         ThermalLog.LogLevel enableLoggingInDebug = BuildConfig.DEBUG ? ThermalLog.LogLevel.DEBUG : ThermalLog.LogLevel.NONE;
 
@@ -477,7 +481,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         //load up the detector based on the specified parameters include the tflite file in the assets folder, etc.
         try {
             detector =
-                    TFLiteObjectDetectionAPIModel.create(
+                    TFLiteObjectDetectionEfficientDet.create(
                             getAssets(),
                             TF_OD_API_MODEL_FILE,
                             TF_OD_API_LABELS_FILE,
@@ -635,9 +639,14 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         String imageFileURL = "";
                         //cycling through all of the recognition detections in my image I am currently processing
                         for (final Classifier.Recognition result : results) {  //loop variable is result, represents one detection
+
+                            Log.d("STORAGE", "in for loop");
+
                             final RectF location = result.getLocation();  //getting as  a rectangle the bounding box of the result detecgiton
                             if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
                                 canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
+
+                                Log.d("STORAGE", "in if statement");
 
                                 //==============================================================
                                 //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
@@ -674,11 +683,16 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
+
+                                boolean readyToStore = CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
                                         MapsActivity.deltaFeverRecordStoreTimeMS,
                                         MapsActivity.covidRecordLastStoreLocation,
                                         MapsActivity.currentLocation,
-                                        MapsActivity.deltaCovidRecordStoreLocationM)) {
+                                        MapsActivity.deltaCovidRecordStoreLocationM);
+
+                                Log.d("STORAGE", "Ready to store: " + readyToStore);
+
+                                if(readyToStore) {
 
                                     ArrayList<Float> angles = new ArrayList<Float>();
                                     angles.add(0, 0.0f);
