@@ -618,6 +618,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
+                        Log.d("STORAGE: ", "Detector results are null?  : " + (results == null));
+
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);   // create canvas to draw bounding boxes inside of which will be displayed in OverlayView
                         final Paint paint = new Paint();
