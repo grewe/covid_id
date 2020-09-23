@@ -569,7 +569,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         sensorOrientation = PORTRAIT;
 
         //making sure the overlay fragment is same wxh and orientation as the ImageView and its image displayed inside.
-        tracker.setFrameConfiguration(previewWidth, previewHeight, PORTRAIT);
+        tracker.setFrameConfiguration(previewWidth, previewHeight, 0);
 
     }
 

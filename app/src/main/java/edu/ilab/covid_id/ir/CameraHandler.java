@@ -205,16 +205,20 @@ class CameraHandler {
 
             //Get a bitmap with only IR data
             Bitmap thermalBitmap;
+            Bitmap zeroMsxBitmap;
             {
                 thermalImage.getFusion().setFusionMode(FusionMode.THERMAL_ONLY);
                 thermalBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
+
+                thermalImage.getFusion().setMsx(0);
+                zeroMsxBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
             }
 
             //Get a bitmap with the visual image, it might have different dimensions then the bitmap from THERMAL_ONLY
             Bitmap dcBitmap = BitmapAndroid.createBitmap(thermalImage.getFusion().getPhoto()).getBitMap();
 
             Log.d(TAG,"adding images to cache");
-            streamDataListener.images(thermalBitmap,dcBitmap);
+            streamDataListener.images(zeroMsxBitmap,dcBitmap);
         }
     };
 
