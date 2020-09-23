@@ -11,6 +11,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.media.Image;
 import android.os.Bundle;
 import edu.ilab.covid_id.R;
 import android.graphics.Bitmap;
@@ -21,6 +22,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +54,7 @@ import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.localize.DetectorActivity;
 import edu.ilab.covid_id.localize.customview.OverlayView;
+import edu.ilab.covid_id.localize.customview.OverlayView.DrawCallback;
 import edu.ilab.covid_id.localize.env.BorderedText;
 import edu.ilab.covid_id.localize.env.ImageUtils;
 import edu.ilab.covid_id.localize.env.Logger;
@@ -62,6 +65,10 @@ import edu.ilab.covid_id.storage.FirebaseStorageUtil;
 
 
 public class ConnectFlirActivity extends AppCompatActivity {
+    private int PORTRAIT = 90;  // for potrait layouts
+
+    // for toggling ir/rgb
+    private boolean TOGGLE_IR_ON = true;
 
     //necessary to limit thread generation - one thread per frame gets created --so that do not run out of memory
     private Handler handler;
@@ -142,7 +149,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
 
     //Variables for Previewing and Overlay
-    private int previewWidth; //width of region will dispplay image in and draw on
+    private int previewWidth; //width of region will display image in and draw on
     private int previewHeight;
 
     //PHILLIP this will go away and be replaced by your bounding box drawing solution
@@ -163,6 +170,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect_flir);
 
+        // set preview width and height
+        previewWidth = 480;
+        previewHeight = 640;
+
         // wont turn sideways
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -182,9 +193,17 @@ public class ConnectFlirActivity extends AppCompatActivity {
         // grab handles to views
         setupViews();
 
+        // set up toggle button
+        setToggleButton();
+
         //method to setup for performing ML detection on stream of IR images captured
         setupForDetection();
+
     }
+
+//    public void setupTracker(Context context) {
+//        tracker = new MultiBoxTracker(context);
+//    }
 
     public void startDiscovery(View view) {
         startDiscovery();
@@ -366,9 +385,21 @@ public class ConnectFlirActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    thermalImage.setImageBitmap(dataHolder.thermalBitmap);
-                    photoImage.setImageBitmap(dataHolder.dcBitmap);
-                    Log.d(TAG, "inside CameraHandler.StreamDataListnerener.images(FrameDataHolder ");
+                    Bitmap rgbBMP = dataHolder.dcBitmap;
+                    Bitmap thermalBMP = dataHolder.thermalBitmap;
+                    photoImage.setImageBitmap(rgbBMP);
+                    thermalImage.setImageBitmap(thermalBMP);
+
+
+//                    Bitmap rgbBMP = dataHolder.dcBitmap;
+//
+//                    // insert canvas drawing and image processing from bounding boxes from recognition results
+//                    final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+//
+//
+//                    thermalImage.setImageBitmap(thermalBMP);
+//                    photoImage.setImageBitmap(rgbBMP);
+//                    Log.d(TAG, "inside CameraHandler.StreamDataListnerener.images(FrameDataHolder ");
                 }
             });
         }
@@ -459,6 +490,25 @@ public class ConnectFlirActivity extends AppCompatActivity {
         photoImage = findViewById(R.id.photo_image);
     }
 
+    /**
+     * set toggle button
+     */
+    private void setToggleButton() {
+        Button irToggleButton = findViewById(R.id.toggle_IR_RGB);
+
+        thermalImage.setVisibility(TOGGLE_IR_ON ? View.VISIBLE : View.GONE);
+        photoImage.setVisibility(TOGGLE_IR_ON ? View.GONE : View.VISIBLE);
+        irToggleButton.setText(TOGGLE_IR_ON ? "Color" : "Infrared");
+
+        irToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TOGGLE_IR_ON = !TOGGLE_IR_ON;
+                setToggleButton();
+            }
+        });
+    }
+
 
     /**
      * this method invoked in onCreate to setup various items for performing ML Detection on stream of IR imagery
@@ -467,6 +517,9 @@ public class ConnectFlirActivity extends AppCompatActivity {
      * THis is really just a SETUP method
      */
     private void setupForDetection(){
+        previewWidth = 480;
+        previewHeight = 640;
+
         final float textSizePx =
                 TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
@@ -500,6 +553,23 @@ public class ConnectFlirActivity extends AppCompatActivity {
         }
 
         Log.d(TAG, "ML detector is loaded");
+
+        // set up tracking overlay
+
+        //grabbing a handle to the tracking_overlay which lets us draw bounding boxes inside of and this is a fragment
+        // that sits on top of the ImageView where the image is displayed.
+        trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay_IR);
+        trackingOverlay.addCallback(
+                new OverlayView.DrawCallback() {
+                    @Override
+                    public void drawCallback(final Canvas canvas) {
+                        tracker.draw(canvas);
+                    }
+                });
+        sensorOrientation = PORTRAIT;
+
+        //making sure the overlay fragment is same wxh and orientation as the ImageView and its image displayed inside.
+        tracker.setFrameConfiguration(previewWidth, previewHeight, PORTRAIT);
 
     }
 
@@ -577,6 +647,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
     }
 
 
+
+
     /**
      * This method is called every time we will to process the CURRENT frame
      * this means the current frame/image will be processed by our this.detector model
@@ -618,9 +690,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
-                        Log.d(TAG_2, "Detector results size  : " + results.size());
-
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);   // create canvas to draw bounding boxes inside of which will be displayed in OverlayView
                         final Paint paint = new Paint();
@@ -642,15 +711,9 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         String imageFileURL = "";
                         //cycling through all of the recognition detections in my image I am currently processing
                         for (final Classifier.Recognition result : results) {  //loop variable is result, represents one detection
-
-                            Log.d(TAG_2, "in for loop");
-
                             final RectF location = result.getLocation();  //getting as  a rectangle the bounding box of the result detecgiton
                             if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
                                 canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
-
-                                Log.d(TAG_2, "in if statement");
-
                                 //==============================================================
                                 //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
                                 //  ONLY store one time regardless of number of recognition results.
@@ -682,19 +745,14 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                         e.printStackTrace();
                                     }
                                 }
-
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-
                                 boolean readyToStore = CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
                                         MapsActivity.deltaFeverRecordStoreTimeMS,
                                         MapsActivity.covidRecordLastStoreLocation,
                                         MapsActivity.currentLocation,
                                         MapsActivity.deltaCovidRecordStoreLocationM);
-
-                                Log.d(TAG_2, "Ready to store: " + readyToStore);
-
                                 if(readyToStore) {
 
                                     ArrayList<Float> angles = new ArrayList<Float>();
@@ -720,30 +778,27 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                                 //the following takes the bounding box location and transforms it for coordinates in display
                                 cropToFrameTransform.mapRect(location);  //transforms using Matrix the bounding box to the correct transformed coordinates
-
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
                                 mappedRecognitions.add(result);  //add the result to a linked list
                             }
                         }
 
-                   //PHILLIP and SHIVALI you need to add your overlay for displaying the results in mappedRecognitions
-                        //THE following lines will NOT work for you they are from my other
-                   //     tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
-                   //     trackingOverlay.postInvalidate();
-/*
-                        runOnUiThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showFrameInfo(previewWidth + "x" + previewHeight);
-                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                                        showInference(lastProcessingTimeMs + "ms");
-                                    }
-                                });
- */
+                        tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
+                        trackingOverlay.postInvalidate();
+
+                        computingDetection = false;
+//
+//                        runOnUiThread(
+//                                new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        showFrameInfo(previewWidth + "x" + previewHeight);
+//                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+//                                        showInference(lastProcessingTimeMs + "ms");
+//                                    }
+//                                });
                     }
                 });
-        //.start();
 
     }
 

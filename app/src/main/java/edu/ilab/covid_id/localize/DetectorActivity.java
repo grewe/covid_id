@@ -337,15 +337,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
                   FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
-
-/*
-                  // ask helper to push record to db
-                  MapsActivity.myFirestoreHelper.addRecord(myRecord);
-
-                  //update the last time record stored
-                  MapsActivity.covidRecordLastStoreTimestamp =  System.currentTimeMillis();
-                  */
-
                 }
                 //###############################################
 
@@ -353,10 +344,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
                 mappedRecognitions.add(result);  //add the result to a linked list
-
-
-
-
               }
             }
 

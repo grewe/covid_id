@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ir.ConnectFlirActivity"
+    android:layout_margin="10dp"
     android:orientation="vertical"
-    android:layout_margin="10dp">
+    tools:context=".ir.ConnectFlirActivity">
 
     <!-- Title -->
 
@@ -13,73 +13,93 @@
 
     <!-- Start / Stop discovery buttons -->
     <Button
-        android:text="Start Discovery"
-        android:layout_width="wrap_content"
+        android:id="@+id/toggle_IR_RGB"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="startDiscovery"
-        android:id="@+id/start_discovery"/>
+        android:text="Toggle" />
 
-    <Button
-        android:id="@+id/stop_discovery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="stopDiscovery"
-        android:text="Stop Discovery" />
-
-    <TextView
-        android:id="@+id/discovery_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="dicovery status"
-        android:textSize="18sp" />
-
-    <!-- Connect to FLIR ONE / Emulators buttons -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <Button
-            android:id="@+id/connect_flir_one"
-            android:onClick="connectFlirOne"
+            android:id="@+id/start_discovery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:onClick="startDiscovery"
+            android:text="Start Discovery" />
+
+        <Button
+            android:id="@+id/stop_discovery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:onClick="stopDiscovery"
+            android:text="Stop Discovery" />
+
+        <TextView
+            android:id="@+id/discovery_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Connect" />
+            android:text="dicovery status"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/connect_flir_one"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="connectFlirOne"
+                android:text="Connect" />
 
 
+        </LinearLayout>
+
+        <!-- Connect to FLIR ONE / Emulators buttons -->
+
+        <Button
+            android:id="@+id/disconnect_any"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:onClick="disconnect"
+            android:text="Disconnect" />
+
+        <TextView
+            android:id="@+id/connection_status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONNECTION STATUS" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/disconnect_any"
-        android:onClick="disconnect"
-        android:text="Disconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
 
-    <TextView
-        android:id="@+id/connection_status_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="CONNECTION STATUS"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <FrameLayout
+        android:id="@+id/display_image_layout"
+        android:layout_width="480px"
+        android:layout_height="640px">
 
         <ImageView
             android:id="@+id/msx_image"
-            android:layout_width="202dp"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:contentDescription="image with IR "
-            android:maxWidth="50dp"
-            android:minWidth="50dp" />
+            android:scaleType="fitXY" />
 
         <ImageView
             android:id="@+id/photo_image"
-            android:layout_width="202dp"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:contentDescription="image with only visual image"
-            android:maxWidth="50dp"
-            android:minWidth="50dp" />
-    </LinearLayout>
+            android:scaleType="fitXY" />
+
+        <edu.ilab.covid_id.localize.customview.OverlayView
+            android:id="@+id/tracking_overlay_IR"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
 
 
 </LinearLayout>

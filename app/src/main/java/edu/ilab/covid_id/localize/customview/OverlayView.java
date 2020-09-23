@@ -18,6 +18,7 @@ package edu.ilab.covid_id.localize.customview;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.LinkedList;
@@ -32,6 +33,7 @@ public class OverlayView extends View {
   }
 
   public void addCallback(final DrawCallback callback) {
+    Log.d("OVERLAY_VIEW", "in add callback");
     callbacks.add(callback);
   }
 
