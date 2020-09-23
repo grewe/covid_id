@@ -70,6 +70,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
     //logging tag
     private static final String TAG = "ConnectFlirActivity";
+    private static final String TAG_2 = "MANNY_DEBUG";
 
     //Handles Android permission for eg Network
     private PermissionHandler permissionHandler;
@@ -618,7 +619,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-                        Log.d("STORAGE: ", "Detector results are null?  : " + (results == null));
+                        Log.d(TAG_2, "Detector results size  : " + results.size());
 
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);   // create canvas to draw bounding boxes inside of which will be displayed in OverlayView
@@ -642,13 +643,13 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         //cycling through all of the recognition detections in my image I am currently processing
                         for (final Classifier.Recognition result : results) {  //loop variable is result, represents one detection
 
-                            Log.d("STORAGE", "in for loop");
+                            Log.d(TAG_2, "in for loop");
 
                             final RectF location = result.getLocation();  //getting as  a rectangle the bounding box of the result detecgiton
                             if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
                                 canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
 
-                                Log.d("STORAGE", "in if statement");
+                                Log.d(TAG_2, "in if statement");
 
                                 //==============================================================
                                 //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
@@ -692,7 +693,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                         MapsActivity.currentLocation,
                                         MapsActivity.deltaCovidRecordStoreLocationM);
 
-                                Log.d("STORAGE", "Ready to store: " + readyToStore);
+                                Log.d(TAG_2, "Ready to store: " + readyToStore);
 
                                 if(readyToStore) {
 

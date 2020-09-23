@@ -54,21 +54,38 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
     private boolean isModelQuantized;
     // Config values.
     private int inputSize;
+    private int NUM_CLASSES = 1; // number of classes SHOULD NOT BE HARD CODED BUT IT IS FOR NOW https://tfhub.dev/tensorflow/efficientdet/d0/1
+    // THIS PARAMETER WAS DETERMINED BY LOOKING AT LOGS FROM OUTPUT TENSORS IN RecognizeImage() below
+    // It will say something like:
+    //  Cannot copy from a TensorFlowLite tensor (StatefulPartitionedCall:7) with shape [1, NUM_RAW_DETECTION_BOXES, 1] to a Java object with shape [x,x,x,x,x,x]
+    private int NUM_RAW_DETECTION_BOXES = 49104; // see https://tfhub.dev/tensorflow/efficientdet/d0/1
     // Pre-allocated buffers.
     private Vector<String> labels = new Vector<String>();
     private int[] intValues;
-    // outputLocations: array of shape [Batchsize, NUM_DETECTIONS,4]
-    // contains the location of detected boxes
+
+
+    /*
+    FOR THE FOLLOWING OUTPUT TENSORS:
+        M : NUMBER OF RAW DETECTIONS (ARCHITECTURE-DEPENDENT)
+        N : NUMBER OF DETECTIONS FROM CONFIG FILE (TRAINING-DEPENDENT)
+        C : NUMBER OF CLASSES FROM CONFIG FILE (TRAINING-DEPENDENT)
+     */
+    // float32 tensor of shape [N, 4] containing bounding box coordinates in the following order: [ymin, xmin, ymax, xmax].
     private float[][][] outputLocations;
-    // outputClasses: array of shape [Batchsize, NUM_DETECTIONS]
-    // contains the classes of detected boxes
+    // int tensor of shape [N] containing detection class index from the label file.
     private float[][] outputClasses;
-    // outputScores: array of shape [Batchsize, NUM_DETECTIONS]
-    // contains the scores of detected boxes
+    // float32 tensor of shape [N] containing detection scores.
     private float[][] outputScores;
-    // numDetections: array of shape [Batchsize]
-    // contains the number of detected boxes
+    // int tensor with only one value, the number of detections [N].
     private float[] numDetections;
+    // float32 tensor of shape [N, 4] containing bounding box coordinates in the following order: [ymin, xmin, ymax, xmax].
+    float[][][] rawDetectionBoxes;
+    // float32 tensor of shape [1, M, C] and contains class score logits for raw detection boxes. M is the number of raw detections.
+    float[][][] rawDetectionScores;
+    // float32 tensor of shape [1, N, C] and contains class score distribution (including background) for detection boxes in the image including background class.
+    float[][][] detectionMulticlassScores;
+    // float32 tensor of shape [N] and contains the anchor indices of the detections after NMS.
+    float[][] detectionAnchorIndeces;
 
     private ByteBuffer imgData;
 
@@ -180,30 +197,25 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
         // Copy the input data into TensorFlow.
         Trace.beginSection("feed");
         outputLocations = new float[1][NUM_DETECTIONS][4];
-        float[][][] couldBeOutputLocations = new float[1][NUM_DETECTIONS][4];
-
-        outputScores = new float[1][NUM_DETECTIONS];  // VERIFIED
-
-
+        detectionMulticlassScores = new float[1][NUM_DETECTIONS][NUM_CLASSES];
+        outputScores = new float[1][NUM_DETECTIONS];
         outputClasses = new float[1][NUM_DETECTIONS];
-        float[][] detectionAnchorIndeces = new float[1][NUM_DETECTIONS];
-
-        float[][][] myOutput1 = new float[1][49104][4]; // VERIFIED TRASH
-
-        numDetections = new float[1]; // VERIFIED
-
+        detectionAnchorIndeces = new float[1][NUM_DETECTIONS];
+        rawDetectionScores = new float[1][NUM_RAW_DETECTION_BOXES][NUM_CLASSES];
+        numDetections = new float[1];
+        rawDetectionBoxes = new float[1][NUM_RAW_DETECTION_BOXES][4];
 
         Object[] inputArray = {imgData};
         Map<Integer, Object> outputMap = new HashMap<>();
 
-        outputMap.put(0, outputScores);     // Confidence Values [1,N]
-        outputMap.put(1, myOutput1);        // [1,M,4] - RAW BOUNDING BOXES W/O MAX-SUPPRESSION (?)
-        outputMap.put(2, numDetections);    // [N] - Number of detections
-        outputMap.put(3, outputLocations);  // Bounding Boxes [1,N,4]
-        outputMap.put(4, outputClasses);    // Pretty Sure (could be swapped with 7)
-        outputMap.put(5, myOutput1);        // [1,M,4] - RAW BOUNDING BOXES W/O MAX-SUPPRESSION (?)
-        outputMap.put(6, couldBeOutputLocations); // UNVERIFIED (could be swapped with 3)
-        outputMap.put(7, detectionAnchorIndeces); // unverified, from documentation should be detection anchor indeces
+        outputMap.put(0, outputScores);         // [1,N] - Confidence Values
+        outputMap.put(1, rawDetectionBoxes);    // [1,M,4] - Non-max-suppressed bounding boxes
+        outputMap.put(2, numDetections);        // [N] - Number of detections
+        outputMap.put(3, outputLocations);      // [1,N,4] - Bounding Boxes
+        outputMap.put(4, outputClasses);        // [1,N] - class index
+        outputMap.put(5, rawDetectionScores);   // [1,M,C] - raw detection scores
+        outputMap.put(6, detectionMulticlassScores); // [1,N,C] - detection multiclass scores
+        outputMap.put(7, detectionAnchorIndeces); // [1,N] detection anchor indeces
 
         Trace.endSection();
 
@@ -228,15 +240,15 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
         // while outputClasses correspond to class index from 0 to number_of_classes
         // final int LABEL_OFFSET = -1;
 
-        // TODO: remove this, was just for testing
+        // log new frame process
         Log.d(TAG, "~~~~~~~~~~~~~~~~~ NEW FRAME ~~~~~~~~~~~~~~~~~~~~");
 
-        final int LABEL_OFFSET = 1;
+        final int LABEL_OFFSET = -1;
 
         for (int i = 0; i < numDetectionsOutput; ++i) {
             float score = outputScores[0][i];
 
-            // TODO: remove this, was just for testing
+            // log a positive result
             if( i < 3 && score > .5) {
                 Log.d(TAG, "SCORE: " + String.valueOf(outputScores[0][i]));
             }
@@ -248,11 +260,11 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
                             outputLocations[0][i][3] * inputSize,
                             outputLocations[0][i][2] * inputSize);
 
-            new Recognition(
+            recognitions.add(new Recognition(
                     "" + i,
-                    "head",
+                    labels.get((int) outputClasses[0][i] + LABEL_OFFSET),
                     outputScores[0][i],
-                    detection);
+                    detection));
         }
 
         Trace.endSection(); // "recognizeImage"
