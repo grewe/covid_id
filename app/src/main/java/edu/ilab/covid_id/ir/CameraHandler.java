@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.flir.thermalsdk.androidsdk.image.BitmapAndroid;
+import com.flir.thermalsdk.image.Rectangle;
+import com.flir.thermalsdk.image.TemperatureUnit;
 import com.flir.thermalsdk.image.ThermalImage;
 import com.flir.thermalsdk.image.fusion.FusionMode;
 import com.flir.thermalsdk.live.Camera;
@@ -51,8 +53,10 @@ class CameraHandler {
 
     public interface StreamDataListener {
         void images(FrameDataHolder dataHolder);
-        void images(Bitmap thermalBitmap, Bitmap dcBitmap);
+       // void images(Bitmap thermalBitmap, Bitmap dcBitmap);
+        void images(Bitmap thermalBitmap, Bitmap dcBitmap, double[][] tempArray);
     }
+
 
     //Discovered FLIR cameras
     LinkedList<Identity> foundCameraIdentities = new LinkedList<>();
@@ -99,6 +103,44 @@ class CameraHandler {
             camera.unsubscribeAllStreams();
         }
         camera.disconnect();
+    }
+
+    /**
+     *
+     * @param heatmap is thermal image which contains all the thermal data
+     * @return double 2d array of temperature per pixel
+     */
+    private double[][] getTemp(ThermalImage heatmap){
+/*
+        ThermalValue maxTemp= heatmap.getStatistics().max.asCelsius();
+*/
+        heatmap.setTemperatureUnit(TemperatureUnit.CELSIUS);
+        // long startTime = System.nanoTime();
+
+        int width=heatmap.getWidth();
+        int height=heatmap.getHeight();
+        double[][] temperature = new double[width][height];
+        Rectangle rect = new Rectangle(0,0,width,height);
+        double[] rectTemp = heatmap.getValues(rect);
+
+        for(int i=0; i<width;i++)
+            for(int j=0;j<height;j++)
+                temperature[i][j] = rectTemp[(j*width) + i]; //row*number_col+col
+
+        /*Log.d(TAG, "rectTemp: "+rectTemp[479]);
+        Point pt = new Point(479, 0);
+        double temp = heatmap.getValueAt(pt);
+        Log.d(TAG, "getTemp: at point 0,639:"+temp);
+        Log.d(TAG, "rectTemp: "+rectTemp[959]);
+        Point pt1 = new Point(479, 1);
+        double temp1 = heatmap.getValueAt(pt);
+        Log.d(TAG, "getTemp: at point 1,639:"+temp1);*/
+
+        /*long endTime = System.nanoTime();
+
+        long duration = (endTime - startTime)/1000000;
+        Log.d(TAG, "getTemp: duration of rect:"+duration);*/
+        return temperature;
     }
 
     /**
@@ -163,6 +205,10 @@ class CameraHandler {
         return null;
     }
 
+    /**
+     * This method return instance of flir one mobile sdk class which will represent flir one device uniquly which identify flir one device
+     * @return
+     */
     @Nullable
     public Identity getFlirOne() {
         for (Identity foundCameraIdentity : foundCameraIdentities) {
@@ -175,21 +221,21 @@ class CameraHandler {
 
         return null;
     }
-
     private void withImage(ThermalImageStreamListener listener, Camera.Consumer<ThermalImage> functionToRun) {
         camera.withImage(listener, functionToRun);
     }
-
 
     /**
      * Called whenever there is a new Thermal Image available, should be used in conjunction with {@link Camera.Consumer}
      */
     private final ThermalImageStreamListener thermalImageStreamListener = new ThermalImageStreamListener() {
+
         @Override
         public void onImageReceived() {
             //Will be called on a non-ui thread
             Log.d(TAG, "onImageReceived(), we got another ThermalImage");
             withImage(this, handleIncomingImage);
+            //stopStream(thermalImageStreamListener);
         }
     };
 
@@ -199,16 +245,41 @@ class CameraHandler {
     private final Camera.Consumer<ThermalImage> handleIncomingImage = new Camera.Consumer<ThermalImage>() {
         @Override
         public void accept(ThermalImage thermalImage) {
+            Runtime runtime;
+            long maxMemory;
+            long usedMemory;
+            double availableMemoryPercentage = 1.0;
+            final double MIN_AVAILABLE_MEMORY_PERCENTAGE = 0.2;
+            final int DELAY_TIME = 5 * 1000;
+
+            runtime = Runtime.getRuntime();
+
+            maxMemory = runtime.maxMemory();
+
+            usedMemory = runtime.totalMemory() - runtime.freeMemory();
+
+            availableMemoryPercentage = 1 - (double) usedMemory / maxMemory;
+
+            if (availableMemoryPercentage < MIN_AVAILABLE_MEMORY_PERCENTAGE) {
+                try {
+                    Thread.sleep(DELAY_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
             Log.d(TAG, "accept() called with: thermalImage = [" + thermalImage.getDescription() + "]");
             //Will be called on a non-ui thread,
             // extract information on the background thread and send the specific information to the UI thread
 
             //Get a bitmap with only IR data
-            Bitmap thermalBitmap;
+            double[][] tempArray = getTemp(thermalImage); //gives temperature array of whole image
+
+            //Bitmap thermalBitmap;
             Bitmap zeroMsxBitmap;
             {
                 thermalImage.getFusion().setFusionMode(FusionMode.THERMAL_ONLY);
-                thermalBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
+                //thermalBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
 
                 thermalImage.getFusion().setMsx(0);
                 zeroMsxBitmap = BitmapAndroid.createBitmap(thermalImage.getImage()).getBitMap();
@@ -218,7 +289,8 @@ class CameraHandler {
             Bitmap dcBitmap = BitmapAndroid.createBitmap(thermalImage.getFusion().getPhoto()).getBitMap();
 
             Log.d(TAG,"adding images to cache");
-            streamDataListener.images(zeroMsxBitmap,dcBitmap);
+            //streamDataListener.images(zeroMsxBitmap,dcBitmap);
+            streamDataListener.images(zeroMsxBitmap,dcBitmap, tempArray);
         }
     };
 

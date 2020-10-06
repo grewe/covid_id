@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <integer name="deltaCovidRecordStoreTimeMS">600000</integer>
+    <integer name="deltaCovidRecordStoreTimeMS">60000</integer>
 
     <integer name="deltaMaskRecordStoreTimeMS">60000</integer>
 
 
-    <integer name="deltaFeverRecordStoreTimeMS">2000</integer>
+    <integer name="deltaFeverRecordStoreTimeMS">60000</integer>
 
 
-    <integer name="deltaCrowdRecordStoreTimeMS">60000</integer>
+    <integer name="deltaCrowdRecordStoreTimeMS">600000</integer>
 
 
     <integer name="deltaSocDistRecordStoreTimeMS">60000</integer>
