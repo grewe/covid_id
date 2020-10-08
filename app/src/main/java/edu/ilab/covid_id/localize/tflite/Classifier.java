@@ -16,6 +16,7 @@ limitations under the License.
 package edu.ilab.covid_id.localize.tflite;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.RectF;
 
 import java.util.List;
@@ -42,7 +43,9 @@ public interface Classifier {
      */
     private final String id;
 
-    /** Display name for the recognition. */
+    /**
+     * Display name for the recognition.
+     */
     private final String title;
 
     /**
@@ -50,8 +53,21 @@ public interface Classifier {
      */
     private final Float confidence;
 
-    /** Optional location within the source image for the location of the recognized object. */
+    /**
+     * Optional location within the source image for the location of the recognized object.
+     */
     private RectF location;
+
+    /**
+     * maximum temperature found in bounding box (used ONLY in IR) represented in Celcius units
+     */
+    private double maxTemp;
+
+
+    /**
+     * location (x,y) of maximum temperature
+     */
+    private Point maxTempLocation;
 
     public Recognition(
             final String id, final String title, final Float confidence, final RectF location) {
@@ -59,6 +75,8 @@ public interface Classifier {
       this.title = title;
       this.confidence = confidence;
       this.location = location;
+      this.maxTemp=maxTemp;
+      this.maxTempLocation=maxTempLocation;
     }
 
     public String getId() {
@@ -81,6 +99,24 @@ public interface Classifier {
       this.location = location;
     }
 
+    public double getMaxTemp() {
+      return  maxTemp;
+    }
+
+    public void setMaxTemp(double maxTemp) {
+      this.maxTemp = maxTemp;
+    }
+
+    public void setMaxTempLocation(Point maxTempLocation) {
+      this.maxTempLocation = maxTempLocation;
+    }
+
+    public Point getMaxTempLocation() {
+      return new Point(maxTempLocation);
+    }
+
+
+
     @Override
     public String toString() {
       String resultString = "";
@@ -99,6 +135,7 @@ public interface Classifier {
       if (location != null) {
         resultString += location + " ";
       }
+
 
       return resultString.trim();
     }

@@ -23,6 +23,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.text.TextUtils;
 import android.util.Pair;
@@ -63,6 +64,7 @@ public class MultiBoxTracker {
   private final Queue<Integer> availableColors = new LinkedList<Integer>();
   private final List<TrackedRecognition> trackedObjects = new LinkedList<TrackedRecognition>();
   private final Paint boxPaint = new Paint();
+  private final Paint tempPaint = new Paint();
   private final float textSizePx;
   private final BorderedText borderedText;
   private Matrix frameToCanvasMatrix;
@@ -82,6 +84,13 @@ public class MultiBoxTracker {
     boxPaint.setStrokeJoin(Join.ROUND);
     boxPaint.setStrokeMiter(100);
 
+    tempPaint.setColor(Color.GREEN);
+    tempPaint.setStyle(Style.STROKE);
+    tempPaint.setStrokeWidth(10.0f);
+    tempPaint.setStrokeCap(Cap.ROUND);
+    tempPaint.setStrokeJoin(Join.ROUND);
+    tempPaint.setStrokeMiter(100);
+
     textSizePx =
         TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, context.getResources().getDisplayMetrics());
@@ -95,6 +104,10 @@ public class MultiBoxTracker {
     this.sensorOrientation = sensorOrientation;
   }
 
+  /**
+   * draws to canvas the recognition results stored in screnRects
+   * @param canvas
+   */
   public synchronized void drawDebug(final Canvas canvas) {
     final Paint textPaint = new Paint();
     textPaint.setColor(Color.WHITE);
@@ -110,6 +123,12 @@ public class MultiBoxTracker {
       canvas.drawRect(rect, boxPaint);
       canvas.drawText("" + detection.first, rect.left, rect.top, textPaint);
       borderedText.drawText(canvas, rect.centerX(), rect.centerY(), "" + detection.first);
+
+
+      //SH draw the crosshairs where the max temp resides
+      /*Point p = detection.getMaxTempLocation();
+      canvas.drawCircle(p.x,p.y,cornerSize,tempPaint);*/
+
     }
   }
 
@@ -122,6 +141,11 @@ public class MultiBoxTracker {
     return frameToCanvasMatrix;
   }
 
+  /**
+   * method to perform drawing in a canvas of the Recognition results setup in trackedObjects
+   * see processImage(*) for how this is setup with content + drawing color
+   * @param canvas
+   */
   public synchronized void draw(final Canvas canvas) {
 
     final boolean rotated = sensorOrientation % 180 == 90;
@@ -142,15 +166,21 @@ public class MultiBoxTracker {
             false);
 
 
-    for (final TrackedRecognition recognition : trackedObjects) {
-      final RectF trackedPos = new RectF(recognition.location);
 
+    //cycle through each recognition result in trackedObjects for drawing
+    for (final TrackedRecognition recognition : trackedObjects) {
+
+      //get bounding box and transform into canvas coordinates
+      final RectF trackedPos = new RectF(recognition.location);
       getFrameToCanvasMatrix().mapRect(trackedPos);
+
+      //get drawing color and draw bounding box
       boxPaint.setColor(recognition.color);
 
       float cornerSize = Math.min(trackedPos.width(), trackedPos.height()) / 8.0f;
       canvas.drawRoundRect(trackedPos, cornerSize, cornerSize, boxPaint);
 
+      //get class label AND confidence and draw
       final String labelString =
           !TextUtils.isEmpty(recognition.title)
               ? String.format("%s %.2f", recognition.title, (100 * recognition.detectionConfidence))
@@ -159,9 +189,21 @@ public class MultiBoxTracker {
       // labelString);
       borderedText.drawText(
           canvas, trackedPos.left + cornerSize, trackedPos.top, labelString + "%", boxPaint);
+
+
+      final String tempString = (""+recognition.maxTemp);
+
+      //SH draw the crosshairs where the max temp resides
+      Point p = recognition.maxTempLocation;
+      canvas.drawCircle(p.x,p.y,cornerSize,tempPaint);
+      borderedText.drawText(canvas,p.x,p.y,tempString);
     }
   }
 
+  /**
+   *
+   * @param results
+   */
   private void processResults(final List<Recognition> results) {
     final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();
 
@@ -180,13 +222,17 @@ public class MultiBoxTracker {
       logger.v(
           "Result! Frame: " + result.getLocation() + " mapped to screen:" + detectionScreenRect);
 
+      //NOTE: IR connectFlirActivity does not call drawDebug() and hence does not use screenRects
+      //       so we are not updating it with temp info --especially as no triplet class in android
       screenRects.add(new Pair<Float, RectF>(result.getConfidence(), detectionScreenRect));
 
+      //safety check
       if (detectionFrameRect.width() < MIN_SIZE || detectionFrameRect.height() < MIN_SIZE) {
         logger.w("Degenerate rectangle! " + detectionFrameRect);
         continue;
       }
 
+      //you should have result containing the max temp ---don't need to anything here
       rectsToTrack.add(new Pair<Float, Recognition>(result.getConfidence(), result));
     }
 
@@ -196,12 +242,20 @@ public class MultiBoxTracker {
       return;
     }
 
+    //HEre setting up some values that are used in the GUI drawing
     for (final Pair<Float, Recognition> potential : rectsToTrack) {
       final TrackedRecognition trackedRecognition = new TrackedRecognition();
-      trackedRecognition.detectionConfidence = potential.first;
-      trackedRecognition.location = new RectF(potential.second.getLocation());
-      trackedRecognition.title = potential.second.getTitle();
-      trackedRecognition.color = COLORS[trackedObjects.size()];
+      trackedRecognition.detectionConfidence = potential.first;  //getting the confidence
+      trackedRecognition.location = new RectF(potential.second.getLocation());  //getting the Recognition.getLocation()
+      trackedRecognition.title = potential.second.getTitle();  //retrieving the label of the Recogntiion
+      trackedRecognition.color = COLORS[trackedObjects.size()]; //based on if the 1st, 2nd etc item (num elements, size increases)
+                                                                // in trackedObjects will get a different drawing color
+
+      //SH add the max TEmp
+      //SH you MUST add to the Recogntion where it is created both (double) maxTemp and a (RectF) maxTempLocation
+      trackedRecognition.maxTemp = potential.second.getMaxTemp();
+      trackedRecognition.maxTempLocation = new Point(potential.second.getMaxTempLocation());
+
       trackedObjects.add(trackedRecognition);
 
       if (trackedObjects.size() >= COLORS.length) {
@@ -210,10 +264,35 @@ public class MultiBoxTracker {
     }
   }
 
+  /**
+   * Class used in Tracking recognitions and used in drawing
+   */
   private static class TrackedRecognition {
+    /**
+     * bounding box
+     */
     RectF location;
+    /**
+     * confidence
+     */
     float detectionConfidence;
+    /**
+     * 'unique" drawing color
+     */
     int color;
+    /**
+     * label / class
+     */
     String title;
+    /**
+     * maximumTemp --this used by IR
+     */
+    double maxTemp;
+
+    /**
+     * location ofr max TEmp - used by IR
+     */
+    Point maxTempLocation;
+
   }
 }

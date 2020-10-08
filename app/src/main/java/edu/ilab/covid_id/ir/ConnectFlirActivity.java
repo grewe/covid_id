@@ -148,8 +148,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
 
-    double max=0;
-
 
     private boolean computingDetection = false;
 
@@ -839,7 +837,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                         LOGGER.i("Running detection on image " + currTimestamp);
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
-
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);// create canvas to draw bounding boxes inside of which will be displayed in OverlayView
@@ -903,16 +900,23 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 * */
                                 int width= tempArray.length;
                                 int height = tempArray[0].length;
-                                List<Double> num = new ArrayList<>();
+                                double max=0;
+                                int x=0;
+                                int y=0;
                                 for(int i=0;i<width;i++){
                                     for(int j =0;j<height;j++){
                                         if(location.contains(i,j)){
-                                            num.add(tempArray[i][j]);
+                                            if (tempArray[i][j] > max) {
+                                                max = tempArray[i][j];
+                                                x=i;
+                                                y=j;
+                                            }
                                         }
                                     }
                                 }
-                                max= Collections.max(num);
-                                Log.d(TAG, "run: max temp:"+max);
+                                Log.d(TAG, "run: max temp:"+max+" at x "+x+" at y "+y);
+                                android.graphics.Point tempLocation=new android.graphics.Point(x,y);
+
                                 //toastMethodForGetMaxTemp(max);
 
                                 //==========================================================================
@@ -951,6 +955,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //the following takes the bounding box location and transforms it for coordinates in display
                                 cropToFrameTransform.mapRect(location);//transforms using Matrix the bounding box to the correct transformed coordinates
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
+                                result.setMaxTemp(max);
+                                result.setMaxTempLocation(tempLocation);
                                 mappedRecognitions.add(result);  //add the result to a linked list
                             }
                         }
@@ -960,13 +966,13 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                         computingDetection = false;
 
-                        runOnUiThread(
+                       /* runOnUiThread(
                                 new Runnable() {
                                     @Override
                                     public void run() {
                                         toastMethodForGetMaxTemp(max);
                                     }
-                                });
+                                });*/
                     }
                 });
 
