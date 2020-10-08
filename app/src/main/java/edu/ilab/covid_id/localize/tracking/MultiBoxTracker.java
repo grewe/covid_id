@@ -190,13 +190,16 @@ public class MultiBoxTracker {
       borderedText.drawText(
           canvas, trackedPos.left + cornerSize, trackedPos.top, labelString + "%", boxPaint);
 
+      if(recognition.maxTempLocation!=null){  //Added by shivali: Displaying circle with highest temp and checking the location of max temp
+        final String tempString = (""+recognition.maxTemp);
 
-      final String tempString = (""+recognition.maxTemp);
+        //SH draw the crosshairs where the max temp resides
+        Point p = recognition.maxTempLocation;
+        canvas.drawCircle(p.x,p.y,cornerSize,tempPaint);
+        borderedText.drawText(canvas,p.x,p.y,tempString);
+      }
 
-      //SH draw the crosshairs where the max temp resides
-      Point p = recognition.maxTempLocation;
-      canvas.drawCircle(p.x,p.y,cornerSize,tempPaint);
-      borderedText.drawText(canvas,p.x,p.y,tempString);
+
     }
   }
 
@@ -251,10 +254,13 @@ public class MultiBoxTracker {
       trackedRecognition.color = COLORS[trackedObjects.size()]; //based on if the 1st, 2nd etc item (num elements, size increases)
                                                                 // in trackedObjects will get a different drawing color
 
-      //SH add the max TEmp
-      //SH you MUST add to the Recogntion where it is created both (double) maxTemp and a (RectF) maxTempLocation
-      trackedRecognition.maxTemp = potential.second.getMaxTemp();
-      trackedRecognition.maxTempLocation = new Point(potential.second.getMaxTempLocation());
+      //Added by shivali
+      //Checking the max temp greater thn 0 to avoid null pointer error.
+      //Adding temp and highest temp location
+      if(potential.second.getMaxTemp()>0){
+        trackedRecognition.maxTemp = potential.second.getMaxTemp();
+        trackedRecognition.maxTempLocation = new Point(potential.second.getMaxTempLocation());
+      }
 
       trackedObjects.add(trackedRecognition);
 
