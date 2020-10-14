@@ -288,7 +288,8 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
 
     @Override
     public void setUseNNAPI(boolean isChecked) {
-        if (tfLite != null) tfLite.setUseNNAPI(isChecked);
+        // current version of tfnightly does not recognize this method
+        //if (tfLite != null) tfLite.setUseNNAPI(isChecked);
     }
 }
 

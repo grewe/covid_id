@@ -130,7 +130,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     d.inputSize = inputSize;
 
     try {
-      d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
+      d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename), new Interpreter.Options());
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -256,6 +256,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
   @Override
   public void setUseNNAPI(boolean isChecked) {
-    if (tfLite != null) tfLite.setUseNNAPI(isChecked);
+    if (tfLite != null) {
+      // current version of tfnightly does not recognize this method
+      // tfLite.setUseNNAPI(isChecked);
+    }
   }
 }
