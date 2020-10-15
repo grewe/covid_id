@@ -5,30 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/flowersClassificationButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/covid_id_flowers" />
-
-    <Button
-        android:id="@+id/objectDetectButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="168dp"
-        android:layout_marginStart="67dp"
-        android:layout_toEndOf="@+id/flowersClassificationButton"
-        android:text="@string/covid_id_localize" />
-
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/flowersClassificationButton"
-        android:layout_marginTop="-48dp"
         tools:context=".MapsActivity" />
 
     <Button
@@ -37,18 +19,38 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:background="#FFFFFF"
         android:text="Login" />
 
-    <Button
-        android:id="@+id/IRButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/button_layout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="12dp"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="12dp"
-        android:text="IR" />
+        android:layout_marginBottom="0dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/flowersClassificationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/covid_id_flowers" />
+
+        <Button
+            android:id="@+id/objectDetectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/covid_id_localize" />
+
+        <Button
+            android:id="@+id/IRButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="IR" />
+    </LinearLayout>
 
 
 </RelativeLayout>
