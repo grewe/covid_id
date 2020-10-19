@@ -39,23 +39,19 @@ import edu.ilab.covid_id.localize.DetectorActivity;
  * Main Launched Activity that contains our Map for Covid ID project --
  */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
     /**
-     * Initializes a single helper to be used by all activities
+     * helper for fire store access
      */
     public static FirestoreHelper myFirestoreHelper;
-
     /**
      * map used in display
      */
     private GoogleMap mMap;
 
-
     /**
      * Firebase Storage used to store image files
      */
     public static FirebaseStorage storageFirebase;
-
 
     /**
      * Create a storage reference from our app
@@ -108,8 +104,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DetectorActivity exampleDetectorActivity;
 
     private static final int REQUEST_CODE = 101;
-
-
 
     /**
      * used to store any app preferences and persistent data like the last record storage timestamp
@@ -189,55 +183,69 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        initFirebase(); // initialize various objects for communicating with the firebase backend
+        initMap();  // initialize map fragment and fusedLocationProviderClient
+        initViewHooks(); // initialize hooks to views on screen
+        initButtonListeners();  // initialize listeners for all buttons on screen
+        initConstants();    // initialize constants from values/integers.xml and shared preferences
+    }
+
+    /**
+     * on start, set login button view
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setLoginButtonUI();
+    }
+
+    /**
+     * before destroying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //make sure to update the SharedPreferences so when app restarts it will now the last timestamp
+        appPrefs.edit().putLong("maskRecordLastStoreTimestamp", maskRecordLastStoreTimestamp)
+                .putLong("feverRecordLastStoreTimestamp",feverRecordLastStoreTimestamp)
+                .putLong("crowdRecordLastStoreTimestamp",crowdRecordLastStoreTimestamp)
+                .putLong("socDistRecordLastStoreTimestamp",socDistRecordLastStoreTimestamp)
+                .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
+    }
+
+    /**
+     * initialize map fragment and fusedLocationProviderClient
+     */
+    private void initMap() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        mapFragment.getMapAsync(MapsActivity.this);
 
         //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+    }
 
-        //grab handles to the various buttons to launch different classification activities
-        this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
-
-        //create event handler for each classification button to launch the corresponding activity
-        flowersClassificationActivityButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Launch classifier --here stupid default flowers classifier
-                Intent intent = new Intent("edu.ilab.covid_id.classification.ClassifierActivity");
-                startActivity(intent);
-            }
-        });
-
-        //grab handle to the example detector/localization Activity
-        this.exampleDetectorActivityButton  = (Button) findViewById(R.id.objectDetectButton);
-        //create event handler for the object Detetor to launch DetectorActvity
-        exampleDetectorActivityButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Launch classifier --here stupid default flowers classifier
-                Intent intent = new Intent("edu.ilab.covid_id.localize.DetectorActivity");
-                startActivity(intent);
-            }
-        });
-
-        //grab handle to the launch the IRStaticDataExploreActivity
-        //IMPORTANT:  CHANGE: later will chante to launch the runtime IRActivity
-        this.IRButton  = (Button) findViewById(R.id.IRButton);
-        //create event handler for the object Detetor to launch DetectorActvity
-        IRButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Launch classifier --here stupid default flowers classifier
-                Intent intent = new Intent("edu.ilab.covid_id.ir.ConnectFlirActivity");
-                startActivity(intent);
-            }
-        });
-
-        // initialize our db helper object
+    /**
+     * initialize various objects for communicating with the firebase backend
+     */
+    private void initFirebase() {
+        // init firebase helper
         myFirestoreHelper = new FirestoreHelper();
+        // connect to get instance of FirebaseStorage used to store image files
+        storageFirebase = FirebaseStorage.getInstance();
+        // Create a storage reference from our app
+        storageFirebaseRef = storageFirebase.getReference();
+        //create reference to images location
+        imagesFirebaseRef = storageFirebaseRef.child("images");
+    }
 
+    /**
+     * initialize constants like maskRecordLastStoreTimestamp and deltaCrowdRecordStoredTimeMS
+     * by querying res/values/integers.xml as well as shared preferences
+     */
+    private void initConstants() {
         //grab shared preferences associated with this app
         appPrefs =  getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
 
@@ -263,26 +271,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         feverRecordLastStoreTimestamp = appPrefs.getLong("feverRecordLastStoreTimestamp", -1);
         crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
         socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
-
-
-        // connect to get instance of FirebaseStorage used to store image files
-        storageFirebase = FirebaseStorage.getInstance();
-
-        // Create a storage reference from our app
-        storageFirebaseRef = storageFirebase.getReference();
-
-        //create reference to images location
-        imagesFirebaseRef = storageFirebaseRef.child("images");
-
     }
 
     /**
-     * on start, set login button view
+     * initialize local hooks to all views on the screen we may need to mutate/utilize
      */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        setLoginButtonUI();
+    private void initViewHooks() {
+        //grab handles to the various buttons to launch different classification activities
+        this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
+        //grab handle to the example detector/localization Activity
+        this.exampleDetectorActivityButton  = (Button) findViewById(R.id.objectDetectButton);
+        //grab handle to the launch the IRStaticDataExploreActivity
+        this.IRButton  = (Button) findViewById(R.id.IRButton);
+    }
+
+    /**
+     * initialize on click listeners to all the buttons on screen
+     */
+    private void initButtonListeners() {
+        //create event handler for each classification button to launch the corresponding activity
+        flowersClassificationActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.classification.ClassifierActivity");
+                startActivity(intent);
+            }
+        });
+        //create event handler for the object Detetor to launch DetectorActvity
+        exampleDetectorActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.localize.DetectorActivity");
+                startActivity(intent);
+            }
+        });
+        //create event handler for the object Detetor to launch DetectorActvity
+        IRButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Launch classifier --here stupid default flowers classifier
+                Intent intent = new Intent("edu.ilab.covid_id.ir.ConnectFlirActivity");
+                startActivity(intent);
+            }
+        });
     }
 
     /**
@@ -330,19 +363,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**
-     * before destroying app update the shared preferences with last stored record timestamps for each kind of record (i.e. maskRecord)
+     * used to update the map location
+     * @param location
      */
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //make sure to update the SharedPreferences so when app restarts it will now the last timestamp
-        appPrefs.edit().putLong("maskRecordLastStoreTimestamp", maskRecordLastStoreTimestamp)
-                .putLong("feverRecordLastStoreTimestamp",feverRecordLastStoreTimestamp)
-                .putLong("crowdRecordLastStoreTimestamp",crowdRecordLastStoreTimestamp)
-                .putLong("socDistRecordLastStoreTimestamp",socDistRecordLastStoreTimestamp)
-                .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
-    }
-
     public void updateMapLocation(Location location ){
         if (location != null) {
             // toast location if flag is set to do so
@@ -432,6 +455,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });*/
     }
 
+    /**
+     * used to get a location request
+     * @return - location request
+     */
     private LocationRequest getLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
@@ -439,7 +466,4 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return locationRequest;
     }
-
-
-
 }

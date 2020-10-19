@@ -5,27 +5,19 @@
 
     <integer name="deltaMaskRecordStoreTimeMS">60000</integer>
 
-
     <integer name="deltaFeverRecordStoreTimeMS">60000</integer>
-
 
     <integer name="deltaCrowdRecordStoreTimeMS">600000</integer>
 
-
     <integer name="deltaSocDistRecordStoreTimeMS">60000</integer>
-
 
     <integer name="deltaCovidRecordStoreLocationM">20</integer>
 
-
     <integer name="deltaMaskRecordStoreLocationM">20</integer>
-
 
     <integer name="deltaFeverRecordStoreLocationM">20</integer>
 
-
     <integer name="deltaCrowdRecordStoreLocationM">20</integer>
-
 
     <integer name="deltaSocDistRecordStoreLocationM">20</integer>
 
