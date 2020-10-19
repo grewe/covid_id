@@ -1,13 +1,17 @@
 package edu.ilab.covid_id;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
@@ -22,8 +26,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
@@ -89,9 +95,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button loginButton;
 
     /**
+     * Handle to track location button
+     */
+    private Button trackLocationButton;
+
+    /**
      * Handle to the IR activity launching button
      */
     private Button IRButton;
+
+    /**
+     * button to expand / collapse settings
+     */
+    private FloatingActionButton expandCollapseSettingsButton;
+
+    /**
+     * layout where settings buttons live
+     */
+    private LinearLayout settingsLayout;
 
     /**
      * for firebase (I think)
@@ -143,11 +164,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaSocDistRecordStoreLocationM;
 
     /**
+     * if user is in live tracking mode, how zoomed in do we want to be (larger is more zoomed in)
+     */
+    public static float trackingZoomSize = 20.0f;
+
+    /**
      * flag to indicate that system is ready to store a new recognition result based on enough time elapsed
      * since last stored record OR user movement is great enough to have the record indicate it is in a new location
      */
-    public static boolean flagStoreRecognitionResults =true;
+    public static boolean flagStoreRecognitionResults = true;
 
+    /**
+     * flag to indicate if map should track user's location live (false by default)
+     */
+    public static boolean trackLocation = false;
 
     /**
      * flag to indicate if should store images to Firebase Storage
@@ -158,6 +188,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * flag to indicate if location should be toasted to user whenever new location is detected
      */
     public static boolean TOAST_LOCATION = false;
+
+    /**
+     * flag for if settings are expanded or not (false by default)
+     */
+    public static boolean expand_settings = false;
 
     /**
      * email as specified when logging into Firebase by user
@@ -197,9 +232,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onDestroy();
         //make sure to update the SharedPreferences so when app restarts it will now the last timestamp
         appPrefs.edit().putLong("maskRecordLastStoreTimestamp", maskRecordLastStoreTimestamp)
-                .putLong("feverRecordLastStoreTimestamp",feverRecordLastStoreTimestamp)
-                .putLong("crowdRecordLastStoreTimestamp",crowdRecordLastStoreTimestamp)
-                .putLong("socDistRecordLastStoreTimestamp",socDistRecordLastStoreTimestamp)
+                .putLong("feverRecordLastStoreTimestamp", feverRecordLastStoreTimestamp)
+                .putLong("crowdRecordLastStoreTimestamp", crowdRecordLastStoreTimestamp)
+                .putLong("socDistRecordLastStoreTimestamp", socDistRecordLastStoreTimestamp)
                 .putLong("covidRecordLastStoreTimestamp", covidRecordLastStoreTimestamp).apply();
     }
 
@@ -236,7 +271,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private void initConstants() {
         //grab shared preferences associated with this app
-        appPrefs =  getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
+        appPrefs = getSharedPreferences("appPreferences", MODE_PRIVATE);  //associate storage with name "appPreferences"
 
         //retrieve for integers.xml the hard coded values for the delta distances  between record storage necessary
         deltaCovidRecordStoreLocationM = getApplicationContext().getResources().getInteger(R.integer.deltaCovidRecordStoreLocationM);
@@ -269,9 +304,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //grab handles to the various buttons to launch different classification activities
         this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
         //grab handle to the example detector/localization Activity
-        this.exampleDetectorActivityButton  = (Button) findViewById(R.id.objectDetectButton);
+        this.exampleDetectorActivityButton = (Button) findViewById(R.id.objectDetectButton);
         //grab handle to the launch the IRStaticDataExploreActivity
-        this.IRButton  = (Button) findViewById(R.id.IRButton);
+        this.IRButton = (Button) findViewById(R.id.IRButton);
+        //grab handle to the FAB for expanding the settings
+        this.expandCollapseSettingsButton = findViewById(R.id.expand_settings_button);
+        //grab handle to expandible settings layout
+        this.settingsLayout = findViewById(R.id.collapsible_button_layout);
+        //grab handle to track location button
+        this.trackLocationButton = findViewById(R.id.track_location_button);
     }
 
     /**
@@ -305,7 +346,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent);
             }
         });
+        // create event handler for FAB settings button
+        settingsLayout.setVisibility(expand_settings ? View.VISIBLE : View.GONE);
+        expandCollapseSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                expand_settings = !expand_settings;
+                settingsLayout.setVisibility(expand_settings ? View.VISIBLE : View.GONE);
+            }
+        });
+        // create event handler for tracking button
+        trackLocationButton.setText("Track");
+        trackLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                trackLocation = !trackLocation;
+                trackLocationButton.setText(trackLocation ? "Stop Track" : "Track");
+            }
+        });
     }
+
+
 
     /**
      * Sets up the login/logout button to take user to google authentication service
@@ -321,8 +382,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             MapsActivity.userEmailFirebase = user.getEmail();
             MapsActivity.userIdFirebase = user.getUid();
             loginButton.setText(R.string.logout);
-        }
-        else {
+        } else {
             loginButton.setText(R.string.login);
         }
 
@@ -355,10 +415,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * used to update the map location
      * @param location
      */
-    public void updateMapLocation(Location location ){
+    public void updateMapLocation(Location location) {
         if (location != null) {
             // toast location if flag is set to do so
-            if(TOAST_LOCATION) {
+            if (TOAST_LOCATION) {
                 Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
             }
             LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
@@ -368,7 +428,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
             mMap.addMarker(markerOptions);
             // toast location if flag is set to do so
-            if(TOAST_LOCATION) {
+            if (TOAST_LOCATION) {
                 Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "" + currentLocation.getLongitude(), Toast.LENGTH_LONG).show();
             }
         }
@@ -383,16 +443,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        /**
+        mMap = googleMap;   // init handle to google map object
+        mMap.setMyLocationEnabled(true);    // set location enabled
+        UiSettings mapSettings = mMap.getUiSettings();
+        mapSettings.setZoomControlsEnabled(true);
+
+        /*
          * SUBHANGI, DIVYA, ROHAN
          * you will have a update callback for location and the ONLY thing you do in it is to set
          * this.currentLocation = newLocaiton you will retrieve from the LocationResults
          *
-         * NOTE: ***investigate why a LocationResults recieves more than one location (getLocations() method)...weird --should be only 1???
-         * */
+         * NOTE: ***investigate why a LocationResults receives more than one location (getLocations() method)...weird --should be only 1???
+         */
 
         LocationCallback mLocationCallback = new LocationCallback() {
             @Override
@@ -401,11 +466,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    // Update UI with location data
-                    // ...
-                    MapsActivity.currentLocation = location;
-                    updateMapLocation(location);
+                    // if user is live tracking, we reset to track user
+                    if(trackLocation) {
+                        Log.d("MY_MAP", "Updating map location");
+                        // MapsActivity.currentLocation = location;
+                        // updateMapLocation(location);
 
+                        //Move the camera to the user's location and zoom in!
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), trackingZoomSize));
+                    }
                 }
             }
 
