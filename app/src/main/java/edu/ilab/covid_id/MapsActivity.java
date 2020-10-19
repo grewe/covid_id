@@ -71,38 +71,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * object to handle Location updates/changes from user
      */
-    FusedLocationProviderClient fusedLocationProviderClient;
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     /**
      * Buttons used to Launch Classification Activities
      */
-    Button flowersClassificationActivityButton;
+    private Button flowersClassificationActivityButton;
 
     /**
      * Handle to the detector activity button
      */
-    Button exampleDetectorActivityButton;
+    private Button exampleDetectorActivityButton;
 
     /**
      * Handle to the login/logout button
      */
-    Button loginButton;
+    private Button loginButton;
 
     /**
      * Handle to the IR activity launching button
      */
-    Button IRButton;
+    private Button IRButton;
 
     /**
-     * Activities to perform different kinds of Classification
+     * for firebase (I think)
      */
-    ClassifierActivity flowersClassifierActivity;
-
-    /**
-     * Activity to perform localition (detection)
-     */
-    DetectorActivity exampleDetectorActivity;
-
     private static final int REQUEST_CODE = 101;
 
     /**
@@ -120,7 +113,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long feverRecordLastStoreTimestamp;
     public static long covidRecordLastStoreTimestamp;  //for generic CovidRecord
 
-
     /**
      * variables representing deltas in time necessary to allow a new related record (i.e. MaskRecord) to be stored
      * represented in milliseconds
@@ -131,8 +123,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaCrowdRecordStoreTimeMS;
     public static long deltaSocDistRecordStoreTimeMS;
 
-
-
     /**
      * following Locations indicate the last Location that kind of record (i.e. maskRecord) was stored to FireStore
      */
@@ -141,7 +131,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static Location socDistRecordLastStoreLocation;
     public static Location feverRecordLastStoreLocation;
     public static Location covidRecordLastStoreLocation;  //for generic CovidRecord
-
 
     /**
      * variables representing deltas in location distance necessary to allow a new related record (i.e. MaskRecord) to be stored
