@@ -7,6 +7,7 @@
     android:layout_height="match_parent">
 
 
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -86,12 +87,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#555555"
+        android:backgroundTint="@color/default_button_bg_color"
         android:clickable="true"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent"
         map:rippleColor="#474242"
-        map:srcCompat="@drawable/ic_baseline_settings_gear_white_24" />
+        map:srcCompat="@drawable/ic_baseline_settings_24" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

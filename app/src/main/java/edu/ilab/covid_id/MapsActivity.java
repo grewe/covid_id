@@ -347,6 +347,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         // create event handler for FAB settings button
+        expandCollapseSettingsButton.setAlpha(0.85f);
         settingsLayout.setVisibility(expand_settings ? View.VISIBLE : View.GONE);
         expandCollapseSettingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
