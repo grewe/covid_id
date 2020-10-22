@@ -48,16 +48,19 @@ public class ClassifierFloatMobileNet extends Classifier {
     super(activity, device, numThreads);
   }
 
-  // TODO: Specify model.tflite as the model file and labels.txt as the label file
+  // TODO: Specify flower_model.tflite as the model file and flower_labels.txt as the label file
 
   @Override
   protected String getModelPath() {
-    return "model.tflite";
+    return true ?  "catdog_model.tflite" : "flower_model.tflite";
+    //return "flower_model.tflite";
+
   }
 
   @Override
   protected String getLabelPath() {
-    return "labels.txt";
+     return true ?  "catdog_label.txt" : "flower_labels.txt";
+     //return "flower_labels.txt";
   }
 
 

@@ -135,7 +135,6 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                             //COVID_ID:  ADD any OTHER preprocessing here
 
-
                             //Calling the Classifier
                             final List<Classifier.Recognition> results =
                                     classifier.recognizeImage(rgbFrameBitmap, sensorOrientation);
@@ -155,8 +154,6 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             showCameraResolution(cropSize + "x" + cropSize);
                                             showRotationInfo(String.valueOf(sensorOrientation));
                                             showInference(lastProcessingTimeMs + "ms");
-
-
 
                                             //==============================================================
                                             //COVID: code to store image to CloudStore  AND store record in database
@@ -180,13 +177,9 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                     e.printStackTrace();
                                             }
 
-
                                             //**************************************************
                                             //Store to Firebase Database  -- if we are ready since last record storage to make a new record
                                             if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-
-
-                                                Date d = new Date();
 
                                                 //setup variables for CovidRecord to store to FireStore
                                                 ArrayList<Float> angles = new ArrayList<Float>();
@@ -200,10 +193,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
                                                 FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation );
-
-
                                             }
-
                                             //=========================================================================
                                         }
                                     });

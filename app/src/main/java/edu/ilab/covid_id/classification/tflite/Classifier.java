@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.os.Trace;
+import android.util.Log;
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
@@ -69,7 +70,8 @@ public abstract class Classifier {
 
 
   /** Number of results to show in the UI. */
-  private static final int MAX_RESULTS = 3;
+  //private static final int MAX_RESULTS = 3;
+  private static final int MAX_RESULTS = 2;
 
   /** The loaded TensorFlow Lite model. */
   private MappedByteBuffer tfliteModel;
@@ -228,6 +230,7 @@ public abstract class Classifier {
     int probabilityTensorIndex = 0;
     int[] probabilityShape =
         tflite.getOutputTensor(probabilityTensorIndex).shape(); // {1, NUM_CLASSES}
+
     DataType probabilityDataType = tflite.getOutputTensor(probabilityTensorIndex).dataType();
 
     // Creates the input tensor.
