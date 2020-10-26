@@ -31,18 +31,26 @@ import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
+import java.util.Date;
+
 import edu.ilab.covid_id.auth.LoginActivity;
 import edu.ilab.covid_id.classification.ClassifierActivity;
+import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.data.FirestoreHelper;
 import edu.ilab.covid_id.localize.DetectorActivity;
 
@@ -127,8 +135,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private LinearLayout settingsLayout;
 
-
-    //private ArrayList<MarkerData> markersData;
+    /**
+     * list populated by firestore query in populateMap() method
+     */
+    private ArrayList<CovidRecord> queryRecords = null;
 
     /**
      * for firebase (I think)
@@ -221,6 +231,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * ID associated with user in Firebase
      */
     public static String userIdFirebase;
+
+    /**
+     * limit for max number of results query from firebase can return
+     */
+    public static int QUERY_LIMIT = 1000;
+
+    /**
+     * threshold for how long back to search in time when querying for covid records in milliseconds
+     *  currently: 1 hour = 1000 ms * 60 s * 60 min
+     */
+    public static long timeOffsetMS = 1000 * 60 * 60;
+
+    /**
+     * threshold for how long back to search in time when querying for covid records in milliseconds
+     *  currently: 15 days = 1000 ms * 60 s * 60 min * 24 hrs * 15 days
+     */
+    public static long timeOffsetMSDiagnostic = 1000 * 60 * 60 * 24 * 15;
+
+    /**
+     * flag for whether we want to run in diagnostic mode or not
+     */
+    public static boolean DIAGNOSTIC_MODE = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -546,10 +578,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private void populateMap() {
         // pull records from firebase according to certain conditions
+        FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
 
-        // pass those records into a method which returns a list of google map markers
+        Date now = new Date();
+        Date prior = new Date(now.getTime() - (DIAGNOSTIC_MODE ? timeOffsetMSDiagnostic : timeOffsetMS));
 
-        // erase the current markers and add these new markers to the map
+        Log.d("LOCATION_QUERY", "Now: " + now.toString());
+        Log.d("LOCATION_QUERY", "Prior: " + prior.toString());
+
+        mFirestore.collection("CovidRecord")
+                .whereGreaterThan("timestamp", prior)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(QUERY_LIMIT)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                // log the number of records returned
+                Log.d("LOCATION_QUERY", "size of list: " + String.valueOf(queryDocumentSnapshots.size()));
+                // initialize new local list of CovidRecords to process
+                queryRecords = new ArrayList<>();
+                for(DocumentSnapshot doc : queryDocumentSnapshots) {
+                    // convert document to CovidRecord class object
+                    CovidRecord x = doc.toObject(CovidRecord.class);
+
+                    
+                    // TODO: check if record is within distance to current location
+                    if( /* is near current location */ true ) {
+                        queryRecords.add(x);
+                    }
+
+
+                    Log.d("LOCATION_QUERY", x.toString());
+                    Log.d("LOCATION_QUERY", x.getRecordType());
+                }
+
+                // TODO: call method which returns a list of google map markers
+
+                // TODO: erase the current markers and add these new markers to the map
+
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("LOCATION_QUERY", e.toString());
+            }
+        });
+
+
+
 
     }
 

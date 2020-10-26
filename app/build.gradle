@@ -78,6 +78,9 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:18.0.0'
     implementation 'com.google.android.gms:play-services-places:17.0.0'
 
+    // for better map query operations
+    implementation 'com.github.chintan369:Geo-FireStore-Query:1.1.0'
+
 
     // for IR Flir services
    //using OLD style implementation --depending on which Gradle Build tools you use
