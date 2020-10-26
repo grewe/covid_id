@@ -24,6 +24,7 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 
@@ -158,7 +159,6 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                             //==============================================================
                                             //COVID: code to store image to CloudStore  AND store record in database
 
-
                                             //**************************************************
                                             //try writing out the image being processed to a FILE locally on Android
                                             //File sd = Environment.getExternalStorageDirectory();
@@ -189,7 +189,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                                                 CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
                                                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
+                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "covidRecord");
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
                                                 FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation, "covidRecord" );

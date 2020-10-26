@@ -77,22 +77,18 @@ public class FirebaseStorageUtil {
 
                     //alter the CovidRecord to add the ImageURL to myRecord
                     myRecord.setFilenameURL(imageFileURL);
-
-                    // ask helper to push record to db
-                    MapsActivity.myFirestoreHelper.addRecord(myRecord);
                 }
             });
         }//end case of storing Images
 
         //-------------------------------------------------
         else {  //NO image file storage  --set fileURL to null in CovidRecord
-
             myRecord.setFilenameURL(null);
-
-            // ask helper to push record to db
-            MapsActivity.myFirestoreHelper.addRecord(myRecord);
-
         }
+
+        // ask helper to push record to db
+        MapsActivity.myFirestoreHelper.addRecord(myRecord);
+
         // based on recordType (mask, socDist, crowd, ir), will keep track of last storage timestamp
         // and location
         if(recordType.equals("crowd")) {

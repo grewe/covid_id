@@ -1,6 +1,7 @@
 package edu.ilab.covid_id.data;
 
 import android.location.Location;
+import android.util.Log;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
@@ -67,6 +68,12 @@ public class CovidRecord {
      */
     private String info;
 
+    /**
+     * stores the type of CovidRecord we are storing (ie: "crowd", "ir", "mask", "socDist",
+     * default: "covidRecord")
+     */
+    private String recordType;
+
 
     /**
      * UserID retrieved after a Firebase Authentication of user
@@ -94,13 +101,16 @@ public class CovidRecord {
         this.boundingBox = null;
         this.userEmailFirebase = null;
         this.userIDFirebase = null;
+        this.recordType = "covidRecord";
     }
 
     /**
      *  constructor with all values given
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase, String userIDFirebase) {
+                       String filenameURL, String info, ArrayList<Float> boundingBox,
+                       ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase,
+                       String userIDFirebase, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -112,12 +122,14 @@ public class CovidRecord {
         this.boundingBox = boundingBox;
         this.userIDFirebase = userIDFirebase;
         this.userEmailFirebase = userEmailFirebase;
+        this.recordType = recordType;
     }
     /**
      *  constructor with all values except user info given --ANONYMOUS storage
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> orientationAngles, float altitude) {
+                       String filenameURL, String info, ArrayList<Float> boundingBox,
+                       ArrayList<Float> orientationAngles, float altitude, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -127,6 +139,7 @@ public class CovidRecord {
         this.filenameURL = filenameURL;
         this.info = info;
         this.boundingBox = boundingBox;
+        this.recordType = recordType;
     }
 
     /**
@@ -134,7 +147,8 @@ public class CovidRecord {
      */
 
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> boundingBox, String userEmailFirebase, String userIDFirebase) {
+                       String filenameURL, String info, ArrayList<Float> boundingBox,
+                       String userEmailFirebase, String userIDFirebase, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -149,6 +163,7 @@ public class CovidRecord {
         this.boundingBox = boundingBox;
         this.userEmailFirebase = userEmailFirebase;
         this.userIDFirebase = userIDFirebase;
+        this.recordType = recordType;
     }
 
     /**
@@ -156,7 +171,7 @@ public class CovidRecord {
      */
 
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> boundingBox) {
+                       String filenameURL, String info, ArrayList<Float> boundingBox, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -169,13 +184,15 @@ public class CovidRecord {
         this.filenameURL = filenameURL;
         this.info = info;
         this.boundingBox = boundingBox;
+        this.recordType = recordType;
     }
     /**
      * Constructor that may be used for classification only
      * (default values for bounding box -1 on all coordinates)
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude,String userEmailFirebase, String userIDFirebase) {
+                       String filenameURL, String info, ArrayList<Float> orientationAngles,
+                       float altitude,String userEmailFirebase, String userIDFirebase, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -191,13 +208,15 @@ public class CovidRecord {
         this.boundingBox.add(3, -1.0f);
         this.userIDFirebase = userIDFirebase;
         this.userEmailFirebase = userEmailFirebase;
+        this.recordType = recordType;
     }
     /**
      * Constructor that may be used for classification only
      * (default values for bounding box -1 on all coordinates)  -- ANONYMOUS
      */
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
-                       String filenameURL, String info, ArrayList<Float> orientationAngles, float altitude) {
+                       String filenameURL, String info, ArrayList<Float> orientationAngles,
+                       float altitude, String recordType) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -211,6 +230,68 @@ public class CovidRecord {
         this.boundingBox.add(1, -1.0f);
         this.boundingBox.add(2, -1.0f);
         this.boundingBox.add(3, -1.0f);
+        this.recordType = recordType;
+    }
+
+    /**
+     * determines if we are ready to store a new record based on either location moved or time duration since last record storage is enough
+     * @return true if ready to store next record, false otherwise
+     * @param lastStoredTimeMS time in MS of last stored record of this type
+     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
+     * @param lastStoredLocation This is location of the last stored record of this type
+     * @param currentLocation This is the lcoation that is updated and represents the current location of this device (should be same as MapsActivity.currentLcoation
+     */
+    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS, Location lastStoredLocation, Location currentLocation, long deltaLocationM ){
+        //safety check - on the weird situation they are asking for location on the phone
+        if(currentLocation == null) {
+
+            return false;
+        }
+
+        //first test if ANY CovidRecord has been stored, if not then say yes!
+        if( lastStoredTimeMS == -1) //nothing has been store yet
+            return true;
+
+        //the current location will be null before the first record is stored
+        if(lastStoredLocation == null)
+            return true;
+
+        //based on time we are ready to store new record
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS || lastStoredLocation.distanceTo(currentLocation) > deltaLocationM )
+            return true;
+
+        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough- OR ENOUGH TIME elapsed
+        /*
+        replace ABOVE
+        //Distance is calcuated on the globe using 2 Lat/Long values
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  || (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
+           return true;
+         */
+
+        return false;
+    }
+
+    /**
+     * determines if we are ready to store a new record based on ONLY time duration since last record storage is enough
+     * @return true if ready to store next record, false otherwise
+     * @param lastStoredTimeMS time in MS of last stored record of this type
+     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
+     */
+    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS){
+        //first test if ANY CovidRecord has been stored, if not then say yes!
+        if( lastStoredTimeMS == -1) //nothing has been store yet
+            return true;
+        //based on time we are ready to store new record
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
+            return true;
+        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough---do like time.
+        /*
+        replace ABOVE
+        //Distance is calcuated on the globe using 2 Lat/Long values
+        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  && (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
+           return true;
+         */
+        return false;
     }
 
     public float getRisk() {
@@ -296,61 +377,11 @@ public class CovidRecord {
     public void setUserEmailFirebase(String userEmailFirebase) { this.userEmailFirebase = userEmailFirebase;}
 
 
-    /**
-     * determines if we are ready to store a new record based on either location moved or time duration since last record storage is enough
-     * @return true if ready to store next record, false otherwise
-     * @param lastStoredTimeMS time in MS of last stored record of this type
-     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
-     * @param lastStoredLocation This is location of the last stored record of this type
-     * @param currentLocation This is the lcoation that is updated and represents the current location of this device (should be same as MapsActivity.currentLcoation
-     */
-    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS, Location lastStoredLocation, Location currentLocation, long deltaLocationM ){
-        //safety check - on the weird situation they are asking for location on the phone
-        if(currentLocation == null)
-            return false;
-        //first test if ANY CovidRecord has been stored, if not then say yes!
-        if( lastStoredTimeMS == -1) //nothing has been store yet
-            return true;
-
-        //the current location will be null before the first record is stored
-        if(lastStoredLocation == null)
-            return true;
-
-        //based on time we are ready to store new record
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS || lastStoredLocation.distanceTo(currentLocation) > deltaLocationM )
-            return true;
-
-        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough- OR ENOUGH TIME elapsed
-        /*
-        replace ABOVE
-        //Distance is calcuated on the globe using 2 Lat/Long values
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  || (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
-           return true;
-         */
-
-        return false;
+    public String getRecordType() {
+        return recordType;
     }
 
-    /**
-     * determines if we are ready to store a new record based on ONLY time duration since last record storage is enough
-     * @return true if ready to store next record, false otherwise
-     * @param lastStoredTimeMS time in MS of last stored record of this type
-     * @param deltaTimeMS delta time needed to have elapsed since last storage before ready to store next record
-     */
-    public static boolean readyStoreRecord(long lastStoredTimeMS, long deltaTimeMS){
-        //first test if ANY CovidRecord has been stored, if not then say yes!
-        if( lastStoredTimeMS == -1) //nothing has been store yet
-            return true;
-        //based on time we are ready to store new record
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS)
-            return true;
-        //SUBHANGI, DIVYA, ROHAN - add test for location change being large enough---do like time.
-        /*
-        replace ABOVE
-        //Distance is calcuated on the globe using 2 Lat/Long values
-        if (Math.abs(lastStoredTimeMS- System.currentTimeMillis()) > deltaTimeMS  && (Distance(lastStoredLcation, currentLocation) > deltaLocationM)
-           return true;
-         */
-        return false;
+    public void setRecordType(String recordType) {
+        this.recordType = recordType;
     }
 }

@@ -945,7 +945,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
                                             new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
-                                            MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
+                                            MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "ir");
 
                                     FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "ir");
 

@@ -492,6 +492,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
+                    MapsActivity.currentLocation = location;
+
                     // if user is live tracking, we reset to track user
                     if(trackLocation) {
                         Log.d("MY_MAP", "Updating map location");
