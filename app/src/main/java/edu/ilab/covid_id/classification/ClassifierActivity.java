@@ -192,7 +192,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                         Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
-                                                FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation );
+                                                FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation, "covidRecord" );
                                             }
                                             //=========================================================================
                                         }

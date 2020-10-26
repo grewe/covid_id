@@ -2,6 +2,7 @@ package edu.ilab.covid_id.data;
 
 import android.util.Log;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
@@ -18,15 +19,10 @@ public class FirestoreHelper {
      * handle for connection for Firestore
      */
     private FirebaseFirestore mFirestore;
-
-
-
     /**
      * handle for manipulating firestore settings
      */
     FirebaseFirestoreSettings settings;
-
-
 
     /**
      * Constructor that initializes a connection to the firestore
@@ -61,109 +57,5 @@ public class FirestoreHelper {
                 }
             });
     }
-
-    /**
-     * adds a record to the firestore MaskRecord document collection
-     * @param record
-     *
-     */
-    public void addRecord(MaskRecord record) {
-        // mFirestore.collection("CovidRecord").add(record);
-
-        mFirestore.collection("MaskRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
-            }
-
-
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("DBSTORE", "Error adding document", e);
-                    }
-                });
-
-    }
-
-    /**
-     * adds a record to the firestore IRRecord document collection
-     * @param record
-     *
-     */
-    public void addRecord(IRRecord record) {
-        // mFirestore.collection("CovidRecord").add(record);
-
-        mFirestore.collection("IRRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
-            }
-
-
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("DBSTORE", "Error adding document", e);
-                    }
-                });
-
-    }
-
-
-    /**
-     * adds a record to the firestore CrowdRecord document collection
-     * @param record
-     *
-     */
-    public void addRecord(CrowdRecord record) {
-        // mFirestore.collection("CovidRecord").add(record);
-
-        mFirestore.collection("CrowdRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
-            }
-
-
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("DBSTORE", "Error adding document", e);
-                    }
-                });
-
-    }
-
-
-    /**
-     * adds a record to the firestore SocDistRecord document collection
-     * @param record
-     *
-     */
-    public void addRecord(SocDistRecord record) {
-        // mFirestore.collection("CovidRecord").add(record);
-
-        mFirestore.collection("SocDistRecord").add(record).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.d("DBSTORE", "DocumentSnapshot written with ID: " + documentReference.getId());
-            }
-
-
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("DBSTORE", "Error adding document", e);
-                    }
-                });
-
-    }
-
-
 
 }

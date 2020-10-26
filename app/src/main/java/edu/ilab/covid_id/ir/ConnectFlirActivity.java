@@ -922,11 +922,11 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                boolean readyToStore = CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp,
+                                boolean readyToStore = CovidRecord.readyStoreRecord(MapsActivity.feverRecordLastStoreTimestamp,
                                         MapsActivity.deltaFeverRecordStoreTimeMS,
-                                        MapsActivity.covidRecordLastStoreLocation,
+                                        MapsActivity.feverRecordLastStoreLocation,
                                         MapsActivity.currentLocation,
-                                        MapsActivity.deltaCovidRecordStoreLocationM);
+                                        MapsActivity.deltaFeverRecordStoreLocationM);
                                 if(readyToStore) {
 
                                     ArrayList<Float> angles = new ArrayList<Float>();
@@ -947,7 +947,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase);
 
-                                    FirebaseStorageUtil.storeImageAndFeverRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation);
+                                    FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "ir");
 
                                 }
                                 //###############################################

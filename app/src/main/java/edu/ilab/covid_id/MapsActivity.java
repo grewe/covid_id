@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -29,9 +30,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -45,10 +51,12 @@ import edu.ilab.covid_id.localize.DetectorActivity;
  * Main Launched Activity that contains our Map for Covid ID project --
  */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+    private static final String TAG = "MAPS_ACTIVITY";
     /**
      * helper for fire store access
      */
     public static FirestoreHelper myFirestoreHelper;
+
     /**
      * map used in display
      */
@@ -105,6 +113,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button IRButton;
 
     /**
+     * Handle to the button which refreshes markers
+     */
+    private Button refreshMarkersButton;
+
+    /**
      * button to expand / collapse settings
      */
     private FloatingActionButton expandCollapseSettingsButton;
@@ -114,6 +127,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private LinearLayout settingsLayout;
 
+
+    //private ArrayList<MarkerData> markersData;
+
     /**
      * for firebase (I think)
      */
@@ -121,7 +137,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     /**
      * used to store any app preferences and persistent data like the last record storage timestamp
-     * for MaskRecord, FeverRecord, CrowdRecord and SocDistRecord
+     * for CovidRecord
      */
     public static SharedPreferences appPrefs;
 
@@ -135,7 +151,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long covidRecordLastStoreTimestamp;  //for generic CovidRecord
 
     /**
-     * variables representing deltas in time necessary to allow a new related record (i.e. MaskRecord) to be stored
+     * variables representing deltas in time necessary to allow a new related CovidRecord  related
+     * to the corresponding module (Mask, Crowd, IR, Soc Dist)to be stored
      * represented in milliseconds
      */
     public static long deltaCovidRecordStoreTimeMS;
@@ -145,7 +162,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaSocDistRecordStoreTimeMS;
 
     /**
-     * following Locations indicate the last Location that kind of record (i.e. maskRecord) was stored to FireStore
+     * following Locations indicate the last Location the CovidRecord related to the corresponding
+     * module (Mask, Crowd, IR, Soc Dist) was stored to FireStore
      */
     public static Location maskRecordLastStoreLocation;
     public static Location crowdRecordLastStoreLocation;
@@ -154,8 +172,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static Location covidRecordLastStoreLocation;  //for generic CovidRecord
 
     /**
-     * variables representing deltas in location distance necessary to allow a new related record (i.e. MaskRecord) to be stored
-     * represented in ????
+     * variables representing deltas in location distance necessary to allow a new related
+     * CovidRecord (i.e. type: "mask") to be stored represented in meters
      */
     public static long deltaCovidRecordStoreLocationM;
     public static long deltaMaskRecordStoreLocationM;
@@ -198,6 +216,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * email as specified when logging into Firebase by user
      */
     public static String userEmailFirebase;
+
     /**
      * ID associated with user in Firebase
      */
@@ -287,7 +306,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         deltaFeverRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaFeverRecordStoreTimeMS);
         deltaSocDistRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaSocDistRecordStoreTimeMS);
 
-
         //retrieve any of the following fields if present: maskRecordLastStoreTimestamp, crowdReocrdLastStoreTimestamp, socDistRecordLastStoreTimestamp, feverRecordLastStoreTimestamp
         // will be -1 if not yet set
         covidRecordLastStoreTimestamp = appPrefs.getLong("covidRecordLastStoreTimestamp", -1);
@@ -313,6 +331,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.settingsLayout = findViewById(R.id.collapsible_button_layout);
         //grab handle to track location button
         this.trackLocationButton = findViewById(R.id.track_location_button);
+        //grab handle to the refresh markers button
+        this.refreshMarkersButton = findViewById(R.id.refresh_markers_button);
     }
 
     /**
@@ -365,9 +385,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 trackLocationButton.setText(trackLocation ? "Stop Track" : "Track");
             }
         });
+        // create event handler for refresh markers button to populate map with markers
+        refreshMarkersButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                populateMap();
+            }
+        });
     }
-
-
 
     /**
      * Sets up the login/logout button to take user to google authentication service
@@ -512,6 +537,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });*/
+    }
+
+    /**
+     * pulls records from the firebase and uses them to populate map
+     */
+    private void populateMap() {
+        // pull records from firebase according to certain conditions
+
+        // pass those records into a method which returns a list of google map markers
+
+        // erase the current markers and add these new markers to the map
+
+    }
+
+    /**
+     * create listener to pass to query completion for populating map
+     * @return
+     */
+    private OnCompleteListener<QuerySnapshot> getPopulateMapListener() {
+        OnCompleteListener<QuerySnapshot> listener = new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d(TAG, document.getId() + " => " + document.getData());
+
+                    }
+                } else {
+                    Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+            }
+        };
+        return listener;
     }
 
     /**

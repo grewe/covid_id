@@ -72,6 +72,12 @@
             android:text="Track" />
 
         <Button
+            android:id="@+id/refresh_markers_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Refresh" />
+
+        <Button
             android:id="@+id/loginButton"
             android:layout_width="120dp"
             android:layout_height="wrap_content"
