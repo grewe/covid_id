@@ -28,6 +28,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -39,6 +40,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -602,9 +604,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // convert document to CovidRecord class object
                     CovidRecord x = doc.toObject(CovidRecord.class);
 
-                    
+                    // TODO: compute these values
+                    double distanceToM, mapHeightM = 200, mapWidthM = 200;
+
+                    // compute how many meters away the record location is from the centered camera position location
+                    CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
+                    Location centeredLoc = new Location("");    // make temp location
+                    centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
+                    centeredLoc.setLongitude(currentPosition.target.longitude); // set long
+                    // compute distance in meters from
+                    distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
+
                     // TODO: check if record is within distance to current location
-                    if( /* is near current location */ true ) {
+                    if( distanceToM <= mapHeightM || distanceToM <= mapWidthM) {
                         queryRecords.add(x);
                     }
 
@@ -612,6 +624,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d("LOCATION_QUERY", x.toString());
                     Log.d("LOCATION_QUERY", x.getRecordType());
                 }
+                Log.d("LOCATION_QUERY", "size of added records: " + queryRecords.size());
 
                 // TODO: call method which returns a list of google map markers
 
@@ -629,6 +642,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
+    }
+
+    /**
+     * Takes a geopoint and returns the equivalent location
+     * @param geoPoint
+     * @return
+     */
+    public static Location geoPointToLocation(GeoPoint geoPoint) {
+        Location location = new Location("");
+        double latitude = geoPoint.getLatitude();
+        double longitude = geoPoint.getLongitude();
+
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+
+        return location;
     }
 
     /**
