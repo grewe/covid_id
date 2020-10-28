@@ -33,6 +33,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -748,11 +749,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 Log.d("LOCATION_QUERY", "size of added records: " + queryRecords.size());
 
-                // TODO: call method which returns a list of google map markers
-
-                // TODO: erase the current markers and add these new markers to the map
-
-
+                // TODO: complete method to erase the current markers and add new markers to the map
+                //  based on query
+                setMarkers(queryRecords, mMap);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -760,10 +759,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d("LOCATION_QUERY", e.toString());
             }
         });
+    }
 
-
-
-
+    /**
+     * clear map and add new markers to map
+     * @param records
+     * @param map
+     */
+    private void setMarkers(ArrayList<CovidRecord> records, GoogleMap map) {
+        map.clear();   // remove all markers, overlays, polylines, etc from map
+        for(CovidRecord record : records) {
+            map.addMarker(new MarkerOptions()
+                    .position(new LatLng(record.getLocation().getLatitude(), record.getLocation().getLongitude()))
+                    .title(record.getRecordType())
+            );
+        }
     }
 
     /**
