@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_above="@+id/bottom_bar_layout"
-        map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
+        map:layout_constraintBottom_toTopOf="@+id/flowers_localize_layout"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintHorizontal_bias="0.0"
         map:layout_constraintStart_toStartOf="parent"
@@ -23,13 +23,11 @@
         tools:context=".MapsActivity" />
 
     <LinearLayout
-        android:id="@+id/bottom_bar_layout"
+        android:id="@+id/flowers_localize_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:gravity="center_horizontal"
+        android:layout_height="0dp"
         android:orientation="horizontal"
-        map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintStart_toStartOf="parent">
 
@@ -46,6 +44,39 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/covid_id_localize" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottom_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/crowdButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Crowd" />
+
+        <Button
+            android:id="@+id/maskButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mask" />
+
+        <Button
+            android:id="@+id/socDistButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SocDist" />
 
         <Button
             android:id="@+id/IRButton"

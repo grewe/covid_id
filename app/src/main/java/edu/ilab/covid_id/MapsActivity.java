@@ -123,6 +123,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button IRButton;
 
     /**
+     * Handle to the mask activity launching button
+     */
+    private Button maskButton;
+
+    /**
+     * Handle to the social distancing activity launching button
+     */
+    private Button socDistButton;
+
+    /**
+     * Handle to the crowd activity launching button
+     */
+    private Button crowdButton;
+
+    /**
      * Handle to the button which refreshes markers
      */
     private Button refreshMarkersButton;
@@ -367,6 +382,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.trackLocationButton = findViewById(R.id.track_location_button);
         //grab handle to the refresh markers button
         this.refreshMarkersButton = findViewById(R.id.refresh_markers_button);
+        //grab handle to the crowd activity button
+        this.crowdButton = findViewById(R.id.crowdButton);
+        //grab handle to the mask activity button
+        this.maskButton = findViewById(R.id.maskButton);
+        //grab handle to the social distancing activity button
+        this.socDistButton = findViewById(R.id.socDistButton);
     }
 
     /**
@@ -424,6 +445,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 populateMap();
+            }
+        });
+        // TODO: start crowd button activity
+        crowdButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "Crowd Button Pressed", Toast.LENGTH_SHORT).show();
+            }
+        });
+        // TODO: start mask button activity
+        maskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "Mask Button Pressed", Toast.LENGTH_SHORT).show();
+            }
+        });
+        // TODO: start social distancing button activity
+        socDistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity.this, "Social Distancing Button Pressed", Toast.LENGTH_SHORT).show();
             }
         });
     }
