@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -211,6 +212,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaSocDistRecordStoreLocationM;
 
     /**
+     * width of earth in meters (used to calculate size of map display area in meters)
+     */
+    public static final double EARTH_WIDTH_M = 12742000.0;
+
+    /**
      * if user is in live tracking mode, how zoomed in do we want to be (larger is more zoomed in)
      */
     public static float trackingZoomSize = 20.0f;
@@ -277,12 +283,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * stores height of map in meters
      */
-    private int mapHeightM = 200;
+    private double mapHeightM = 200;
 
     /**
      * stores height of map in meters
      */
-    private int mapWidthM = 200;
+    private double mapWidthM = 200;
 
     /**
      * stores height of map in pixels
@@ -293,6 +299,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * stores width of map in pixels
      */
     private int mapWidthPx = -1;
+
+    /**
+     * stores height of map in digital pixels
+     */
+    private int mapHeightDP = -1;
+
+    /**
+     * stores width of map in digital pixels
+     */
+    private int mapWidthDP = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -343,10 +359,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapHeightPx = display.getHeight();
         mapWidthPx = display.getWidth();
 
+        // TODO: convert to digital pixels
+        mapHeightDP = convertPixelsToDp(mapHeightPx, MapsActivity.this);
+        mapWidthDP = convertPixelsToDp(mapWidthPx, MapsActivity.this);
+
         Log.d("LOCATION_QUERY", "mapheightpx: " + mapHeightPx + ", mapwidthpx: " + mapWidthPx);
 
         //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return An int value to represent dp equivalent to px value
+     */
+    public static int convertPixelsToDp(float px, Context context){
+        Log.d("LOCATION_QUERY", "pixels: " + px);
+        int dp = Math.round(px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
+        Log.d("LOCATION_QUERY", "dp: " + dp);
+        return dp;
+
     }
 
     /**
@@ -654,12 +689,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // pull records from firebase according to certain conditions
         FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
 
+        // calculate time after which we want to pull records (prior)
         Date now = new Date();
         Date prior = new Date(now.getTime() - (DIAGNOSTIC_MODE ? timeOffsetMSDiagnostic : timeOffsetMS));
 
         Log.d("LOCATION_QUERY", "Now: " + now.toString());
         Log.d("LOCATION_QUERY", "Prior: " + prior.toString());
 
+        // pull up to QUERY_LIMIT (1000 currently) records posted after 'prior' date
         mFirestore.collection("CovidRecord")
                 .whereGreaterThan("timestamp", prior)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -669,18 +706,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 // log the number of records returned
-                Log.d("LOCATION_QUERY", "size of list: " + String.valueOf(queryDocumentSnapshots.size()));
+                Log.d("LOCATION_QUERY", "size of returned documents list: " +queryDocumentSnapshots.size());
                 // initialize new local list of CovidRecords to process
                 queryRecords = new ArrayList<>();
+
+                /*
+                 Get current centered position, zoom level, and map width/height in meters:
+                 */
+
+                CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
+                Location centeredLoc = new Location("");    // make temp location
+                centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
+                centeredLoc.setLongitude(currentPosition.target.longitude); // set long
+
+                // calculate width of earth in digital pixels based on current zoom level
+                //  see: https://developers.google.com/maps/documentation/android-sdk/views
+                //  for documentation into where this equation comes from
+                double EARTH_WIDTH_DP = 256 * Math.pow(2.0, currentPosition.zoom);
+
+                // calculate how many meters each digital pixel represents given the zoom level
+                double metersPerDP = EARTH_WIDTH_M / EARTH_WIDTH_DP;
+
+                // calculate height & width of map in meters based on map fragment dimensions
+                mapHeightM = mapHeightDP * metersPerDP;
+                mapWidthM =  mapWidthDP * metersPerDP;
+
+                Log.d("LOCATION_QUERY", "map height in meters: " + mapHeightM);
+
                 for(DocumentSnapshot doc : queryDocumentSnapshots) {
                     // convert document to CovidRecord class object
                     CovidRecord x = doc.toObject(CovidRecord.class);
 
-                    // compute how many meters away the record location is from the centered camera position location
-                    CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
-                    Location centeredLoc = new Location("");    // make temp location
-                    centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
-                    centeredLoc.setLongitude(currentPosition.target.longitude); // set long
                     // compute distance in meters from record to center of map
                     double distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
 
@@ -689,9 +745,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         queryRecords.add(x);
                     }
 
-
-                    Log.d("LOCATION_QUERY", x.toString());
-                    Log.d("LOCATION_QUERY", x.getRecordType());
                 }
                 Log.d("LOCATION_QUERY", "size of added records: " + queryRecords.size());
 
