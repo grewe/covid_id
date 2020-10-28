@@ -34,7 +34,7 @@ public class FirebaseStorageUtil {
      * @param rgbFrameBitmap
      * @param myRecord
      * @param location
-     * @param recordType : "mask", "ir", "socDist", "crowd"
+     * @param recordType : "mask", "ir", "socDist", "crowd", default: "covidRecord"
      */
     public static void storeImageAndCovidRecord(Bitmap rgbFrameBitmap, CovidRecord myRecord , Location location, String recordType){
         Date d = new Date();

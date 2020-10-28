@@ -54,7 +54,8 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
     private boolean isModelQuantized;
     // Config values.
     private int inputSize;
-    private int NUM_CLASSES = 1; // number of classes SHOULD NOT BE HARD CODED BUT IT IS FOR NOW https://tfhub.dev/tensorflow/efficientdet/d0/1
+    public static int NUM_CLASSES = -1; // number of classes determined by reading label map file
+
     // THIS PARAMETER WAS DETERMINED BY LOOKING AT LOGS FROM OUTPUT TENSORS IN RecognizeImage() below
     // It will say something like:
     //  Cannot copy from a TensorFlowLite tensor (StatefulPartitionedCall:7) with shape [1, NUM_RAW_DETECTION_BOXES, 1] to a Java object with shape [x,x,x,x,x,x]
@@ -126,11 +127,18 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
         InputStream labelsInput = assetManager.open(actualFilename);
         BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
         String line;
+
+        // count number of lines in label map file
+        int classNum = 0;
+
         while ((line = br.readLine()) != null) {
             LOGGER.w(line);
             d.labels.add(line);
+            classNum ++;
         }
         br.close();
+
+        TFLiteObjectDetectionEfficientDet.NUM_CLASSES = classNum;
 
         d.inputSize = inputSize;
 

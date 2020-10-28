@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -271,6 +273,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     public static boolean DIAGNOSTIC_MODE = true;
 
+    // TODO: calculate these values rather than hard coding
+    /**
+     * stores height of map in meters
+     */
+    private int mapHeightM = 200;
+
+    /**
+     * stores height of map in meters
+     */
+    private int mapWidthM = 200;
+
+    /**
+     * stores height of map in pixels
+     */
+    private int mapHeightPx = -1;
+
+    /**
+     * stores width of map in pixels
+     */
+    private int mapWidthPx = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -314,6 +337,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(MapsActivity.this);
+
+        // get fragment width and height
+        Display display = mapFragment.getActivity().getWindowManager().getDefaultDisplay();
+        mapHeightPx = display.getHeight();
+        mapWidthPx = display.getWidth();
+
+        Log.d("LOCATION_QUERY", "mapheightpx: " + mapHeightPx + ", mapwidthpx: " + mapWidthPx);
 
         //need fusedLocationProviderClient to utilize Location services from device.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -646,19 +676,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // convert document to CovidRecord class object
                     CovidRecord x = doc.toObject(CovidRecord.class);
 
-                    // TODO: compute these values
-                    double distanceToM, mapHeightM = 200, mapWidthM = 200;
-
                     // compute how many meters away the record location is from the centered camera position location
                     CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
                     Location centeredLoc = new Location("");    // make temp location
                     centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
                     centeredLoc.setLongitude(currentPosition.target.longitude); // set long
-                    // compute distance in meters from
-                    distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
+                    // compute distance in meters from record to center of map
+                    double distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
 
-                    // TODO: check if record is within distance to current location
-                    if( distanceToM <= mapHeightM || distanceToM <= mapWidthM) {
+                    // check if map height/width have been calculated and if record is within distance to current location
+                    if( mapHeightPx != -1 && mapWidthPx != -1 && (distanceToM <= mapHeightM || distanceToM <= mapWidthM)) {
                         queryRecords.add(x);
                     }
 
