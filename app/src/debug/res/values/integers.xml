@@ -21,5 +21,25 @@
 
     <integer name="deltaSocDistRecordStoreLocationM">20</integer>
 
+    <!-- IR Record Risk Values -->
+    <integer name="riskThresholdHigh_IR">70</integer>
+    <integer name="riskThresholdCaution_IR">40</integer>
+
+    <!-- Crowd Record Risk Values -->
+    <integer name="riskThresholdHigh_Crowd">70</integer>
+    <integer name="riskThresholdCaution_Crowd">40</integer>
+
+    <!-- SocDist Record Risk Values -->
+    <integer name="riskThresholdHigh_SocDist">70</integer>
+    <integer name="riskThresholdCaution_SocDist">40</integer>
+
+    <!-- Mask Record Risk Values -->
+    <integer name="riskThresholdHigh_Mask">70</integer>
+    <integer name="riskThresholdCaution_Mask">40</integer>
+
+    <!-- Default (CovidRecord) Risk Values -->
+    <integer name="riskThresholdHigh_Covid">70</integer>
+    <integer name="riskThresholdCaution_Covid">40</integer>
+
 
 </resources>

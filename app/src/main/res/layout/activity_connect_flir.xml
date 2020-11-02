@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,73 +14,94 @@
     <!-- Show SDK version -->
 
     <!-- Start / Stop discovery buttons -->
-    <Button
-        android:id="@+id/toggle_IR_RGB"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Toggle" />
-
     <LinearLayout
+        android:id="@+id/button_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <Button
-            android:id="@+id/start_discovery"
-            android:layout_width="fill_parent"
+            android:id="@+id/toggle_IR_RGB"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="startDiscovery"
-            android:text="Start Discovery" />
+            android:text="Toggle" />
 
         <Button
-            android:id="@+id/stop_discovery"
-            android:layout_width="fill_parent"
+            android:id="@+id/show_hide_buttons_button"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="stopDiscovery"
-            android:text="Stop Discovery" />
-
-        <TextView
-            android:id="@+id/discovery_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="dicovery status"
-            android:textSize="18sp" />
+            android:text="Hide" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <Button
-                android:id="@+id/connect_flir_one"
+                android:id="@+id/start_discovery"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:onClick="connectFlirOne"
-                android:text="Connect" />
+                android:onClick="startDiscovery"
+                android:text="Start Discovery" />
+
+            <Button
+                android:id="@+id/stop_discovery"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="stopDiscovery"
+                android:text="Stop Discovery" />
+
+            <TextView
+                android:id="@+id/discovery_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Discovery Status"
+                android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/connect_flir_one"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="connectFlirOne"
+                    android:text="Connect" />
 
 
+            </LinearLayout>
+
+            <!-- Connect to FLIR ONE / Emulators buttons -->
+
+            <Button
+                android:id="@+id/disconnect_any"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="disconnect"
+                android:text="Disconnect" />
+
+            <TextView
+                android:id="@+id/connection_status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connection Status"
+                android:textSize="18sp" />
         </LinearLayout>
-
-        <!-- Connect to FLIR ONE / Emulators buttons -->
-
-        <Button
-            android:id="@+id/disconnect_any"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="disconnect"
-            android:text="Disconnect" />
-
-        <TextView
-            android:id="@+id/connection_status_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CONNECTION STATUS" />
     </LinearLayout>
 
 
     <FrameLayout
         android:id="@+id/display_image_layout"
         android:layout_width="480px"
-        android:layout_height="640px">
+        android:layout_height="640px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_bar_layout">
 
         <ImageView
             android:id="@+id/msx_image"
@@ -102,4 +125,4 @@
     </FrameLayout>
 
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

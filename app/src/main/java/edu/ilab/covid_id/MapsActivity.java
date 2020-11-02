@@ -30,6 +30,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -207,6 +209,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static long deltaFeverRecordStoreLocationM;
     public static long deltaCrowdRecordStoreLocationM;
     public static long deltaSocDistRecordStoreLocationM;
+
+    /**
+     * variables representing risk thresholds from 0 to 100 for the three stages of high, caution,
+     * and low, read in from integers.xml. NOTE: everything below 'caution' value will be considered
+     * low, and between low and high will be 'caution', everything above 'high' is considered high
+     * risk. NOTE: this will influence the choice of icons used in visualization
+     */
+    public static int riskThresholdHigh_IR;
+    public static int riskThresholdCaution_IR;
+
+    public static int riskThresholdHigh_Crowd;
+    public static int riskThresholdCaution_Crowd;
+
+    public static int riskThresholdHigh_SocDist;
+    public static int riskThresholdCaution_SocDist;
+
+    public static int riskThresholdHigh_Mask;
+    public static int riskThresholdCaution_Mask;
+
+    public static int riskThresholdHigh_Covid;
+    public static int riskThresholdCaution_Covid;
 
     /**
      * width of earth in meters (used to calculate size of map display area in meters)
@@ -417,7 +440,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         deltaFeverRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaFeverRecordStoreTimeMS);
         deltaSocDistRecordStoreTimeMS = getApplicationContext().getResources().getInteger(R.integer.deltaSocDistRecordStoreTimeMS);
 
-        //retrieve any of the following fields if present: maskRecordLastStoreTimestamp, crowdReocrdLastStoreTimestamp, socDistRecordLastStoreTimestamp, feverRecordLastStoreTimestamp
+        //retrieve from integers.xml the hard coded values for the risk thresholds for each record type
+        riskThresholdCaution_IR = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_IR);
+        riskThresholdHigh_IR = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_IR);
+        riskThresholdCaution_Crowd = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_Crowd);
+        riskThresholdHigh_Crowd = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_Crowd);
+        riskThresholdCaution_Mask = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_Mask);
+        riskThresholdHigh_Mask = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_Mask);
+        riskThresholdCaution_SocDist = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_SocDist);
+        riskThresholdHigh_SocDist = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_SocDist);
+        riskThresholdCaution_Covid = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_Covid);
+        riskThresholdHigh_Covid = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_Covid);
+
+
+                //retrieve any of the following fields if present: maskRecordLastStoreTimestamp, crowdReocrdLastStoreTimestamp, socDistRecordLastStoreTimestamp, feverRecordLastStoreTimestamp
         // will be -1 if not yet set
         covidRecordLastStoreTimestamp = appPrefs.getLong("covidRecordLastStoreTimestamp", -1);
         maskRecordLastStoreTimestamp = appPrefs.getLong("maskRecordLastStoreTimestamp", -1);
@@ -777,8 +813,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void setMarkers(ArrayList<CovidRecord> records, GoogleMap map) {
         map.clear();   // remove all markers, overlays, polylines, etc from map
         // iterate through records and add one marker per record at the corresponding location
+        BitmapDescriptor icon;
+
+
         for(CovidRecord record : records) {
+            if(record.getRecordType().equals("ir")) {
+                if(record.getRisk() > riskThresholdHigh_IR) {   // high
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_ir_high);
+                } else if(record.getRisk() > riskThresholdCaution_IR) { // caution
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_ir_caution);
+                } else { // low
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_ir_low);
+                }
+            }
+            else if(record.getRecordType().equals("mask")) {
+                if(record.getRisk() > riskThresholdHigh_Mask) {   // high
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_mask_high);
+                } else if(record.getRisk() > riskThresholdCaution_Mask) { // caution
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_mask_caution);
+                } else { // low
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_mask_low);
+                }
+            }
+            else if(record.getRecordType().equals("crowd")) {
+                if(record.getRisk() > riskThresholdHigh_Crowd) {   // high
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_crowd_high);
+                } else if(record.getRisk() > riskThresholdCaution_Crowd) { // caution
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_crowd_caution);
+                } else { // low
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_crowd_low);
+                }
+            }
+            else if(record.getRecordType().equals("socDist")) {
+                if(record.getRisk() > riskThresholdHigh_SocDist) {   // high
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_socdist_high);
+                } else if(record.getRisk() > riskThresholdCaution_IR) { // caution
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_socdist_caution);
+                } else { // low
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_socdist_low);
+                }
+            }
+            else { // default covid record
+//                if(record.getRisk() > riskThresholdHigh_Covid) {   // high
+//                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_high);
+//                } else if(record.getRisk() > riskThresholdCaution_Covid) { // caution
+//                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_caution);
+//                } else { // low
+//                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_low);
+//                }
+                // TODO: delete this and replace with commented code
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_high);
+            }
+
             map.addMarker(new MarkerOptions()
+                    .icon(icon)
                     .position(new LatLng(record.getLocation().getLatitude(), record.getLocation().getLongitude()))
                     .title(record.getRecordType())
             );

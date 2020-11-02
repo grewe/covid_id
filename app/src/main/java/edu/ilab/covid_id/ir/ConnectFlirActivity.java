@@ -239,22 +239,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     }
 
     /**
-     * Unknown?????
-     * @param view
-     */
-    public void connectSimulatorOne(View view) {
-        connect(cameraHandler.getCppEmulator());
-    }
-
-    /**
-     * Unknown??
-     * @param view
-     */
-    public void connectSimulatorTwo(View view) {
-        connect(cameraHandler.getFlirOneEmulator());
-    }
-
-    /**
      * This method would invoke and disconnect the camera
      * @param view
      */
@@ -412,7 +396,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
             });
         }
     };
-
 
     /**
      * annonymous inner class for handling the incomming stream of IR images
@@ -627,13 +610,13 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         int width=heatmap.getWidth();
         int height=heatmap.getHeight();
-        double[][] temprature = new double[width][height];
+        double[][] temperature = new double[width][height];
         Rectangle rect = new Rectangle(0,0,width,height);
         double[] rectTemp = heatmap.getValues(rect);
 
         for(int i=0; i<width;i++)
             for(int j=0;j<height;j++)
-                temprature[i][j] = rectTemp[(j*width) + i]; //row*number_col+col
+                temperature[i][j] = rectTemp[(j*width) + i]; //row*number_col+col
 
         /*Log.d(TAG, "rectTemp: "+rectTemp[479]);
         Point pt = new Point(479, 0);
@@ -648,7 +631,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         long duration = (endTime - startTime)/1000000;
         Log.d(TAG, "getTemp: duration of rect:"+duration);*/
-        return temprature;
+        return temperature;
     }
 
     /**
@@ -765,7 +748,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         previewWidth = image.getWidth();
         previewHeight = image.getHeight();
 
-        sensorOrientation =  90;   //sensorOreintation will be 0 for horizontal and 90 for portrait
+        sensorOrientation =  90;   //sensorOrientation will be 0 for horizontal and 90 for portrait
 
         LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
         LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
@@ -795,8 +778,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private void toastMethodForGetMaxTemp(double max){
         Toast.makeText(getApplicationContext(),  "Highest Temperature:"+max, Toast.LENGTH_SHORT).show();
     }
-
-
 
     /**
      * This method is called every time we will to process the CURRENT frame
@@ -978,7 +959,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
     }
 
-
     protected void showFrameInfo(String frameInfo) {
         //somehow.setText(frameInfo);
     }
@@ -992,24 +972,19 @@ public class ConnectFlirActivity extends AppCompatActivity {
         //showmehow.inferenceTimeTextView.setText(inferenceTime);
     }
 
-
-
     protected void setUseNNAPI(final boolean isChecked) {
         runInBackground(() -> detector.setUseNNAPI(isChecked));
     }
 
-
     protected void setNumThreads(final int numThreads) {
         runInBackground(() -> detector.setNumThreads(numThreads));
     }
-
 
     protected synchronized void runInBackground(final Runnable r) {
         if (handler != null) {
             handler.post(r);
         }
     }
-
 
     /**
      * onResume here creates the Thread Handler and starts it.
@@ -1023,7 +998,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
     }
-
 
     /**
      * quiting the Thread Handler --see onResume for reinitialization
@@ -1044,7 +1018,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         super.onPause();
     }
 
-
     /**
      * do nothing special --only a log message
      */
@@ -1062,6 +1035,4 @@ public class ConnectFlirActivity extends AppCompatActivity {
         LOGGER.d("onDestroy " + this);
         super.onDestroy();
     }
-
-
 }
