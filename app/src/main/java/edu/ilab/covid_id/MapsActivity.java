@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -33,7 +32,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -55,10 +53,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import edu.ilab.covid_id.auth.LoginActivity;
-import edu.ilab.covid_id.classification.ClassifierActivity;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.data.FirestoreHelper;
-import edu.ilab.covid_id.localize.DetectorActivity;
 
 
 /**
@@ -709,46 +705,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // log the number of records returned
                 Log.d("LOCATION_QUERY", "size of returned documents list: " +queryDocumentSnapshots.size());
                 // initialize new local list of CovidRecords to process
-                queryRecords = new ArrayList<>();
-
-                /*
-                 Get current centered position, zoom level, and map width/height in meters:
-                 */
-
-                CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
-                Location centeredLoc = new Location("");    // make temp location
-                centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
-                centeredLoc.setLongitude(currentPosition.target.longitude); // set long
-
-                // calculate width of earth in digital pixels based on current zoom level
-                //  see: https://developers.google.com/maps/documentation/android-sdk/views
-                //  for documentation into where this equation comes from
-                double EARTH_WIDTH_DP = 256 * Math.pow(2.0, currentPosition.zoom);
-
-                // calculate how many meters each digital pixel represents given the zoom level
-                double metersPerDP = EARTH_WIDTH_M / EARTH_WIDTH_DP;
-
-                // calculate height & width of map in meters based on map fragment dimensions
-                mapHeightM = mapHeightDP * metersPerDP;
-                mapWidthM =  mapWidthDP * metersPerDP;
-
-                Log.d("LOCATION_QUERY", "map height in meters: " + mapHeightM);
-
-                for(DocumentSnapshot doc : queryDocumentSnapshots) {
-                    // convert document to CovidRecord class object
-                    CovidRecord x = doc.toObject(CovidRecord.class);
-
-                    // compute distance in meters from record to center of map
-                    double distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
-
-                    // check if map height/width have been calculated and if record is within distance to current location
-                    if( mapHeightPx != -1 && mapWidthPx != -1 && (distanceToM <= mapHeightM || distanceToM <= mapWidthM)) {
-                        queryRecords.add(x);
-                    }
-
-                }
-                Log.d("LOCATION_QUERY", "size of added records: " + queryRecords.size());
-
+                queryRecords = getVisibleRecords(queryDocumentSnapshots);
                 // TODO: complete method to erase the current markers and add new markers to the map
                 //  based on query
                 setMarkers(queryRecords, mMap);
@@ -762,12 +719,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**
-     * clear map and add new markers to map
-     * @param records
-     * @param map
+     * from a QuerySnapshot of CovidRecords from the firebase, returns all records that were
+     * generated on the visible portion of the screen
+     * @param queryDocumentSnapshots - snapshot of records pulled from database
+     * @return - ArrayList of CovidRecord objects that were made from locations currently visible
+     */
+    private ArrayList<CovidRecord> getVisibleRecords(QuerySnapshot queryDocumentSnapshots) {
+        // new list of records to parse from query
+        ArrayList<CovidRecord> queryRecords = new ArrayList<>();
+
+        /*
+         Get current centered position, zoom level, and map width/height in meters:
+         */
+        CameraPosition currentPosition = mMap.getCameraPosition();  // get current camera position
+        Location centeredLoc = new Location("");    // make temp location
+        centeredLoc.setLatitude(currentPosition.target.latitude);   // set lat
+        centeredLoc.setLongitude(currentPosition.target.longitude); // set long
+
+        // calculate width of earth in digital pixels based on current zoom level
+        //  see: https://developers.google.com/maps/documentation/android-sdk/views
+        //  for documentation into where this equation comes from
+        double EARTH_WIDTH_DP = 256 * Math.pow(2.0, currentPosition.zoom);
+
+        // calculate how many meters each digital pixel represents given the zoom level
+        double metersPerDP = EARTH_WIDTH_M / EARTH_WIDTH_DP;
+
+        // calculate height & width of map in meters based on map fragment dimensions
+        mapHeightM = mapHeightDP * metersPerDP;
+        mapWidthM =  mapWidthDP * metersPerDP;
+
+        Log.d("LOCATION_QUERY", "map height in meters: " + mapHeightM);
+
+        for(DocumentSnapshot doc : queryDocumentSnapshots) {
+            // convert document to CovidRecord class object
+            CovidRecord x = doc.toObject(CovidRecord.class);
+
+            // compute distance in meters from record to center of map
+            double distanceToM = centeredLoc.distanceTo(geoPointToLocation(x.getLocation()));
+
+            // check if map height/width have been calculated and if record is within distance to current location
+            if( mapHeightPx != -1 && mapWidthPx != -1 && (distanceToM <= mapHeightM || distanceToM <= mapWidthM)) {
+                queryRecords.add(x);
+            }
+
+        }
+        Log.d("LOCATION_QUERY", "size of added records: " + queryRecords.size());
+
+        return queryRecords;    // return populated list of records
+    }
+
+    /**
+     * TODO: flesh this method out to do more than simply add a marker for each record found
+     * currently clears map and add new markers to map, 1 basic marker per record
+     * @param records - list of records to build markers from
+     * @param map - map to draw records on
      */
     private void setMarkers(ArrayList<CovidRecord> records, GoogleMap map) {
         map.clear();   // remove all markers, overlays, polylines, etc from map
+        // iterate through records and add one marker per record at the corresponding location
         for(CovidRecord record : records) {
             map.addMarker(new MarkerOptions()
                     .position(new LatLng(record.getLocation().getLatitude(), record.getLocation().getLongitude()))
