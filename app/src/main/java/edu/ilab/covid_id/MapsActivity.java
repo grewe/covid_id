@@ -34,6 +34,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -461,10 +462,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
         socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
     }
-
-    /**
-     * initialize local hooks to all views on the screen we may need to mutate/utilize
-     */
     private void initViewHooks() {
         //grab handles to the various buttons to launch different classification activities
         this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
@@ -713,6 +710,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });*/
+
+
+        /**
+         * setup custom windowInfoAdapter so when user clicks on a CovidRecord marker it will display
+         * appropriate information
+         */
+        /*
+        googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(final Marker marker) {
+               return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                return null;
+            }
+        });
+
+         */
+
     }
 
     /**
@@ -820,7 +838,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         for(CovidRecord record : records) {
             marker_info = "risk: " + record.getRisk() +  "  ";
-            marker_info += "certainty:" + record.getCertainty() + " ";
+            marker_info += "certainty:" + String.format("%.1f", record.getCertainty()) + " ";
+
 
             if(record.getRecordType().equals("ir")) {
                 if(record.getRisk() > riskThresholdHigh_IR) {   // high
