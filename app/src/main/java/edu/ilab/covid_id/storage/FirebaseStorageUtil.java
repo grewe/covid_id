@@ -74,9 +74,9 @@ public class FirebaseStorageUtil {
                         // Handle failures
                         imageFileURL = null;
                     }
-
                     //alter the CovidRecord to add the ImageURL to myRecord
                     myRecord.setFilenameURL(imageFileURL);
+                    addRecordAndUpdateTimestamps(myRecord, recordType, location);
                 }
             });
         }//end case of storing Images
@@ -84,8 +84,19 @@ public class FirebaseStorageUtil {
         //-------------------------------------------------
         else {  //NO image file storage  --set fileURL to null in CovidRecord
             myRecord.setFilenameURL(null);
+            addRecordAndUpdateTimestamps(myRecord, recordType, location);
         }
 
+    }
+
+     /**
+     * Method to actually perform the record insertion into the Firebase and additionally updates
+      * current location and timestamps for the appropriate record type.
+     * @param myRecord
+     * @param recordType
+     * @param location
+     */
+    private static void addRecordAndUpdateTimestamps(CovidRecord myRecord, String recordType, Location location) {
         // ask helper to push record to db
         MapsActivity.myFirestoreHelper.addRecord(myRecord);
 
@@ -118,4 +129,5 @@ public class FirebaseStorageUtil {
             MapsActivity.covidRecordLastStoreLocation = location;
         }
     }
+
 }

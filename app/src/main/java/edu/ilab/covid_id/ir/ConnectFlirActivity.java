@@ -675,8 +675,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                             if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
                                 canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
                                 //==============================================================
-                                //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
-                                //  ONLY store one time regardless of number of recognition results.
+                                //  locally store (on device) one time regardless of number of recognition results.
                                 if(saveImageOnceFlag == 1){
 
                                     //set flag so know have already stored this image
@@ -689,7 +688,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
                                     File dest = new File(directory, "croppedImage.png");
                                     File topLabelBox = new File(directory, "topLabelBoxImage.png");
-
                                     try {
                                         dest.createNewFile();
                                         FileOutputStream out = new FileOutputStream(dest);
@@ -746,8 +744,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     angles.add(1, 0.0f);
                                     angles.add(2, 0.0f);
 
-
-
                                     ArrayList<Float> boundingBox = new ArrayList<Float>();
                                     boundingBox.add(0, location.left);
                                     boundingBox.add(1, location.top);
@@ -759,6 +755,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "ir");
 
+                                    //COVID: store image to CloudStore
+                                    //  ONLY store one time regardless of number of recognition results.
                                     FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "ir");
 
                                 }
