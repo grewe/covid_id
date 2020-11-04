@@ -25,6 +25,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.flir.thermalsdk.ErrorCode;
@@ -86,10 +87,12 @@ public class ConnectFlirActivity extends AppCompatActivity {
     // for toggling ir/rgb
     private boolean TOGGLE_IR_ON = true;
 
+    // for toggling button bar
+    private boolean SHOW_BUTTONS = true;
+
     //necessary to limit thread generation - one thread per frame gets created --so that do not run out of memory
     private Handler handler;
     private HandlerThread handlerThread;
-
 
     //logging tag
     private static final String TAG = "ConnectFlirActivity";
@@ -110,14 +113,11 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
-
-
     //NECESSARY Variables for doing Backend storage and Tensorflow model processing
     // temporary flag for determining when to create/push records to the db
     int flag = 0;
 
     private static final Logger LOGGER = new Logger();
-
 
     // TODO: fix this value
     // Configuration values for the prepackaged SSD model.
@@ -132,13 +132,13 @@ public class ConnectFlirActivity extends AppCompatActivity {
     // Minimum detection confidence to track a detection.
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;   //a detected prediction must have value > threshold to be displayed
     private static final boolean MAINTAIN_ASPECT = false;  //if you want to keep aspect ration or not --THIS must be same as what is expected in model,done in training
-    //PHILLIP below needs to change to adapt to your view size
+
+
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480); //for display ONLY specific to THIS activity
+
+
     private static final boolean SAVE_PREVIEW_BITMAP = false;  //specific to THIS activity
     private static final float TEXT_SIZE_DIP = 10;  //font size for display of bounding boxes
-
-
-
 
     private Classifier detector;  //class variable representing the actual model loaded up
     // note this is  edu.ilab.covid_id.localize.tflite.Classifier;
@@ -169,7 +169,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private int previewHeight;
 
     //PHILLIP this will go away and be replaced by your bounding box drawing solution
-    OverlayView trackingOverlay;   //boudning box and prediction info is drawn on screen using an OverlayView
+    OverlayView trackingOverlay;   //bounding box and prediction info is drawn on screen using an OverlayView
     private Integer sensorOrientation;  //this Activity does rotation for different Orientations
 
 
@@ -188,8 +188,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
 
         // set preview width and height
-        previewWidth = 480;
-        previewHeight = 640;
+        previewWidth = DESIRED_PREVIEW_SIZE.getWidth();
+        previewHeight = DESIRED_PREVIEW_SIZE.getHeight();
 
         // wont turn sideways
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -213,9 +213,11 @@ public class ConnectFlirActivity extends AppCompatActivity {
         // set up toggle button
         setToggleButton();
 
+        // set up show/hide button
+        setShowHideButton();
+
         //method to setup for performing ML detection on stream of IR images captured
         setupForDetection();
-
     }
 
 //    public void setupTracker(Context context) {
@@ -574,6 +576,26 @@ public class ConnectFlirActivity extends AppCompatActivity {
     }
 
     /**
+     * set toggle button
+     */
+    private void setShowHideButton() {
+        Button showHideButton = findViewById(R.id.show_hide_buttons_button);
+        LinearLayout collapsibleLayout = findViewById(R.id.collapsible_button_layout);
+
+        collapsibleLayout.setVisibility(SHOW_BUTTONS ? View.VISIBLE : View.GONE);
+
+        showHideButton.setText(SHOW_BUTTONS ? "Hide Buttons" : "Expand Buttons");
+
+        showHideButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SHOW_BUTTONS = !SHOW_BUTTONS;
+                setShowHideButton();
+            }
+        });
+    }
+
+    /**
      * fetching temperature array from every point.
      * this method is time consuming hence not using it
      * approx takes 6400ms to complete
@@ -641,8 +663,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
      * THis is really just a SETUP method
      */
     private void setupForDetection(){
-        previewWidth = 480;
-        previewHeight = 640;
+        previewWidth = DESIRED_PREVIEW_SIZE.getWidth();
+        previewHeight = DESIRED_PREVIEW_SIZE.getHeight();
 
         final float textSizePx =
                 TypedValue.applyDimension(
@@ -708,8 +730,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
      */
     private void setupForImageProcessingAndOverlay(Camera c) {
         //hardcoding values for mxsImage options for Flir One Pro camera
-        previewWidth = 480;
-        previewHeight = 640;
+        previewWidth = DESIRED_PREVIEW_SIZE.getWidth();
+        previewHeight = DESIRED_PREVIEW_SIZE.getHeight();
+
+
         sensorOrientation =  0; //sensorOreintation will be 0 for horizontal and 90 for portrait
 
         LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
@@ -738,42 +762,42 @@ public class ConnectFlirActivity extends AppCompatActivity {
         frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
     }
 
-    /**
-     * This method setups various bitmaps and variables used in preprocessing of the images
-     * to prepare them for processing by our ML model (e.g. correct scaling, etc)
-     * This gets the input image size based on the incoming image
-     */
-    private void setupForImageProcessingAndOverlay(Bitmap image) {
-        //display size
-        previewWidth = image.getWidth();
-        previewHeight = image.getHeight();
-
-        sensorOrientation =  90;   //sensorOrientation will be 0 for horizontal and 90 for portrait
-
-        LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
-        LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
-
-        //seting up the bitmap input image  based on grabing it from the preview display of it.
-        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-       // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
-        //setting up the bitmap to store the resized input image to the size that the model expects
-
-       croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
-
-
-        //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
-        //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
-        //   involves rotation based on sensorOrientation
-        //   invovles if you want aspect to be maintained
-        frameToCropTransform =
-                ImageUtils.getTransformationMatrix(
-                        previewWidth, previewHeight,
-                        cropSize, cropSize,
-                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
-
-        cropToFrameTransform = new Matrix();  //identity matrix initially
-        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-    }
+//    /**
+//     * This method setups various bitmaps and variables used in preprocessing of the images
+//     * to prepare them for processing by our ML model (e.g. correct scaling, etc)
+//     * This gets the input image size based on the incoming image
+//     */
+//    private void setupForImageProcessingAndOverlay(Bitmap image) {
+//        //display size
+//        previewWidth = image.getWidth();
+//        previewHeight = image.getHeight();
+//
+//        sensorOrientation =  90;   //sensorOrientation will be 0 for horizontal and 90 for portrait
+//
+//        LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
+//        LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
+//
+//        //seting up the bitmap input image  based on grabing it from the preview display of it.
+//        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+//       // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
+//        //setting up the bitmap to store the resized input image to the size that the model expects
+//
+//       croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
+//
+//
+//        //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
+//        //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
+//        //   involves rotation based on sensorOrientation
+//        //   invovles if you want aspect to be maintained
+//        frameToCropTransform =
+//                ImageUtils.getTransformationMatrix(
+//                        previewWidth, previewHeight,
+//                        cropSize, cropSize,
+//                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
+//
+//        cropToFrameTransform = new Matrix();  //identity matrix initially
+//        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
+//    }
 
     private void toastMethodForGetMaxTemp(double max){
         Toast.makeText(getApplicationContext(),  "Highest Temperature:"+max, Toast.LENGTH_SHORT).show();
