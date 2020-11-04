@@ -34,6 +34,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -461,10 +462,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         crowdRecordLastStoreTimestamp = appPrefs.getLong("crowdRecordLastStoreTimestamp", -1);
         socDistRecordLastStoreTimestamp = appPrefs.getLong("socDistRecordLastStoreTimestamp", -1);
     }
-
-    /**
-     * initialize local hooks to all views on the screen we may need to mutate/utilize
-     */
     private void initViewHooks() {
         //grab handles to the various buttons to launch different classification activities
         this.flowersClassificationActivityButton = (Button) findViewById(R.id.flowersClassificationButton);
@@ -713,6 +710,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });*/
+
+
+        /**
+         * setup custom windowInfoAdapter so when user clicks on a CovidRecord marker it will display
+         * appropriate information
+         */
+        /*
+        googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(final Marker marker) {
+               return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                return null;
+            }
+        });
+
+         */
+
     }
 
     /**
@@ -815,8 +833,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // iterate through records and add one marker per record at the corresponding location
         BitmapDescriptor icon;
 
+        String marker_info = "";
+
 
         for(CovidRecord record : records) {
+            marker_info = "risk: " + record.getRisk() +  "  ";
+            marker_info += "certainty:" + String.format("%.1f", record.getCertainty()) + " ";
+
+
             if(record.getRecordType().equals("ir")) {
                 if(record.getRisk() > riskThresholdHigh_IR) {   // high
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_ir_high);
@@ -825,6 +849,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else { // low
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_ir_low);
                 }
+                marker_info += "temperature:" + record.getInfo() + " ";
             }
             else if(record.getRecordType().equals("mask")) {
                 if(record.getRisk() > riskThresholdHigh_Mask) {   // high
@@ -834,6 +859,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else { // low
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_mask_low);
                 }
+                marker_info += "type:" + record.getInfo() + " ";
             }
             else if(record.getRecordType().equals("crowd")) {
                 if(record.getRisk() > riskThresholdHigh_Crowd) {   // high
@@ -843,6 +869,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else { // low
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_crowd_low);
                 }
+                marker_info += "type:" + record.getInfo() + " ";
             }
             else if(record.getRecordType().equals("socDist")) {
                 if(record.getRisk() > riskThresholdHigh_SocDist) {   // high
@@ -852,6 +879,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else { // low
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_socdist_low);
                 }
+                marker_info += "type:" + record.getInfo() + " ";
             }
             else { // default covid record
 //                if(record.getRisk() > riskThresholdHigh_Covid) {   // high
@@ -861,14 +889,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                } else { // low
 //                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_low);
 //                }
+                marker_info += "type:" + record.getInfo() + " ";
                 // TODO: delete this and replace with commented code
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.icon_covid_high);
             }
+
 
             map.addMarker(new MarkerOptions()
                     .icon(icon)
                     .position(new LatLng(record.getLocation().getLatitude(), record.getLocation().getLongitude()))
                     .title(record.getRecordType())
+                    .snippet(marker_info)
             );
         }
     }
