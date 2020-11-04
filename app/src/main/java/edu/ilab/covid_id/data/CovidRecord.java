@@ -1,5 +1,6 @@
 package edu.ilab.covid_id.data;
 
+import android.graphics.Point;
 import android.location.Location;
 import android.util.Log;
 
@@ -87,6 +88,17 @@ public class CovidRecord {
 
 
     /**
+     * temperature used in an IR generated CovidRecord
+     */
+    private double maxTempC;
+
+    /**
+     * temperature location point
+     */
+    private Point tempLocation;
+
+
+    /**
      * Default constructor with null or impossible values.
      */
     public CovidRecord() {
@@ -102,8 +114,33 @@ public class CovidRecord {
         this.userEmailFirebase = null;
         this.userIDFirebase = null;
         this.recordType = "covidRecord";
+        this.maxTempC = -1;
+        this.tempLocation = null;
     }
 
+
+    /**
+     *  constructor with all values given
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox,
+                       ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase,
+                       String userIDFirebase, String recordType, double maxTempC, Point tempLocation) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+        this.recordType = recordType;
+        this.maxTempC = maxTempC;
+        this.tempLocation = tempLocation;
+    }
     /**
      *  constructor with all values given
      */
@@ -383,5 +420,19 @@ public class CovidRecord {
 
     public void setRecordType(String recordType) {
         this.recordType = recordType;
+    }
+    public double getMaxTempC() {
+        return maxTempC;
+    }
+
+    public void setMaxTempC(double maxTempC) {
+        this.maxTempC = maxTempC;
+    }
+    public Point getTempLocation() {
+        return tempLocation;
+    }
+
+    public void setTempLocation(Point tempLocation) {
+        this.tempLocation = tempLocation;
     }
 }

@@ -710,21 +710,21 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 * */
                                 int width= tempArray.length;
                                 int height = tempArray[0].length;
-                                double max=0;
+                                double maxTempC=0;
                                 int x=0;
                                 int y=0;
                                 for(int i=0;i<width;i++){
                                     for(int j =0;j<height;j++){
                                         if(location.contains(i,j)){
-                                            if (tempArray[i][j] > max) {
-                                                max = tempArray[i][j];
+                                            if (tempArray[i][j] > maxTempC) {
+                                                maxTempC = tempArray[i][j];
                                                 x=i;
                                                 y=j;
                                             }
                                         }
                                     }
                                 }
-                                Log.d(TAG, "run: max temp:"+max+" at x "+x+" at y "+y);
+                                Log.d(TAG, "run: max temp:"+maxTempC+" at x "+x+" at y "+y);
                                 android.graphics.Point tempLocation=new android.graphics.Point(x,y);
 
                                 //toastMethodForGetMaxTemp(max);
@@ -750,10 +750,12 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     boundingBox.add(2, location.right);
                                     boundingBox.add( 3, location.bottom);
 
+
+
                                     CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
                                             new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
-                                            MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "ir");
+                                            MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "ir", maxTempC, tempLocation);
 
                                     //COVID: store image to CloudStore
                                     //  ONLY store one time regardless of number of recognition results.
@@ -765,7 +767,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //the following takes the bounding box location and transforms it for coordinates in display
                                 cropToFrameTransform.mapRect(location);//transforms using Matrix the bounding box to the correct transformed coordinates
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
-                                result.setMaxTemp(max);
+                                result.setMaxTemp(maxTempC);
                                 result.setMaxTempLocation(tempLocation);
                                 mappedRecognitions.add(result);  //add the result to a linked list
                             }
