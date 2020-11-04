@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -43,6 +44,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 //Import necessary for Backend Plus Tensorflow Model Integration
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
+
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -95,13 +98,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
 
-    //NECESSARY Variables for doing Backend storage and Tensorflow model processing
-    // temporary flag for determining when to create/push records to the db
-    int flag = 0;
-
     private static final Logger LOGGER = new Logger();
 
-    // TODO: fix this value
     // Configuration values for the prepackaged SSD model.
     private static final int TF_OD_API_INPUT_SIZE = 512;    //this is the wxh of square input size to MODEL
     private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
@@ -130,7 +128,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
 
-
     private boolean computingDetection = false;
 
     private long timestamp = 0;
@@ -143,9 +140,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private MultiBoxTracker tracker; // this class assists with tracking bounding boxes - represents results
     //note this is instance of edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
-    private BorderedText borderedText;
-
-
     //Variables for Previewing and Overlay
     private int previewWidth; //width of region will display image in and draw on
     private int previewHeight;
@@ -153,6 +147,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
     //PHILLIP this will go away and be replaced by your bounding box drawing solution
     OverlayView trackingOverlay;   //bounding box and prediction info is drawn on screen using an OverlayView
     private Integer sensorOrientation;  //this Activity does rotation for different Orientations
+
+    // forehead temp mean and std deviation according to https://europepmc.org/article/med/15877017
+    public static final float FOREHEAD_TEMP_C_MEAN = 33.31f;
+    public static final float FOREHEAD_TEMP_C_STDDEV = 1.18f;
 
     /**
      * Show message on the screen
@@ -531,7 +529,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         final float textSizePx =
                 TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
-        borderedText = new BorderedText(textSizePx);
+        BorderedText borderedText = new BorderedText(textSizePx);
         borderedText.setTypeface(Typeface.MONOSPACE);
 
         //class to contain detection results with bounding box information
@@ -732,13 +730,19 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
+                                Resources resources = getApplicationContext().getResources();   // get local resources
+                                // check if firebase is ready for new record of type IR
                                 boolean readyToStore = CovidRecord.readyStoreRecord(MapsActivity.feverRecordLastStoreTimestamp,
                                         MapsActivity.deltaFeverRecordStoreTimeMS,
                                         MapsActivity.feverRecordLastStoreLocation,
                                         MapsActivity.currentLocation,
                                         MapsActivity.deltaFeverRecordStoreLocationM);
-                                if(readyToStore) {
-
+                                // check that temperature is in valid range (32C - 44C)
+                                boolean validTemperature = maxTempC > resources.getInteger(R.integer.minTempThresholdForIRStorage)
+                                        && maxTempC < resources.getInteger(R.integer.maxTempThresholdForIRStorage);
+                                // store if firestore is ready for record and temp is in acceptable
+                                // human range (about 90F to 110F)
+                                if(readyToStore && validTemperature) {
                                     ArrayList<Float> angles = new ArrayList<Float>();
                                     angles.add(0, 0.0f);
                                     angles.add(1, 0.0f);
@@ -750,9 +754,15 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     boundingBox.add(2, location.right);
                                     boundingBox.add( 3, location.bottom);
 
-
-
-                                    CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
+                                    /*
+                                    generate CovidRecord with calculated risk value, result confidence * 100,
+                                    GeoPoint from current location, Timestamp.now, null imageFileURL,
+                                    title from result (head), bounding box from recognition, angles all
+                                    set to 0.0f, altitude of 0.0f, current user's email address,
+                                    current user's ID, type: IR, maxTempC for temp, and location of
+                                    temperature found
+                                     */
+                                    CovidRecord myRecord = new CovidRecord(getRisk(maxTempC, result.getConfidence()), result.getConfidence()*100,
                                             new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "ir", maxTempC, tempLocation);
@@ -788,6 +798,43 @@ public class ConnectFlirActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+
+    /**
+     * calculate IR risk from temp found as well as certainty. risk is calculated as follows:
+     * if temp < mean, return 0.
+     * else, use mean and std dev values for forehead temperature from https://europepmc.org/article/med/15877017
+     * to generate a normal distribution and then evaluating the cdf at a point x, then normalize
+     * that output (which is between .5 and 1) to instead give a number between 0 and 100 (subtract .5
+     * then multiply by 2 then by 100). the entire risk is then scaled according to our certainty
+     *
+     * Example 1: Moderate Risk (Max temp 1 std dev above clinical forehead temp mean w/some uncertainty):
+     *      certainty: .8
+     *      temp: 34.49C or 94.082F (mean + 1 std deviation) => z-score = 1
+     *
+     *      Then: CDF(Z=1) = .84134
+     *      Then: risk = 100 * 2 * (.84134 - .5) * .8 = 54.6
+     *
+     * Example 2: High Risk (Max temp 2 std dev above clinical forehead temp mean w/no uncertainty):
+     *      certainty: 1.0
+     *      temp: 35.67C or 96.206F (mean + 2 std deviation) => z-score = 2
+     *
+     *      Then: CDF(Z=2) = 0.97725
+     *      Then risk = 100 * 2 * (.97725 - .5) * 1.0 = 95.45
+     *
+     * Example 3: Low Risk (Max temp less than clinical forehead temp mean):
+     *      risk = 0.0
+     *
+     * @param temp - max temp found in recognition in degrees C
+     * @param certainty - value in [0,1] representing model's certainty for head detection result
+     * @return risk factor calculated from temp and certainty in range [0,100]
+     */
+    private float getRisk(double temp, double certainty) {
+        if(temp < FOREHEAD_TEMP_C_MEAN) {
+            return 0.0f;
+        }
+        NormalDistribution nd = new NormalDistribution(FOREHEAD_TEMP_C_MEAN, FOREHEAD_TEMP_C_STDDEV);
+        return (float) (100 * 2 * (nd.cumulativeProbability(temp) - 0.5) * certainty);
     }
 
     /**

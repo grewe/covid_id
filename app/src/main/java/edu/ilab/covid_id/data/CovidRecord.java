@@ -75,7 +75,6 @@ public class CovidRecord {
      */
     private String recordType;
 
-
     /**
      * UserID retrieved after a Firebase Authentication of user
      */
@@ -85,7 +84,6 @@ public class CovidRecord {
      * User Email retrieved after a Firebase Authentication of user
      */
     private String userEmailFirebase;
-
 
     /**
      * temperature used in an IR generated CovidRecord

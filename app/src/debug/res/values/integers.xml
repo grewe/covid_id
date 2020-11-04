@@ -41,5 +41,10 @@
     <integer name="riskThresholdHigh_Covid">70</integer>
     <integer name="riskThresholdCaution_Covid">40</integer>
 
+    <!-- IR lower and upper threshold for temp to store record (Celsius) -->
+    <integer name="minTempThresholdForIRStorage">32</integer>
+    <integer name="maxTempThresholdForIRStorage">44</integer>
+
+
 
 </resources>

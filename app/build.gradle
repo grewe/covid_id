@@ -81,6 +81,8 @@ dependencies {
     // for better map query operations
     implementation 'com.github.chintan369:Geo-FireStore-Query:1.1.0'
 
+    // for apache commons math (for Gaussian distribution tools)
+    implementation 'org.apache.commons:commons-math3:3.6.1'
 
     // for IR Flir services
    //using OLD style implementation --depending on which Gradle Build tools you use
