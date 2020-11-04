@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,7 +11,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.media.Image;
 import android.os.Bundle;
 import edu.ilab.covid_id.R;
 import android.graphics.Bitmap;
@@ -31,33 +29,18 @@ import android.widget.Toast;
 import com.flir.thermalsdk.ErrorCode;
 import com.flir.thermalsdk.androidsdk.BuildConfig;
 import com.flir.thermalsdk.androidsdk.ThermalSdkAndroid;
-import com.flir.thermalsdk.androidsdk.image.BitmapAndroid;
 import com.flir.thermalsdk.androidsdk.live.connectivity.UsbPermissionHandler;
-import com.flir.thermalsdk.image.ImageFactory;
-import com.flir.thermalsdk.image.JavaImageBuffer;
-import com.flir.thermalsdk.image.Point;
-import com.flir.thermalsdk.image.Rectangle;
-import com.flir.thermalsdk.image.TemperatureUnit;
-import com.flir.thermalsdk.image.ThermalImage;
-import com.flir.thermalsdk.image.ThermalImageFile;
-import com.flir.thermalsdk.image.ThermalValue;
 import com.flir.thermalsdk.live.CommunicationInterface;
 import com.flir.thermalsdk.live.Identity;
 import com.flir.thermalsdk.live.connectivity.ConnectionStatusListener;
 import com.flir.thermalsdk.live.discovery.DiscoveryEventListener;
-import com.flir.thermalsdk.live.streaming.ThermalImageStreamListener;
 import com.flir.thermalsdk.log.ThermalLog;
 import com.flir.thermalsdk.live.Camera;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.LinkedBlockingQueue;
 
 //Import necessary for Backend Plus Tensorflow Model Integration
-import com.google.android.gms.common.util.ArrayUtils;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
@@ -71,7 +54,6 @@ import edu.ilab.covid_id.MapsActivity;
 import edu.ilab.covid_id.data.CovidRecord;
 import edu.ilab.covid_id.localize.DetectorActivity;
 import edu.ilab.covid_id.localize.customview.OverlayView;
-import edu.ilab.covid_id.localize.customview.OverlayView.DrawCallback;
 import edu.ilab.covid_id.localize.env.BorderedText;
 import edu.ilab.covid_id.localize.env.ImageUtils;
 import edu.ilab.covid_id.localize.env.Logger;
@@ -108,7 +90,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private TextView discoveryStatus;
 
     private ImageView thermalImage;
-    private ImageView photoImage;
+    private ImageView rgbImage;
 
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
@@ -135,7 +117,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
 
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480); //for display ONLY specific to THIS activity
-
+    private static final Size FLIR_IMAGE_SIZE = new Size(640, 480); // the size flir images start at
 
     private static final boolean SAVE_PREVIEW_BITMAP = false;  //specific to THIS activity
     private static final float TEXT_SIZE_DIP = 10;  //font size for display of bounding boxes
@@ -172,8 +154,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     OverlayView trackingOverlay;   //bounding box and prediction info is drawn on screen using an OverlayView
     private Integer sensorOrientation;  //this Activity does rotation for different Orientations
 
-
-
     /**
      * Show message on the screen
      */
@@ -185,7 +165,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect_flir);
-
 
         // set preview width and height
         previewWidth = DESIRED_PREVIEW_SIZE.getWidth();
@@ -219,10 +198,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
         //method to setup for performing ML detection on stream of IR images captured
         setupForDetection();
     }
-
-//    public void setupTracker(Context context) {
-//        tracker = new MultiBoxTracker(context);
-//    }
 
     public void startDiscovery(View view) {
         startDiscovery();
@@ -411,58 +386,11 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 public void run() {
                     Bitmap rgbBMP = dataHolder.dcBitmap;
                     Bitmap thermalBMP = dataHolder.thermalBitmap;
-                    //    CelciusDataArray tempData = dataHolder.thermalCelcisuData;//or whatever byte data[] you need to convert to the ThermalImage
-                    photoImage.setImageBitmap(rgbBMP);
+                    rgbImage.setImageBitmap(rgbBMP);
                     thermalImage.setImageBitmap(thermalBMP);
-
-
-//                    Bitmap rgbBMP = dataHolder.dcBitmap;
-//
-//                    // insert canvas drawing and image processing from bounding boxes from recognition results
-//                    final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-//
-//
-//                    thermalImage.setImageBitmap(thermalBMP);
-//                    photoImage.setImageBitmap(rgbBMP);
-//                    Log.d(TAG, "inside CameraHandler.StreamDataListnerener.images(FrameDataHolder ");
                 }
             });
         }
-
-
-        /**
-         * method that is called to add a new bitmap (image) to be processed by adding it to the
-         * framesBuffer, then has a runnable thread that will process the images in the framesBuffer
-         * @param thermalBitmap thermal image
-         * @param dcBitmap  corresponding rgb image
-         */
-        // @Override
-        /*public void images(Bitmap thermalBitmap, Bitmap dcBitmap) {
-
-            try {
-                framesBuffer.put(new FrameDataHolder(thermalBitmap,dcBitmap));
-            } catch (InterruptedException e) {
-                //if interrupted while waiting for adding a new item in the queue
-                Log.e(TAG,"images(), unable to add incoming images to frames buffer, exception:"+e);
-            }
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG,"framebuffer size:"+framesBuffer.size());
-                    FrameDataHolder poll = framesBuffer.poll();
-                    thermalImage.setImageBitmap(poll.thermalBitmap);
-                    photoImage.setImageBitmap(poll.dcBitmap);
-                    //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
-                    //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
-
-                    //Preprocess image and pass to TfLite Model here
-                    //processImage(poll.thermalBitmap);
-
-                }
-            });
-
-        }*/
 
         /**
          * method that is called to add a new bitmap (image) to be processed by adding it to the
@@ -473,7 +401,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
          */
         @Override
         public void images(Bitmap thermalBitmap, Bitmap dcBitmap, double[][] tempArray) {
-
             try {
                 framesBuffer.put(new FrameDataHolder(thermalBitmap, dcBitmap,tempArray));
                 Log.d(TAG, "Added FrameDataHolder in buffer");
@@ -482,21 +409,17 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 //if interrupted while waiting for adding a new item in the queue
                 Log.e(TAG, "images(), unable to add incoming images to frames buffer, exception:" + e);
             }
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
                     Log.d(TAG, "framebuffer size:" + framesBuffer.size());
                     FrameDataHolder poll = framesBuffer.poll();
                     thermalImage.setImageBitmap(poll.thermalBitmap);
-                    photoImage.setImageBitmap(poll.dcBitmap);
+                    rgbImage.setImageBitmap(poll.dcBitmap);
                     //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
                     //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
                     //Preprocess image and pass to TfLite Model here
-
                     processImage(poll.thermalBitmap, poll.tempArray);
-
                 }
             });
         }
@@ -552,8 +475,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private void setupViews() {
         connectionStatus = findViewById(R.id.connection_status_text);
         discoveryStatus = findViewById(R.id.discovery_status);
-        thermalImage = findViewById(R.id.msx_image);
-        photoImage = findViewById(R.id.photo_image);
+        thermalImage = findViewById(R.id.thermal_image);
+        rgbImage = findViewById(R.id.rgb_image);
     }
 
     /**
@@ -563,7 +486,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
         Button irToggleButton = findViewById(R.id.toggle_IR_RGB);
 
         thermalImage.setVisibility(TOGGLE_IR_ON ? View.VISIBLE : View.GONE);
-        photoImage.setVisibility(TOGGLE_IR_ON ? View.GONE : View.VISIBLE);
+        rgbImage.setVisibility(TOGGLE_IR_ON ? View.GONE : View.VISIBLE);
         irToggleButton.setText(TOGGLE_IR_ON ? "Color" : "Infrared");
 
         irToggleButton.setOnClickListener(new View.OnClickListener() {
@@ -593,67 +516,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 setShowHideButton();
             }
         });
-    }
-
-    /**
-     * fetching temperature array from every point.
-     * this method is time consuming hence not using it
-     * approx takes 6400ms to complete
-     * */
-    private double[][] getTempArray(ThermalImage heatmap){
-        int width=heatmap.getWidth();
-        int height=heatmap.getHeight();
-        double[][] temprature = new double[width][height];
-        double temp =0;
-        double celtemp =0;
-        for(int i =0;i<width;i++){
-            for(int j =0;j<height;j++){
-                Point pt = new Point(i, j);
-                 temp = heatmap.getValueAt(pt);
-                temprature[i][j]= temp;
-                //Log.d("DEBUG", "temperatureAt(x,y)=" + temp + "At i and j " +i +" "+ j);
-
-            }
-        }
-        //Log.d("DEBUG", "temprature[0][639]" +temprature[0][639]);
-       // Log.d("DEBUG", "temprature[1][639]" +temprature[1][639]);
-        return temprature;
-    }
-    /*
-    * Method to get temperature Array by using rectangle.
-    * time consumed approx 100ms
-    * */
-    private double[][] getTemp(ThermalImage heatmap){
-/*
-        ThermalValue maxTemp= heatmap.getStatistics().max.asCelsius();
-*/
-        heatmap.setTemperatureUnit(TemperatureUnit.CELSIUS);
-       // long startTime = System.nanoTime();
-
-        int width=heatmap.getWidth();
-        int height=heatmap.getHeight();
-        double[][] temperature = new double[width][height];
-        Rectangle rect = new Rectangle(0,0,width,height);
-        double[] rectTemp = heatmap.getValues(rect);
-
-        for(int i=0; i<width;i++)
-            for(int j=0;j<height;j++)
-                temperature[i][j] = rectTemp[(j*width) + i]; //row*number_col+col
-
-        /*Log.d(TAG, "rectTemp: "+rectTemp[479]);
-        Point pt = new Point(479, 0);
-        double temp = heatmap.getValueAt(pt);
-        Log.d(TAG, "getTemp: at point 0,639:"+temp);
-        Log.d(TAG, "rectTemp: "+rectTemp[959]);
-        Point pt1 = new Point(479, 1);
-        double temp1 = heatmap.getValueAt(pt);
-        Log.d(TAG, "getTemp: at point 1,639:"+temp1);*/
-
-        /*long endTime = System.nanoTime();
-
-        long duration = (endTime - startTime)/1000000;
-        Log.d(TAG, "getTemp: duration of rect:"+duration);*/
-        return temperature;
     }
 
     /**
@@ -716,7 +578,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
         //making sure the overlay fragment is same wxh and orientation as the ImageView and its image displayed inside.
         tracker.setFrameConfiguration(previewWidth, previewHeight, 0);
-
     }
 
     /**
@@ -729,24 +590,12 @@ public class ConnectFlirActivity extends AppCompatActivity {
      *        previewHeight = c.getResolutionofThermal().getHeight();
      */
     private void setupForImageProcessingAndOverlay(Camera c) {
-        //hardcoding values for mxsImage options for Flir One Pro camera
-        previewWidth = DESIRED_PREVIEW_SIZE.getWidth();
-        previewHeight = DESIRED_PREVIEW_SIZE.getHeight();
+        sensorOrientation =  0; //sensorOrientation will be 0 for portrait and 90 for horizontal
 
-
-        sensorOrientation =  0; //sensorOreintation will be 0 for horizontal and 90 for portrait
-
-        LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
-        LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
-
-        //seting up the bitmap input image  based on grabing it from the preview display of it.
+        //seting up the bitmap input image  based on grabbing it from the preview display of it.
         thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-        // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
         //setting up the bitmap to store the resized input image to the size that the model expects
-
         croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
-
-       // thermalcroppedBitmap = BitmapAndroid.createBitmap(cropSize, cropSize, JavaImageBuffer.Format.RGBA_8888 );
 
         //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
         //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
@@ -754,53 +603,12 @@ public class ConnectFlirActivity extends AppCompatActivity {
         //   invovles if you want aspect to be maintained
         frameToCropTransform =
                 ImageUtils.getTransformationMatrix(
-                        previewWidth, previewHeight,
+                        FLIR_IMAGE_SIZE.getWidth(), FLIR_IMAGE_SIZE.getHeight(),
                         cropSize, cropSize,
-                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
+                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOrientation should be 0
 
         cropToFrameTransform = new Matrix();  //identity matrix initially
         frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-    }
-
-//    /**
-//     * This method setups various bitmaps and variables used in preprocessing of the images
-//     * to prepare them for processing by our ML model (e.g. correct scaling, etc)
-//     * This gets the input image size based on the incoming image
-//     */
-//    private void setupForImageProcessingAndOverlay(Bitmap image) {
-//        //display size
-//        previewWidth = image.getWidth();
-//        previewHeight = image.getHeight();
-//
-//        sensorOrientation =  90;   //sensorOrientation will be 0 for horizontal and 90 for portrait
-//
-//        LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
-//        LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
-//
-//        //seting up the bitmap input image  based on grabing it from the preview display of it.
-//        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-//       // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
-//        //setting up the bitmap to store the resized input image to the size that the model expects
-//
-//       croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
-//
-//
-//        //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
-//        //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
-//        //   involves rotation based on sensorOrientation
-//        //   invovles if you want aspect to be maintained
-//        frameToCropTransform =
-//                ImageUtils.getTransformationMatrix(
-//                        previewWidth, previewHeight,
-//                        cropSize, cropSize,
-//                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
-//
-//        cropToFrameTransform = new Matrix();  //identity matrix initially
-//        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-//    }
-
-    private void toastMethodForGetMaxTemp(double max){
-        Toast.makeText(getApplicationContext(),  "Highest Temperature:"+max, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -808,8 +616,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
      * this means the current frame/image will be processed by our this.detector model
      * and results are cycled through (can be more than one deteciton in an image) and displayed
      */
-    protected void processImage(Bitmap image,double[][] tempArray) {
-
+    protected void processImage(Bitmap image, double[][] tempArray) {
         ++timestamp;
         final long currTimestamp = timestamp;
 
@@ -983,27 +790,10 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
     }
 
-    protected void showFrameInfo(String frameInfo) {
-        //somehow.setText(frameInfo);
-    }
-
-    protected void showCropInfo(String cropInfo) {
-
-        //shomehow.cropValueTextView.setText(cropInfo);
-    }
-
-    protected void showInference(String inferenceTime) {
-        //showmehow.inferenceTimeTextView.setText(inferenceTime);
-    }
-
-    protected void setUseNNAPI(final boolean isChecked) {
-        runInBackground(() -> detector.setUseNNAPI(isChecked));
-    }
-
-    protected void setNumThreads(final int numThreads) {
-        runInBackground(() -> detector.setNumThreads(numThreads));
-    }
-
+    /**
+     * sets a runnable to run in the background
+     * @param r - runnable
+     */
     protected synchronized void runInBackground(final Runnable r) {
         if (handler != null) {
             handler.post(r);
@@ -1059,4 +849,128 @@ public class ConnectFlirActivity extends AppCompatActivity {
         LOGGER.d("onDestroy " + this);
         super.onDestroy();
     }
+
+    //    public void setupTracker(Context context) {
+//        tracker = new MultiBoxTracker(context);
+//    }
+//    private void toastMethodForGetMaxTemp(double max){
+//        Toast.makeText(getApplicationContext(),  "Highest Temperature:"+max, Toast.LENGTH_SHORT).show();
+//    }
+//    protected void showFrameInfo(String frameInfo) {
+//        //somehow.setText(frameInfo);
+//    }
+//
+//    protected void showCropInfo(String cropInfo) {
+//
+//        //shomehow.cropValueTextView.setText(cropInfo);
+//    }
+//
+//    protected void showInference(String inferenceTime) {
+//        //showmehow.inferenceTimeTextView.setText(inferenceTime);
+//    }
+//
+//    protected void setUseNNAPI(final boolean isChecked) {
+//        runInBackground(() -> detector.setUseNNAPI(isChecked));
+//    }
+//
+//    protected void setNumThreads(final int numThreads) {
+//        runInBackground(() -> detector.setNumThreads(numThreads));
+//    }
+//    /**
+//     * This method setups various bitmaps and variables used in preprocessing of the images
+//     * to prepare them for processing by our ML model (e.g. correct scaling, etc)
+//     * This gets the input image size based on the incoming image
+//     */
+//    private void setupForImageProcessingAndOverlay(Bitmap image) {
+//        //display size
+//        previewWidth = image.getWidth();
+//        previewHeight = image.getHeight();
+//
+//        sensorOrientation =  90;   //sensorOrientation will be 0 for horizontal and 90 for portrait
+//
+//        LOGGER.i(TAG, "Camera orientation relative to screen canvas: %d", sensorOrientation);
+//        LOGGER.i(TAG, "Initializing at size %dx%d", previewWidth, previewHeight);
+//
+//        //seting up the bitmap input image  based on grabing it from the preview display of it.
+//        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+//       // rgbFrameBitmap = Bitmap.createBitmap(480,640, Bitmap.Config.ARGB_8888);
+//        //setting up the bitmap to store the resized input image to the size that the model expects
+//
+//       croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
+//
+//
+//        //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
+//        //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
+//        //   involves rotation based on sensorOrientation
+//        //   invovles if you want aspect to be maintained
+//        frameToCropTransform =
+//                ImageUtils.getTransformationMatrix(
+//                        previewWidth, previewHeight,
+//                        cropSize, cropSize,
+//                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOreination should be 0
+//
+//        cropToFrameTransform = new Matrix();  //identity matrix initially
+//        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
+//    }
+//    /**
+//     * fetching temperature array from every point.
+//     * this method is time consuming hence not using it
+//     * approx takes 6400ms to complete
+//     * */
+//    private double[][] getTempArray(ThermalImage heatmap){
+//        int width=heatmap.getWidth();
+//        int height=heatmap.getHeight();
+//        double[][] temprature = new double[width][height];
+//        double temp =0;
+//        double celtemp =0;
+//        for(int i =0;i<width;i++){
+//            for(int j =0;j<height;j++){
+//                Point pt = new Point(i, j);
+//                 temp = heatmap.getValueAt(pt);
+//                temprature[i][j]= temp;
+//                //Log.d("DEBUG", "temperatureAt(x,y)=" + temp + "At i and j " +i +" "+ j);
+//
+//            }
+//        }
+//        //Log.d("DEBUG", "temprature[0][639]" +temprature[0][639]);
+//       // Log.d("DEBUG", "temprature[1][639]" +temprature[1][639]);
+//        return temprature;
+//    }
+//    /*
+//    * Method to get temperature Array by using rectangle.
+//    * time consumed approx 100ms
+//    * */
+//    private double[][] getTemp(ThermalImage heatmap){
+///*
+//        ThermalValue maxTemp= heatmap.getStatistics().max.asCelsius();
+//*/
+//        heatmap.setTemperatureUnit(TemperatureUnit.CELSIUS);
+//       // long startTime = System.nanoTime();
+//
+//        int width=heatmap.getWidth();
+//        int height=heatmap.getHeight();
+//        double[][] temperature = new double[width][height];
+//        Rectangle rect = new Rectangle(0,0,width,height);
+//        double[] rectTemp = heatmap.getValues(rect);
+//
+//        for(int i=0; i<width;i++)
+//            for(int j=0;j<height;j++)
+//                temperature[i][j] = rectTemp[(j*width) + i]; //row*number_col+col
+//
+//        /*Log.d(TAG, "rectTemp: "+rectTemp[479]);
+//        Point pt = new Point(479, 0);
+//        double temp = heatmap.getValueAt(pt);
+//        Log.d(TAG, "getTemp: at point 0,639:"+temp);
+//        Log.d(TAG, "rectTemp: "+rectTemp[959]);
+//        Point pt1 = new Point(479, 1);
+//        double temp1 = heatmap.getValueAt(pt);
+//        Log.d(TAG, "getTemp: at point 1,639:"+temp1);*/
+//
+//        /*long endTime = System.nanoTime();
+//
+//        long duration = (endTime - startTime)/1000000;
+//        Log.d(TAG, "getTemp: duration of rect:"+duration);*/
+//        return temperature;
+//    }
+
 }

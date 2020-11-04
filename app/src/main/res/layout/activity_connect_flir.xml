@@ -97,22 +97,22 @@
 
     <FrameLayout
         android:id="@+id/display_image_layout"
-        android:layout_width="480px"
-        android:layout_height="640px"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_bar_layout">
 
         <ImageView
-            android:id="@+id/msx_image"
+            android:id="@+id/thermal_image"
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:contentDescription="image with IR "
             android:scaleType="fitXY" />
 
         <ImageView
-            android:id="@+id/photo_image"
+            android:id="@+id/rgb_image"
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:contentDescription="image with only visual image"
