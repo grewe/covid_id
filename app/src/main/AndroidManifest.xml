@@ -85,6 +85,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".crowd.ClassifierActivity"
+            android:label="Crowd_label"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.crowd.ClassifierActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

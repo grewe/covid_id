@@ -547,6 +547,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 Toast.makeText(MapsActivity.this, "Crowd Button Pressed", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                startActivity(intent);
             }
         });
         // TODO: start mask button activity
