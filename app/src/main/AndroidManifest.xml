@@ -66,6 +66,16 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".mask.DetectorActivity"
+            android:label="@string/covid_id_localize"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.mask.DetectorActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".classification.ClassifierActivity"
             android:label="@string/covid_id_flowers"
             android:parentActivityName=".MapsActivity">
