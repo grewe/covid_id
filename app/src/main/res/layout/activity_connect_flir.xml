@@ -23,19 +23,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_bar_layout">
 
-        <Button
-            android:id="@+id/start_discovery"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="startDiscovery"
-            android:text="Start Discovery" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/stop_discovery"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="stopDiscovery"
-            android:text="Stop Discovery" />
+            <Button
+                android:id="@+id/start_discovery"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="startDiscovery"
+                android:text="Start Discovery" />
+
+            <Button
+                android:id="@+id/stop_discovery"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="stopDiscovery"
+                android:text="Stop Discovery" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/discovery_status"
@@ -44,21 +53,30 @@
             android:text="Discovery Status"
             android:textSize="18sp" />
 
-        <Button
-            android:id="@+id/connect_flir_one"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="connectFlirOne"
-            android:text="Connect" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/connect_flir_one"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="connectFlirOne"
+                android:text="Connect" />
+
+            <Button
+                android:id="@+id/disconnect_any"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="disconnect"
+                android:text="Disconnect" />
+        </LinearLayout>
 
         <!-- Connect to FLIR ONE / Emulators buttons -->
-
-        <Button
-            android:id="@+id/disconnect_any"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="disconnect"
-            android:text="Disconnect" />
 
         <TextView
             android:id="@+id/connection_status_text"
@@ -88,17 +106,17 @@
 
     <FrameLayout
         android:id="@+id/display_image_layout"
-        android:layout_width="480px"
-        android:layout_height="640px"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_bar_layout">
+        app:layout_constraintTop_toTopOf="@+id/collapsible_button_layout">
 
         <ImageView
             android:id="@+id/thermal_image"
-            android:layout_width="480px"
-            android:layout_height="640px"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
             android:contentDescription="image with IR "
             android:scaleType="fitXY" />
 
@@ -111,8 +129,8 @@
 
         <edu.ilab.covid_id.localize.customview.OverlayView
             android:id="@+id/tracking_overlay_IR"
-            android:layout_width="480px"
-            android:layout_height="640px" />
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
 
     </FrameLayout>
 

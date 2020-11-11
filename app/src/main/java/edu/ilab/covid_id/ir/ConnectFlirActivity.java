@@ -402,7 +402,6 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                         viewWidth, viewHeight,
                                         sensorOrientation, MAINTAIN_ASPECT
                                );
-                        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
                     } else {
                         // initial matrix
                         cropToFrameTransform = new Matrix();  //identity matrix initially
