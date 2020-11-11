@@ -22,7 +22,9 @@ import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -72,8 +74,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
     // for toggling ir/rgb
     private boolean TOGGLE_IR_ON = true;
 
-    // for toggling button bar
-    private boolean SHOW_BUTTONS = true;
+//    // for toggling button bar
+//    private boolean SHOW_BUTTONS = true;
 
     //necessary to limit thread generation - one thread per frame gets created --so that do not run out of memory
     private Handler handler;
@@ -91,7 +93,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private Identity connectedIdentity = null;
     private TextView connectionStatus;
     private TextView discoveryStatus;
-
+    private FrameLayout imageLayout;
     private ImageView thermalImage;
     private ImageView rgbImage;
 
@@ -190,278 +192,14 @@ public class ConnectFlirActivity extends AppCompatActivity {
         // set up toggle button
         setToggleButton();
 
-        // set up show/hide button
-        setShowHideButton();
+//        // set up show/hide button
+//        setShowHideButton();
 
         //method to setup for performing ML detection on stream of IR images captured
         setupForDetection();
     }
 
-    public void startDiscovery(View view) {
-        startDiscovery();
-    }
 
-    public void stopDiscovery(View view) {
-        stopDiscovery();
-    }
-
-    /**
-     * this method is invoked auto when connect button hit and called connectFlirOne method of the cameraHandler
-     * @param view
-     */
-    public void connectFlirOne(View view) {
-        connect(cameraHandler.getFlirOne());
-    }
-
-    /**
-     * This method would invoke and disconnect the camera
-     * @param view
-     */
-    public void disconnect(View view) {
-        disconnect();
-    }
-
-    /**
-     * Handle Android permission request response for Bluetooth permissions
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        Log.d(TAG, "onRequestPermissionsResult() called with: requestCode = [" + requestCode + "], permissions = [" + permissions + "], grantResults = [" + grantResults + "]");
-        permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    /**
-     * Connect to a FlirOne Camera with given identity
-     *
-     */
-    private void connect(Identity identity) {
-        //We don't have to stop a discovery but it's nice to do if we have found the camera that we are looking for
-        cameraHandler.stopDiscovery(discoveryStatusListener);
-        if (connectedIdentity != null) {
-            Log.d(TAG, "connect(), we only support one camera connection at the time");
-            showMessage.show("We only support one camera connection at a time");
-            return;
-        }
-        if (identity == null) {
-            Log.d(TAG, "connect(), can't connect, no camera  available");
-            showMessage.show("connect(), can't connect, no camera available");
-            return;
-        }
-        connectedIdentity = identity;
-        updateConnectionText(identity, "CONNECTING");
-        //IF your using "USB_DEVICE_ATTACHED" and "usb-device vendor-id" in the Android Manifest
-        // you don't need to request permission, see documentation for more information
-        if (UsbPermissionHandler.isFlirOne(identity)) {
-            usbPermissionHandler.requestFlirOnePermisson(identity, this, permissionListener);
-        } else {
-            doConnect(identity);
-        }
-    }
-
-    private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
-        @Override
-        public void permissionGranted(Identity identity) {
-            doConnect(identity);
-        }
-        @Override
-        public void permissionDenied(Identity identity) {
-            ConnectFlirActivity.this.showMessage.show("Permission was denied for identity ");
-        }
-        @Override
-        public void error(UsbPermissionHandler.UsbPermissionListener.ErrorType errorType, final Identity identity) {
-            ConnectFlirActivity.this.showMessage.show("Error when asking for permission for FLIR ONE, error:"+errorType+ " identity:" +identity);
-        }
-    };
-
-    /**
-     * This method starts streaming images from flir one device
-     * @param identity
-     */
-    private void doConnect(Identity identity) {
-        new Thread(() -> {
-            try {
-                cameraHandler.connect(identity, connectionStatusListener);
-                runOnUiThread(() -> {
-                    updateConnectionText(identity, "CONNECTED");
-                    //this is the code that will be invoked once we are connected
-                    Log.d(TAG, "Lynne it is connected");
-
-                    //call method to setup
-
-                    setupForImageProcessingAndOverlay(cameraHandler.getCamera());
-                    cameraHandler.startStream(streamDataListener);
-                });
-            } catch (IOException e) {
-                runOnUiThread(() -> {
-                    Log.d(TAG, "Could not connect: " + e);
-                    updateConnectionText(identity, "DISCONNECTED");
-                });
-            }
-        }).start();
-    }
-
-    /**
-     * Disconnect to a camera
-     */
-    private void disconnect() {
-        updateConnectionText(connectedIdentity, "DISCONNECTING");
-        connectedIdentity = null;
-        Log.d(TAG, "disconnect() called with: connectedIdentity = [" + connectedIdentity + "]");
-        new Thread(() -> {
-            cameraHandler.disconnect();
-            runOnUiThread(() -> {
-                updateConnectionText(null, "DISCONNECTED");
-            });
-        }).start();
-    }
-
-    /**
-     * Update the UI text for connection status
-     */
-    private void updateConnectionText(Identity identity, String status) {
-        String deviceId = identity != null ? identity.deviceId : "";
-        //connectionStatus.setText(getString(R.string.connection_status_text, deviceId + " " + status));
-        connectionStatus.setText("Connected"+deviceId + " " + status);
-    }
-
-    /**
-     * Start camera discovery
-     */
-    private void startDiscovery() {
-        cameraHandler.startDiscovery(cameraDiscoveryListener, discoveryStatusListener);
-    }
-
-    /**
-     * Stop camera discovery
-     */
-    private void stopDiscovery() {
-        cameraHandler.stopDiscovery(discoveryStatusListener);
-    }
-
-    /**
-     * Callback for discovery status, using it to update UI
-     */
-    private CameraHandler.DiscoveryStatus discoveryStatusListener = new CameraHandler.DiscoveryStatus() {
-        @Override
-        public void started() {
-           // discoveryStatus.setText(getString(R.string.connection_status_text, "discovering"));
-            discoveryStatus.setText("Discovering");
-        }
-        @Override
-        public void stopped() {
-            //discoveryStatus.setText(getString(R.string.connection_status_text, "not discovering"));
-            discoveryStatus.setText("Not discovering");
-        }
-    };
-
-    /**
-     * Camera connecting state thermalImageStreamListener, keeps track of if the camera is connected or not
-     * <p>
-     * Note that callbacks are received on a non-ui thread so have to eg use {@link #runOnUiThread(Runnable)} to interact view UI components
-     */
-    private ConnectionStatusListener connectionStatusListener = new ConnectionStatusListener() {
-        @Override
-        public void onDisconnected(@org.jetbrains.annotations.Nullable ErrorCode errorCode) {
-            Log.d(TAG, "onDisconnected errorCode:" + errorCode);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateConnectionText(connectedIdentity, "DISCONNECTED");
-                }
-            });
-        }
-    };
-
-    /**
-     * annonymous inner class for handling the incomming stream of IR images
-     * Note CameraHandler.StreamDataListener is an Interface and here is the implementation of its methods.
-     */
-    private final CameraHandler.StreamDataListener streamDataListener = new CameraHandler.StreamDataListener() {
-        @Override
-        public void images(FrameDataHolder dataHolder) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Bitmap rgbBMP = dataHolder.dcBitmap;
-                    Bitmap thermalBMP = dataHolder.thermalBitmap;
-                    rgbImage.setImageBitmap(rgbBMP);
-                    thermalImage.setImageBitmap(thermalBMP);
-                }
-            });
-        }
-
-        /**
-         * method that is called to add a new bitmap (image) to be processed by adding it to the
-         * framesBuffer, then has a runnable thread that will process the images in the framesBuffer
-         * @param thermalBitmap thermal image
-         * @param dcBitmap  corresponding rgb image
-         *                  Taking temperature array from Camera Handler
-         */
-        @Override
-        public void images(Bitmap thermalBitmap, Bitmap dcBitmap, double[][] tempArray) {
-            try {
-                framesBuffer.put(new FrameDataHolder(thermalBitmap, dcBitmap,tempArray));
-                Log.d(TAG, "Added FrameDataHolder in buffer");
-
-            } catch (InterruptedException e) {
-                //if interrupted while waiting for adding a new item in the queue
-                Log.e(TAG, "images(), unable to add incoming images to frames buffer, exception:" + e);
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "framebuffer size:" + framesBuffer.size());
-                    FrameDataHolder poll = framesBuffer.poll();
-                    thermalImage.setImageBitmap(poll.thermalBitmap);
-                    rgbImage.setImageBitmap(poll.dcBitmap);
-                    //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
-                    //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
-                    //Preprocess image and pass to TfLite Model here
-                    processImage(poll.thermalBitmap, poll.tempArray);
-                }
-            });
-        }
-
-
-    };
-
-    /**
-     * Camera Discovery thermalImageStreamListener, is notified if a new camera was found during a active discovery phase
-     * <p>
-     * Note that callbacks are received on a non-ui thread so have to eg use {@link #runOnUiThread(Runnable)} to interact view UI components
-     */
-    private DiscoveryEventListener cameraDiscoveryListener = new DiscoveryEventListener() {
-        @Override
-        public void onCameraFound(Identity identity) {
-            Log.d(TAG, "onCameraFound identity:" + identity);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    cameraHandler.add(identity);
-                }
-            });
-        }
-
-        @Override
-        public void onDiscoveryError(CommunicationInterface communicationInterface, ErrorCode errorCode) {
-            Log.d(TAG, "onDiscoveryError communicationInterface:" + communicationInterface + " errorCode:" + errorCode);
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    stopDiscovery();
-                    ConnectFlirActivity.this.showMessage.show("onDiscoveryError communicationInterface:" + communicationInterface + " errorCode:" + errorCode);
-                }
-            });
-        }
-    };
-
-    private ShowMessage showMessage = new ShowMessage() {
-        @Override
-        public void show(String message) {
-            Toast.makeText(ConnectFlirActivity.this, message, Toast.LENGTH_SHORT).show();
-        }
-    };
 
     /**
      * this method grabs handles to various GUI elements for this activity
@@ -471,6 +209,7 @@ public class ConnectFlirActivity extends AppCompatActivity {
      * photoImage = ImageView to display corresponding rgb Image
      */
     private void setupViews() {
+        imageLayout = findViewById(R.id.display_image_layout);
         connectionStatus = findViewById(R.id.connection_status_text);
         discoveryStatus = findViewById(R.id.discovery_status);
         thermalImage = findViewById(R.id.thermal_image);
@@ -496,25 +235,25 @@ public class ConnectFlirActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * set toggle button
-     */
-    private void setShowHideButton() {
-        Button showHideButton = findViewById(R.id.show_hide_buttons_button);
-        LinearLayout collapsibleLayout = findViewById(R.id.collapsible_button_layout);
-
-        collapsibleLayout.setVisibility(SHOW_BUTTONS ? View.VISIBLE : View.GONE);
-
-        showHideButton.setText(SHOW_BUTTONS ? "Hide Buttons" : "Expand Buttons");
-
-        showHideButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SHOW_BUTTONS = !SHOW_BUTTONS;
-                setShowHideButton();
-            }
-        });
-    }
+//    /**
+//     * set toggle button
+//     */
+//    private void setShowHideButton() {
+//        Button showHideButton = findViewById(R.id.show_hide_buttons_button);
+//        LinearLayout collapsibleLayout = findViewById(R.id.collapsible_button_layout);
+//
+//        collapsibleLayout.setVisibility(SHOW_BUTTONS ? View.VISIBLE : View.GONE);
+//
+//        showHideButton.setText(SHOW_BUTTONS ? "Hide Buttons" : "Expand Buttons");
+//
+//        showHideButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                SHOW_BUTTONS = !SHOW_BUTTONS;
+//                setShowHideButton();
+//            }
+//        });
+//    }
 
     /**
      * this method invoked in onCreate to setup various items for performing ML Detection on stream of IR imagery
@@ -574,8 +313,25 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 });
         sensorOrientation = PORTRAIT;
 
+
         //making sure the overlay fragment is same wxh and orientation as the ImageView and its image displayed inside.
-        tracker.setFrameConfiguration(previewWidth, previewHeight, 0);
+        // tracker.setFrameConfiguration(previewWidth, previewHeight, 0);
+
+
+        ViewTreeObserver viewTreeObserver = imageLayout.getViewTreeObserver();
+        if (viewTreeObserver.isAlive()) {
+            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    imageLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                    int viewWidth = imageLayout.getWidth();
+                    int viewHeight = imageLayout.getHeight();
+
+                    tracker.setFrameConfiguration(viewWidth, viewHeight, 0);
+                }
+            });
+        }
     }
 
     /**
@@ -588,25 +344,73 @@ public class ConnectFlirActivity extends AppCompatActivity {
      *        previewHeight = c.getResolutionofThermal().getHeight();
      */
     private void setupForImageProcessingAndOverlay(Camera c) {
-        sensorOrientation =  0; //sensorOrientation will be 0 for portrait and 90 for horizontal
 
-        //seting up the bitmap input image  based on grabbing it from the preview display of it.
-        thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-        //setting up the bitmap to store the resized input image to the size that the model expects
-        croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
 
-        //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
-        //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
-        //   involves rotation based on sensorOrientation
-        //   invovles if you want aspect to be maintained
-        frameToCropTransform =
-                ImageUtils.getTransformationMatrix(
-                        FLIR_IMAGE_SIZE.getWidth(), FLIR_IMAGE_SIZE.getHeight(),
-                        cropSize, cropSize,
-                        sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOrientation should be 0
+        ViewTreeObserver viewTreeObserver = imageLayout.getViewTreeObserver();
+        if (viewTreeObserver.isAlive()) {
+            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    imageLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-        cropToFrameTransform = new Matrix();  //identity matrix initially
-        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
+                    // TODO: remove this flag
+                    boolean TESTING_NEW = true;
+
+                    previewWidth = 480;
+                    previewHeight = 640;
+
+//                    if(TESTING_NEW) {
+//                        previewWidth = imageLayout.getWidth();
+//                        previewHeight = imageLayout.getHeight();
+//                    } else {
+//                        previewWidth = 480;
+//                        previewHeight = 640;
+//                    }
+
+                    int viewWidth = imageLayout.getWidth();
+                    int viewHeight = imageLayout.getHeight();
+
+                    Log.d("OVERLAY", "view width: " + previewWidth + ", view height: " + previewHeight);
+
+                    sensorOrientation =  0; //sensorOrientation will be 0 for portrait and 90 for horizontal
+
+                    //seting up the bitmap input image  based on grabbing it from the preview display of it.
+                    thermalFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+                    //setting up the bitmap to store the resized input image to the size that the model expects
+                    croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
+
+                    //create a transformation that will be used to convert the input image to the right size and orientation expected by the model
+                    //   involves resizing (to cropsizexcropsize) from the original previewWidthxpreviewHeight
+                    //   involves rotation based on sensorOrientation
+                    //   invovles if you want aspect to be maintained
+                    frameToCropTransform =
+                            ImageUtils.getTransformationMatrix(
+                                    previewWidth, previewHeight,
+                                    cropSize, cropSize,
+                                    sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOrientation should be 0
+
+
+                    if(TESTING_NEW) {
+                        // TODO: figure out the correct transformation to properly fit from 512x512 to
+                        // new image width and height
+                        //      NOTE: WHY is there now a black bar on the right side of recognitions - was not there back in September:
+                        //          OLD: https://firebasestorage.googleapis.com/v0/b/hale-carport-278621.appspot.com/o/images%2FyyJyuNVCOzfUSkDSLNfq4TKW3sI2_1600641936917?alt=media&token=acc590aa-1fbe-4781-a3ed-c1d5e173aff0
+                        //          NEW: https://firebasestorage.googleapis.com/v0/b/hale-carport-278621.appspot.com/o/images%2FyyJyuNVCOzfUSkDSLNfq4TKW3sI2_1605075186718?alt=media&token=6db3bcc4-3dac-48e9-81ed-1fc5951b8b3f
+                        cropToFrameTransform =
+                                ImageUtils.getTransformationMatrix(
+                                        cropSize, cropSize,
+                                        viewWidth, viewHeight,
+                                        sensorOrientation, MAINTAIN_ASPECT
+                               );
+                        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
+                    } else {
+                        // initial matrix
+                        cropToFrameTransform = new Matrix();  //identity matrix initially
+                        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -783,7 +587,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                             }
                         }
 
-                        tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
+                        //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
+                        tracker.trackResults(mappedRecognitions, currTimestamp);
                         trackingOverlay.postInvalidate();
 
                         computingDetection = false;
@@ -896,6 +701,272 @@ public class ConnectFlirActivity extends AppCompatActivity {
         LOGGER.d("onDestroy " + this);
         super.onDestroy();
     }
+
+    public void startDiscovery(View view) {
+        startDiscovery();
+    }
+
+    public void stopDiscovery(View view) {
+        stopDiscovery();
+    }
+
+    /**
+     * this method is invoked auto when connect button hit and called connectFlirOne method of the cameraHandler
+     * @param view
+     */
+    public void connectFlirOne(View view) {
+        connect(cameraHandler.getFlirOne());
+    }
+
+    /**
+     * This method would invoke and disconnect the camera
+     * @param view
+     */
+    public void disconnect(View view) {
+        disconnect();
+    }
+
+    /**
+     * Handle Android permission request response for Bluetooth permissions
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.d(TAG, "onRequestPermissionsResult() called with: requestCode = [" + requestCode + "], permissions = [" + permissions + "], grantResults = [" + grantResults + "]");
+        permissionHandler.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    /**
+     * Connect to a FlirOne Camera with given identity
+     *
+     */
+    private void connect(Identity identity) {
+        //We don't have to stop a discovery but it's nice to do if we have found the camera that we are looking for
+        cameraHandler.stopDiscovery(discoveryStatusListener);
+        if (connectedIdentity != null) {
+            Log.d(TAG, "connect(), we only support one camera connection at the time");
+            showMessage.show("We only support one camera connection at a time");
+            return;
+        }
+        if (identity == null) {
+            Log.d(TAG, "connect(), can't connect, no camera  available");
+            showMessage.show("connect(), can't connect, no camera available");
+            return;
+        }
+        connectedIdentity = identity;
+        updateConnectionText(identity, "CONNECTING");
+        //IF your using "USB_DEVICE_ATTACHED" and "usb-device vendor-id" in the Android Manifest
+        // you don't need to request permission, see documentation for more information
+        if (UsbPermissionHandler.isFlirOne(identity)) {
+            usbPermissionHandler.requestFlirOnePermisson(identity, this, permissionListener);
+        } else {
+            doConnect(identity);
+        }
+    }
+
+    private UsbPermissionHandler.UsbPermissionListener permissionListener = new UsbPermissionHandler.UsbPermissionListener() {
+        @Override
+        public void permissionGranted(Identity identity) {
+            doConnect(identity);
+        }
+        @Override
+        public void permissionDenied(Identity identity) {
+            ConnectFlirActivity.this.showMessage.show("Permission was denied for identity ");
+        }
+        @Override
+        public void error(UsbPermissionHandler.UsbPermissionListener.ErrorType errorType, final Identity identity) {
+            ConnectFlirActivity.this.showMessage.show("Error when asking for permission for FLIR ONE, error:"+errorType+ " identity:" +identity);
+        }
+    };
+
+    /**
+     * This method starts streaming images from flir one device
+     * @param identity
+     */
+    private void doConnect(Identity identity) {
+        new Thread(() -> {
+            try {
+                cameraHandler.connect(identity, connectionStatusListener);
+                runOnUiThread(() -> {
+                    updateConnectionText(identity, "CONNECTED");
+                    //this is the code that will be invoked once we are connected
+                    Log.d(TAG, "Lynne it is connected");
+
+                    //call method to setup
+
+                    setupForImageProcessingAndOverlay(cameraHandler.getCamera());
+                    cameraHandler.startStream(streamDataListener);
+                });
+            } catch (IOException e) {
+                runOnUiThread(() -> {
+                    Log.d(TAG, "Could not connect: " + e);
+                    updateConnectionText(identity, "DISCONNECTED");
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Disconnect to a camera
+     */
+    private void disconnect() {
+        updateConnectionText(connectedIdentity, "DISCONNECTING");
+        connectedIdentity = null;
+        Log.d(TAG, "disconnect() called with: connectedIdentity = [" + connectedIdentity + "]");
+        new Thread(() -> {
+            cameraHandler.disconnect();
+            runOnUiThread(() -> {
+                updateConnectionText(null, "DISCONNECTED");
+            });
+        }).start();
+    }
+
+    /**
+     * Update the UI text for connection status
+     */
+    private void updateConnectionText(Identity identity, String status) {
+        String deviceId = identity != null ? identity.deviceId : "";
+        //connectionStatus.setText(getString(R.string.connection_status_text, deviceId + " " + status));
+        connectionStatus.setText("Connected"+deviceId + " " + status);
+    }
+
+    /**
+     * Start camera discovery
+     */
+    private void startDiscovery() {
+        cameraHandler.startDiscovery(cameraDiscoveryListener, discoveryStatusListener);
+    }
+
+    /**
+     * Stop camera discovery
+     */
+    private void stopDiscovery() {
+        cameraHandler.stopDiscovery(discoveryStatusListener);
+    }
+
+    /**
+     * Callback for discovery status, using it to update UI
+     */
+    private CameraHandler.DiscoveryStatus discoveryStatusListener = new CameraHandler.DiscoveryStatus() {
+        @Override
+        public void started() {
+            // discoveryStatus.setText(getString(R.string.connection_status_text, "discovering"));
+            discoveryStatus.setText("Discovering");
+        }
+        @Override
+        public void stopped() {
+            //discoveryStatus.setText(getString(R.string.connection_status_text, "not discovering"));
+            discoveryStatus.setText("Not discovering");
+        }
+    };
+
+    /**
+     * Camera connecting state thermalImageStreamListener, keeps track of if the camera is connected or not
+     * <p>
+     * Note that callbacks are received on a non-ui thread so have to eg use {@link #runOnUiThread(Runnable)} to interact view UI components
+     */
+    private ConnectionStatusListener connectionStatusListener = new ConnectionStatusListener() {
+        @Override
+        public void onDisconnected(@org.jetbrains.annotations.Nullable ErrorCode errorCode) {
+            Log.d(TAG, "onDisconnected errorCode:" + errorCode);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateConnectionText(connectedIdentity, "DISCONNECTED");
+                }
+            });
+        }
+    };
+
+    /**
+     * annonymous inner class for handling the incomming stream of IR images
+     * Note CameraHandler.StreamDataListener is an Interface and here is the implementation of its methods.
+     */
+    private final CameraHandler.StreamDataListener streamDataListener = new CameraHandler.StreamDataListener() {
+        @Override
+        public void images(FrameDataHolder dataHolder) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Bitmap rgbBMP = dataHolder.dcBitmap;
+                    Bitmap thermalBMP = dataHolder.thermalBitmap;
+                    rgbImage.setImageBitmap(rgbBMP);
+                    thermalImage.setImageBitmap(thermalBMP);
+                }
+            });
+        }
+
+        /**
+         * method that is called to add a new bitmap (image) to be processed by adding it to the
+         * framesBuffer, then has a runnable thread that will process the images in the framesBuffer
+         * @param thermalBitmap thermal image
+         * @param dcBitmap  corresponding rgb image
+         *                  Taking temperature array from Camera Handler
+         */
+        @Override
+        public void images(Bitmap thermalBitmap, Bitmap dcBitmap, double[][] tempArray) {
+            try {
+                framesBuffer.put(new FrameDataHolder(thermalBitmap, dcBitmap,tempArray));
+                Log.d(TAG, "Added FrameDataHolder in buffer");
+
+            } catch (InterruptedException e) {
+                //if interrupted while waiting for adding a new item in the queue
+                Log.e(TAG, "images(), unable to add incoming images to frames buffer, exception:" + e);
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "framebuffer size:" + framesBuffer.size());
+                    FrameDataHolder poll = framesBuffer.poll();
+                    thermalImage.setImageBitmap(poll.thermalBitmap);
+                    rgbImage.setImageBitmap(poll.dcBitmap);
+                    //setup various variables for ImageProcessing --this is NOT RIGHT HERE but, we don't have an image grabbed until here
+                    //setupForImageProcessingAndOverlay(poll.msxBitmap); //pass the bitmap will process
+                    //Preprocess image and pass to TfLite Model here
+                    processImage(poll.thermalBitmap, poll.tempArray);
+                }
+            });
+        }
+
+
+    };
+
+    /**
+     * Camera Discovery thermalImageStreamListener, is notified if a new camera was found during a active discovery phase
+     * <p>
+     * Note that callbacks are received on a non-ui thread so have to eg use {@link #runOnUiThread(Runnable)} to interact view UI components
+     */
+    private DiscoveryEventListener cameraDiscoveryListener = new DiscoveryEventListener() {
+        @Override
+        public void onCameraFound(Identity identity) {
+            Log.d(TAG, "onCameraFound identity:" + identity);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    cameraHandler.add(identity);
+                }
+            });
+        }
+
+        @Override
+        public void onDiscoveryError(CommunicationInterface communicationInterface, ErrorCode errorCode) {
+            Log.d(TAG, "onDiscoveryError communicationInterface:" + communicationInterface + " errorCode:" + errorCode);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    stopDiscovery();
+                    ConnectFlirActivity.this.showMessage.show("onDiscoveryError communicationInterface:" + communicationInterface + " errorCode:" + errorCode);
+                }
+            });
+        }
+    };
+
+    private ShowMessage showMessage = new ShowMessage() {
+        @Override
+        public void show(String message) {
+            Toast.makeText(ConnectFlirActivity.this, message, Toast.LENGTH_SHORT).show();
+        }
+    };
 
     //    public void setupTracker(Context context) {
 //        tracker = new MultiBoxTracker(context);
