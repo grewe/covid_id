@@ -353,19 +353,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
                 public void onGlobalLayout() {
                     imageLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                    // TODO: remove this flag
-                    boolean TESTING_NEW = true;
-
                     previewWidth = 480;
                     previewHeight = 640;
-
-//                    if(TESTING_NEW) {
-//                        previewWidth = imageLayout.getWidth();
-//                        previewHeight = imageLayout.getHeight();
-//                    } else {
-//                        previewWidth = 480;
-//                        previewHeight = 640;
-//                    }
 
                     int viewWidth = imageLayout.getWidth();
                     int viewHeight = imageLayout.getHeight();
@@ -389,24 +378,15 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                     cropSize, cropSize,
                                     sensorOrientation, MAINTAIN_ASPECT);  //TIP: if you want no rotation than sensorOrientation should be 0
 
-
-                    if(TESTING_NEW) {
-                        // TODO: figure out the correct transformation to properly fit from 512x512 to
-                        // new image width and height
-                        //      NOTE: WHY is there now a black bar on the right side of recognitions - was not there back in September:
-                        //          OLD: https://firebasestorage.googleapis.com/v0/b/hale-carport-278621.appspot.com/o/images%2FyyJyuNVCOzfUSkDSLNfq4TKW3sI2_1600641936917?alt=media&token=acc590aa-1fbe-4781-a3ed-c1d5e173aff0
-                        //          NEW: https://firebasestorage.googleapis.com/v0/b/hale-carport-278621.appspot.com/o/images%2FyyJyuNVCOzfUSkDSLNfq4TKW3sI2_1605075186718?alt=media&token=6db3bcc4-3dac-48e9-81ed-1fc5951b8b3f
-                        cropToFrameTransform =
+                    // create transformation matrix for stretching from 512 x 512 to dynamically
+                    // acquired view width and height
+                    cropToFrameTransform =
                                 ImageUtils.getTransformationMatrix(
                                         cropSize, cropSize,
                                         viewWidth, viewHeight,
                                         sensorOrientation, MAINTAIN_ASPECT
                                );
-                    } else {
-                        // initial matrix
-                        cropToFrameTransform = new Matrix();  //identity matrix initially
-                        frameToCropTransform.invert(cropToFrameTransform);  //calculating the cropToFrameTransform as the inversion of the frameToCropTransform
-                    }
+
                 }
             });
         }
@@ -578,10 +558,18 @@ public class ConnectFlirActivity extends AppCompatActivity {
                                 //###############################################
 
                                 //the following takes the bounding box location and transforms it for coordinates in display
-                                cropToFrameTransform.mapRect(location);//transforms using Matrix the bounding box to the correct transformed coordinates
+                                cropToFrameTransform.mapRect(location);
+
+                                // map the temp location circle according to the same matrix
+                                float[] floatTempLoc = new float[] {tempLocation.x, tempLocation.y};
+                                cropToFrameTransform.mapPoints(floatTempLoc);
+                                tempLocation.x = (int)floatTempLoc[0];
+                                tempLocation.y = (int)floatTempLoc[1];
+
+                                result.setMaxTempLocation(tempLocation);    // set new temp location
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
-                                result.setMaxTemp(maxTempC);
-                                result.setMaxTempLocation(tempLocation);
+                                result.setMaxTemp(maxTempC);    // set the max temp in celcius
+
                                 mappedRecognitions.add(result);  //add the result to a linked list
                             }
                         }
