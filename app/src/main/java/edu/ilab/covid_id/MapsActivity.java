@@ -564,7 +564,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         socDistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "Social Distancing Button Pressed", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MapsActivity.this, "Social Distancing Button Pressed", Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
+                startActivity(intent);
             }
         });
     }

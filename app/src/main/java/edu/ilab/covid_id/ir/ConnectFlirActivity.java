@@ -106,7 +106,9 @@ public class ConnectFlirActivity extends AppCompatActivity {
     private static final int TF_OD_API_INPUT_SIZE = 512;    //this is the wxh of square input size to MODEL
     private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
     private static final String TF_OD_API_MODEL_FILE = "IRdetect.tflite"; //"IRdetect.tflite";   //name of input file for MODEL must be tflite format
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/IRlabelmap.txt";  //LabelMap file listed classes--same order as training
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/IRlabelmap.txt";
+
+    //LabelMap file listed classes--same order as training
 
 
     private static final DetectorActivity.DetectorMode MODE = DetectorActivity.DetectorMode.TF_OD_API;   //Using Object Detection API
