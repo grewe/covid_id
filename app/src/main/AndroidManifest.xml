@@ -10,8 +10,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!--  must add permission to use camera -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- must add permission to use camera -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature android:name="android.hardware.camera" />
@@ -24,7 +23,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.ObjectDetection">
-
         <activity android:name=".auth.LoginActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -66,16 +64,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".mask.DetectorActivity"
-            android:label="@string/covid_id_localize"
-            android:parentActivityName=".MapsActivity">
-            <intent-filter>
-                <action android:name="edu.ilab.covid_id.mask.DetectorActivity" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".classification.ClassifierActivity"
             android:label="@string/covid_id_flowers"
             android:parentActivityName=".MapsActivity">
@@ -105,8 +93,26 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".mask.MouthNoseActivity"
+            android:label="@string/covid_id_mouthNose"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.mask.MouthNoseActivity" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".mask.MaskActivity"
+            android:label="@string/covid_id_mask"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.mask.MaskActivity" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".socDist.DetectorActivity"
             android:label="@string/covid_id_socDist"
@@ -117,7 +123,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

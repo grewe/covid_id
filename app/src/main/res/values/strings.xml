@@ -13,6 +13,8 @@
     </string-array>
     <string name="covid_id_flowers" translatable="false">Flowers</string>
     <string name="covid_id_localize" translatable="false">Localize</string>
+    <string name="covid_id_mask" translatable="false">Mask</string>
+    <string name="covid_id_mouthNose" translatable="false">Mouth/Nose</string>
     <string name="covid_id_socDist" translatable="false">socDist</string>
     <string name="tfe_ic_device" translatable="false">Device:</string>
     <string-array name="tfe_ic_devices" translatable="false">
