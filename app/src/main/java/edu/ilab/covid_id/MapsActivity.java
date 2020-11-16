@@ -161,6 +161,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LinearLayout crowdButtonLayout;
 
     /**
+     * Layout where crowd buttons live
+     */
+    private LinearLayout socDistButtonLayout;
+
+    /**
      * list populated by firestore query in populateMap() method
      */
     private ArrayList<CovidRecord> queryRecords = null;
@@ -277,6 +282,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * flag for if the crowd button is expanded or not (false by default)
      */
     public static boolean expand_crowd = false;
+
+    /**
+     * flag for if the socDist button is expanded or not (false by default)
+     */
+    public static boolean expand_socDist = false;
 
     /**
      * email as specified when logging into Firebase by user
@@ -567,6 +577,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //startActivity(intent);
             }
         });
+
         // TODO: start mask button activity
         maskButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -581,7 +592,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 //Toast.makeText(MapsActivity.this, "Social Distancing Button Pressed", Toast.LENGTH_SHORT).show();
-
+                expand_socDist = !expand_socDist;
+                socDistButtonLayout.setVisibility(expand_socDist? View.VISIBLE : View.GONE);
                 Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
                 startActivity(intent);
             }
