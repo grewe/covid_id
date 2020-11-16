@@ -156,6 +156,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LinearLayout settingsLayout;
 
     /**
+     * Layout where crowd buttons live
+     */
+    private LinearLayout crowdButtonLayout;
+
+    /**
      * list populated by firestore query in populateMap() method
      */
     private ArrayList<CovidRecord> queryRecords = null;
@@ -267,6 +272,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * flag for if settings are expanded or not (false by default)
      */
     public static boolean expand_settings = false;
+
+    /**
+     * flag for if the crowd button is expanded or not (false by default)
+     */
+    public static boolean expand_crowd = false;
 
     /**
      * email as specified when logging into Firebase by user
@@ -473,6 +483,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.expandCollapseSettingsButton = findViewById(R.id.expand_settings_button);
         //grab handle to expandible settings layout
         this.settingsLayout = findViewById(R.id.collapsible_button_layout);
+        //grab the handle to expandible crowd button layout
+        this.crowdButtonLayout = findViewById(R.id.crowdButton_layout);
         //grab handle to track location button
         this.trackLocationButton = findViewById(R.id.track_location_button);
         //grab handle to the refresh markers button
@@ -542,13 +554,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 populateMap();
             }
         });
+
         // TODO: start crowd button activity
+        crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
         crowdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(MapsActivity.this, "Crowd Button Pressed", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
-                startActivity(intent);
+                expand_crowd = !expand_crowd;
+                crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
+                //Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                //startActivity(intent);
             }
         });
         // TODO: start mask button activity
@@ -658,7 +674,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /*
          * SUBHANGI, DIVYA, ROHAN
          * you will have a update callback for location and the ONLY thing you do in it is to set
-         * this.currentLocation = newLocaiton you will retrieve from the LocationResults
+         * this.currentLocation = newLocation you will retrieve from the LocationResults
          *
          * NOTE: ***investigate why a LocationResults receives more than one location (getLocations() method)...weird --should be only 1???
          */

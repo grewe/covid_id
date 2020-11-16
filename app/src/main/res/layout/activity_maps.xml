@@ -47,6 +47,32 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/crowdButton_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background=" #040404"
+        android:gravity="center"
+        android:orientation="vertical"
+        map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
+        map:layout_constraintStart_toStartOf="@+id/bottom_bar_layout">
+
+        <Button
+            android:id="@+id/crowdButton_direct_person"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Direct Person" />
+
+        <Button
+            android:id="@+id/crowdButton_classification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Classification" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/bottom_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
