@@ -48,51 +48,21 @@
         android:id="@+id/crowdButton_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background=" #040404"
-        android:gravity="center"
-        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
-        map:layout_constraintStart_toStartOf="@+id/bottom_bar_layout">
+        map:layout_constraintStart_toStartOf="@+id/constraint_layout_parent" >
 
         <Button
             android:id="@+id/crowdButton_direct_person"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Count" />
 
         <Button
             android:id="@+id/crowdButton_classification"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Learn" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/socDistButton_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="261dp"
-        android:background=" #040404"
-        android:gravity="center"
-        android:orientation="vertical"
-        map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
-        map:layout_constraintEnd_toEndOf="@+id/bottom_bar_layout"
-        map:layout_constraintStart_toStartOf="@+id/bottom_bar_layout">
-
-        <Button
-            android:id="@+id/socDistButton_direct_person"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Measure" />
-
-        <Button
-            android:id="@+id/socDistButton_learning"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Learn" />
     </LinearLayout>
 
@@ -100,30 +70,45 @@
         android:id="@+id/maskButton_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="261dp"
-        android:background=" #040404"
         android:gravity="center"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        map:layout_constraintStart_toStartOf="@+id/bottom_bar_layout"
         map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
-        map:layout_constraintEnd_toStartOf="@+id/map"
-
-        map:layout_constraintHorizontal_bias="0.4"
-        map:layout_constraintHorizontal_chainStyle="spread"
-        map:layout_constraintStart_toStartOf="parent">
+        map:layout_constraintHorizontal_chainStyle="spread" >
 
         <Button
             android:id="@+id/mask"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Mask" />
 
         <Button
             android:id="@+id/mouth_nose"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Mouth/Nose" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/socDistButton_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        map:layout_constraintBottom_toTopOf="@+id/bottom_bar_layout"
+        map:layout_constraintStart_toStartOf="@+id/bottom_bar_layout">
+
+        <Button
+            android:id="@+id/socDistButton_direct_person"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Measure" />
+
+        <Button
+            android:id="@+id/socDistButton_learning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Learn" />
     </LinearLayout>
 
     <LinearLayout
@@ -131,6 +116,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:background="#00000000"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
         map:layout_constraintBottom_toBottomOf="parent"

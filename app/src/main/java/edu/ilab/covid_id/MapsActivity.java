@@ -131,14 +131,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button maskButton;
 
     /**
+     * Handle to the social distancing measure activity launching button
+     */
+    private Button maskMaskButton;
+
+    /**
+     * Handle to the crowd activity launching button
+     */
+    private Button maskMouthNoseButton;
+
+    /**
      * Handle to the social distancing activity launching button
      */
     private Button socDistButton;
 
     /**
+     * Handle to the social distancing measure activity launching button
+     */
+    private Button socDistMeasureButton;
+
+    /**
+     * Handle to the crowd activity launching button
+     */
+    private Button socDistLearnButton;
+
+    /**
      * Handle to the crowd activity launching button
      */
     private Button crowdButton;
+
+    /**
+     * Handle to the crowd measure activity launching button
+     */
+    private Button crowdMeasureButton;
+
+    /**
+     * Handle to the crowd learn activity launching button
+     */
+    private Button crowdLearnButton;
 
     /**
      * Handle to the button which refreshes markers
@@ -161,9 +191,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LinearLayout crowdButtonLayout;
 
     /**
-     * Layout where crowd buttons live
+     * Layout where socDist buttons live
      */
     private LinearLayout socDistButtonLayout;
+
+    /**
+     * Layout where mask buttons live
+     */
+    private LinearLayout maskButtonLayout;
 
     /**
      * list populated by firestore query in populateMap() method
@@ -287,6 +322,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * flag for if the socDist button is expanded or not (false by default)
      */
     public static boolean expand_socDist = false;
+
+    /**
+     * flag for if the mask button is expanded or not (false by default)
+     */
+    public static boolean expand_mask = false;
 
     /**
      * email as specified when logging into Firebase by user
@@ -495,6 +535,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.settingsLayout = findViewById(R.id.collapsible_button_layout);
         //grab the handle to expandible crowd button layout
         this.crowdButtonLayout = findViewById(R.id.crowdButton_layout);
+        //grab the handle to the crowd measure button
+        this.crowdMeasureButton = findViewById(R.id.crowdButton_direct_person);
+        //grab the handle to the crowd learn button
+        this.crowdLearnButton = findViewById(R.id.crowdButton_classification);
+        //grab the handle to expandible socDist button layout
+        this.socDistButtonLayout = findViewById(R.id.socDistButton_layout);
+        //grab the handle to social distancing measure button
+        this.socDistMeasureButton = findViewById(R.id.socDistButton_direct_person);
+        //grab the handle to social distancing learn button
+        this.socDistLearnButton = findViewById(R.id.socDistButton_learning);
+        //grab the handle to expandible mask button layout
+        this.maskButtonLayout = findViewById(R.id.maskButton_layout);
+        //grab the handle to mask mask button
+        this.maskMaskButton = findViewById(R.id.mask);
+        //grab the handle to the mask mouth/nose button
+        this.maskMouthNoseButton = findViewById(R.id.mouth_nose);
         //grab handle to track location button
         this.trackLocationButton = findViewById(R.id.track_location_button);
         //grab handle to the refresh markers button
@@ -564,38 +620,85 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 populateMap();
             }
         });
-
         // TODO: start crowd button activity
         crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
         crowdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "Crowd Button Pressed", Toast.LENGTH_SHORT).show();
                 expand_crowd = !expand_crowd;
+                expand_mask = false;
+                expand_socDist = false;
                 crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
-                //Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
-                //startActivity(intent);
+                maskButtonLayout.setVisibility(expand_mask ? View.VISIBLE : View.GONE);
+                socDistButtonLayout.setVisibility(expand_socDist ? View.VISIBLE : View.GONE);
             }
         });
-
+        crowdMeasureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                startActivity(intent);
+            }
+        });
+        crowdLearnButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                startActivity(intent);
+            }
+        });
         // TODO: start mask button activity
+        maskButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
         maskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MapsActivity.this, "Mask Button Pressed", Toast.LENGTH_SHORT).show();
+                expand_mask = !expand_mask;
+                expand_crowd = false;
+                expand_socDist = false;
+                crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
+                maskButtonLayout.setVisibility(expand_mask ? View.VISIBLE : View.GONE);
+                socDistButtonLayout.setVisibility(expand_socDist ? View.VISIBLE : View.GONE);
+            }
+        });
+        maskMaskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 Intent intent = new Intent("edu.ilab.covid_id.mask.MaskActivity");
                 startActivity(intent);
             }
         });
+        maskMouthNoseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent("edu.ilab.covid_id.mask.MouthNoseActivity");
+                startActivity(intent);
+            }
+        });
         // TODO: start social distancing button activity
+        socDistButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
         socDistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Toast.makeText(MapsActivity.this, "Social Distancing Button Pressed", Toast.LENGTH_SHORT).show();
                 expand_socDist = !expand_socDist;
-                socDistButtonLayout.setVisibility(expand_socDist? View.VISIBLE : View.GONE);
-                Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
-                startActivity(intent);
+                expand_crowd = false;
+                expand_mask = false;
+                crowdButtonLayout.setVisibility(expand_crowd ? View.VISIBLE : View.GONE);
+                maskButtonLayout.setVisibility(expand_mask ? View.VISIBLE : View.GONE);
+                socDistButtonLayout.setVisibility(expand_socDist ? View.VISIBLE : View.GONE);
+            }
+        });
+        socDistMeasureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
+                // startActivity(intent);
+            }
+        });
+        socDistLearnButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
+                // startActivity(intent);
             }
         });
     }
