@@ -26,8 +26,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        map:layout_constraintRight_toRightOf="@+id/constraint_layout_parent"
-        map:layout_constraintEnd_toEndOf="parent">
+        android:visibility="gone"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintRight_toRightOf="@+id/constraint_layout_parent">
 
         <Button
             android:id="@+id/flowersClassificationButton"

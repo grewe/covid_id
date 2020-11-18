@@ -41,6 +41,7 @@ import com.flir.thermalsdk.log.ThermalLog;
 import com.flir.thermalsdk.live.Camera;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.concurrent.LinkedBlockingQueue;
 
 //Import necessary for Backend Plus Tensorflow Model Integration
@@ -570,6 +571,8 @@ public class ConnectFlirActivity extends AppCompatActivity {
 
                                 result.setMaxTempLocation(tempLocation);    // set new temp location
                                 result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
+
+                                maxTempC = roundDoubleTwoDecimals(maxTempC);    // round to two decimals
                                 result.setMaxTemp(maxTempC);    // set the max temp in celcius
 
                                 mappedRecognitions.add(result);  //add the result to a linked list
@@ -592,6 +595,16 @@ public class ConnectFlirActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+
+    /**
+     * rounds a decimal to two decimal places and returns
+     * @param x - decimal to round
+     * @return - rounded decimal
+     */
+    public static double roundDoubleTwoDecimals(double x) {
+        DecimalFormat twoDecimals = new DecimalFormat("0.00");  // set decimal format for doubles
+        return Double.parseDouble(twoDecimals.format(x));    // parse double to two decimals
     }
 
     /**
