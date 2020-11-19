@@ -71,10 +71,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 300;    //this is the wxh of square input size to MODEL
   private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
-  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";   //name of input file for MODEL must be tflite format
-                                                                        //TIP: if creating subclass for say mask detection make your detector
+  //private static final String TF_OD_API_MODEL_FILE = "detect.tflite";   //name of input file for MODEL must be tflite format
+  private static final String TF_OD_API_MODEL_FILE = "maskDetectorSSD.tflite";                                                                      //TIP: if creating subclass for say mask detection make your detector
                                                                         //   file called maskdetect.flite and put in assets folder
-  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";  //LabelMap file listed classes--same order as training
+  //private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
+  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/masklabelmap.txt"; //LabelMap file listed classes--same order as training
                                                                                             //TIP: if creating subclass for say mask detector then make a
                                                                                             //   file called masklabelmap.txt and put in assets folder
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;   //Using Object Detection API

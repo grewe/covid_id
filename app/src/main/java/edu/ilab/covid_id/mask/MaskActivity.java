@@ -16,7 +16,8 @@
 
 package edu.ilab.covid_id.mask;
 
-import android.content.Context;
+import
+        android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -28,9 +29,12 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.firebase.Timestamp;
@@ -108,6 +112,24 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
 
     private BorderedText borderedText;
 
+
+    //Read in High and Caustion boundary values related to risk value
+    private int riskThresholdHigh_Mask;
+    private int riskThresholdCaution_Mask;
+
+
+    protected void onCreate(final Bundle savedInstanceState) {
+        LOGGER.d("onCreate " + this);
+        super.onCreate(savedInstanceState);
+        riskThresholdCaution_Mask = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_Mask);
+        riskThresholdHigh_Mask = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_Mask);
+        //safety check hardcoded defaults if out of range
+        if (riskThresholdCaution_Mask >= riskThresholdHigh_Mask || riskThresholdCaution_Mask < 0 || riskThresholdHigh_Mask < 0 || riskThresholdCaution_Mask > 100 || riskThresholdHigh_Mask > 100) {
+            riskThresholdHigh_Mask = 100;
+            riskThresholdCaution_Mask = 70;
+
+        }
+    }
 
     /**
      * The PARENT class of this class CameraActivity is responsible for connecting to camera on Device
@@ -251,6 +273,10 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
 
+                        //risk
+                        float risk = 90.0f;
+
+
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
                         final Paint paint = new Paint();
@@ -331,7 +357,31 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
                                     boundingBox.add(2, location.right);
                                     boundingBox.add( 3, location.bottom);
 
-                                    CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
+                                    //create a risk metric based on label + confidence as well as the Caution and High Rish thresholds (set in integers.xml)
+
+                                    //high risk is mapped between [riskThresholdHigh_Mask to 100]
+                                    if(result.getTitle() == "face_no_mask") {
+                                        //based on both confidence value will set risk in range
+                                        risk = riskThresholdHigh_Mask + (100-riskThresholdHigh_Mask) * result.getConfidence();
+                                        if( risk > 100.0) risk = 100.0f; //saftey
+                                    }
+                                    else if(result.getTitle() == "face_with_mask_incorrect") {  //range [rishThresholCaution_Mask to rishTHresholdHigh_Mask]
+                                        //based on both confidence value will set risk in range
+                                        risk = riskThresholdCaution_Mask + (riskThresholdHigh_Mask-riskThresholdCaution_Mask) * result.getConfidence();
+                                        if( risk < riskThresholdCaution_Mask || risk > riskThresholdHigh_Mask) risk = riskThresholdHigh_Mask; //saftey
+                                    }
+                                    else if(result.getTitle() == "face_with_mask") {  //range [0 to rishThresholCaution_Mask]
+                                        //based on both confidence value will set risk in range
+                                        risk = riskThresholdCaution_Mask - (riskThresholdCaution_Mask) * result.getConfidence();
+                                        if( risk < 0 || risk > riskThresholdCaution_Mask) risk = riskThresholdCaution_Mask; //saftey
+                                    }
+                                    else {  //never should execute case --but, in case use default value of 90.0f
+                                        risk = 90.0f;
+                                    }
+
+                                    Log.d("MaskActivity: ",  "risk" + risk);
+
+                                    CovidRecord myRecord = new CovidRecord(risk, result.getConfidence()*100,
                                             new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "mask");

@@ -300,4 +300,3 @@ public class TFLiteObjectDetectionEfficientDet implements Classifier {
         //if (tfLite != null) tfLite.setUseNNAPI(isChecked);
     }
 }
-

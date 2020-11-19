@@ -37,6 +37,11 @@
     <integer name="riskThresholdHigh_Mask">70</integer>
     <integer name="riskThresholdCaution_Mask">40</integer>
 
+
+    <!-- MouthNose Record Risk Values -->
+    <integer name="riskThresholdHigh_Mouth_Nose">70</integer>
+    <integer name="riskThresholdCaution_Mouth_Nose">40</integer>
+
     <!-- Default (CovidRecord) Risk Values -->
     <integer name="riskThresholdHigh_Covid">70</integer>
     <integer name="riskThresholdCaution_Covid">40</integer>

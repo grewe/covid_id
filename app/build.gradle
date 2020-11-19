@@ -12,12 +12,12 @@ android {
     // Add this line
     apply plugin: 'com.google.gms.google-services'
 
-    compileSdkVersion 28
+    compileSdkVersion 30
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "edu.ilab.covid_id"
         minSdkVersion 23
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
