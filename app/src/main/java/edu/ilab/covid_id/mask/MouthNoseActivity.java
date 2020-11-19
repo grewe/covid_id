@@ -16,7 +16,6 @@
 
 package edu.ilab.covid_id.mask;
 
-import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -53,7 +52,6 @@ import edu.ilab.covid_id.localize.env.BorderedText;
 import edu.ilab.covid_id.localize.env.ImageUtils;
 import edu.ilab.covid_id.localize.env.Logger;
 import edu.ilab.covid_id.localize.tflite.Classifier;
-import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionAPIModel;
 import edu.ilab.covid_id.localize.tflite.TFLiteObjectDetectionEfficientDet;
 import edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 import edu.ilab.covid_id.storage.FirebaseStorageUtil;

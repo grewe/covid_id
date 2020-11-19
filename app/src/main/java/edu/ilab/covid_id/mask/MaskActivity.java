@@ -359,18 +359,20 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
 
                                     //create a risk metric based on label + confidence as well as the Caution and High Rish thresholds (set in integers.xml)
 
+                                    String title = result.getTitle();
+                                    Log.d("MaskActivity", title);
                                     //high risk is mapped between [riskThresholdHigh_Mask to 100]
-                                    if(result.getTitle() == "face_no_mask") {
+                                    if(title.contains("face_no_mask")) { // needs 'contains' method instead of "==" because title has /n nwline char at end of string
                                         //based on both confidence value will set risk in range
                                         risk = riskThresholdHigh_Mask + (100-riskThresholdHigh_Mask) * result.getConfidence();
                                         if( risk > 100.0) risk = 100.0f; //saftey
                                     }
-                                    else if(result.getTitle() == "face_with_mask_incorrect") {  //range [rishThresholCaution_Mask to rishTHresholdHigh_Mask]
+                                    else if(title.contains("face_with_mask_incorrect")) {  //range [rishThresholCaution_Mask to rishTHresholdHigh_Mask]
                                         //based on both confidence value will set risk in range
                                         risk = riskThresholdCaution_Mask + (riskThresholdHigh_Mask-riskThresholdCaution_Mask) * result.getConfidence();
                                         if( risk < riskThresholdCaution_Mask || risk > riskThresholdHigh_Mask) risk = riskThresholdHigh_Mask; //saftey
                                     }
-                                    else if(result.getTitle() == "face_with_mask") {  //range [0 to rishThresholCaution_Mask]
+                                    else if(title.contains("face_with_mask")) {  //range [0 to rishThresholCaution_Mask]
                                         //based on both confidence value will set risk in range
                                         risk = riskThresholdCaution_Mask - (riskThresholdCaution_Mask) * result.getConfidence();
                                         if( risk < 0 || risk > riskThresholdCaution_Mask) risk = riskThresholdCaution_Mask; //saftey
