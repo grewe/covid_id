@@ -114,15 +114,26 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".socDist.DetectorActivity"
-            android:label="@string/covid_id_socDist"
+            android:name=".socDist.DPDM.DetectorActivity"
+            android:label="@string/covid_id_socDist_DPDM"
             android:parentActivityName=".MapsActivity">
             <intent-filter>
-                <action android:name="edu.ilab.covid_id.socDist.DetectorActivity" />
+                <action android:name="edu.ilab.covid_id.socDist.DPDM.DetectorActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".socDist.LSBDM.DetectorActivity"
+            android:label="@string/covid_id_socDist_LSBDM"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.socDist.LSBDM.DetectorActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

@@ -692,13 +692,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 // Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
                 // startActivity(intent);
+                Intent intent = new Intent("edu.ilab.covid_id.socDist.DPDM.DetectorActivity");
+                startActivity(intent);
             }
         });
         socDistLearnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Intent intent = new Intent("edu.ilab.covid_id.socDist.DetectorActivity");
-                // startActivity(intent);
+                // startActivity(intent)
+                    Intent intent = new Intent("edu.ilab.covid_id.socDist.LSBDM.DetectorActivity");
+                    startActivity(intent);
+
             }
         });
     }
