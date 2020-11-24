@@ -16,8 +16,6 @@
 
 package edu.ilab.covid_id.socDist.DPDM;
 
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -28,6 +26,7 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
@@ -36,8 +35,6 @@ import android.widget.Toast;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -110,6 +107,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private BorderedText borderedText;
 
+  float riskThresholdHigh_SocDist;
+  float riskThresholdCaution_SocDist;
+
+  @Override
+  protected void onCreate(final Bundle savedInstanceState) {
+    this.riskThresholdHigh_SocDist =  getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_SocDist);
+    this.riskThresholdCaution_SocDist = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_SocDist);
+
+    //safety check hardcoded defaults if out of range
+    if (riskThresholdCaution_SocDist >= riskThresholdHigh_SocDist || riskThresholdCaution_SocDist < 0 || riskThresholdHigh_SocDist < 0 || riskThresholdCaution_SocDist > 100 || riskThresholdHigh_SocDist > 100) {
+      riskThresholdHigh_SocDist = 100;
+      riskThresholdCaution_SocDist = 70;
+    }
+    super.onCreate(savedInstanceState);
+
+  }
 
   /**
    * The PARENT class of this class CameraActivity is responsible for connecting to camera on Device
@@ -228,20 +241,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     readyForNextImage();
 
-    //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
-    final Canvas canvas = new Canvas(croppedBitmap);
 
-    //CROP and transform
-    //why working in portrait mode and not horizontal
-    //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
-   // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
-    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
-    // For examining the actual TF input.
-    if (SAVE_PREVIEW_BITMAP) {
-      ImageUtils.saveBitmap(croppedBitmap);
-    }
-
-    //Need to run in separate thread ---to process the iamge --going to call the model to do prediction
+    //Need to run in separate thread ---to process the image --going to call the model to do prediction
     // because of this must run in own thread.
     runInBackground(
         new Runnable() {
@@ -250,9 +251,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             LOGGER.i("Running detection on image " + currTimestamp);
             final long startTime = SystemClock.uptimeMillis();
             final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
-            lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+            final List<Person> persons = new ArrayList<Person>();
 
-
+            //STEP 1: create image to display and to save in backend record
             cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
             final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
             final Paint paint = new Paint();
@@ -260,6 +261,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             paint.setStyle(Style.STROKE);
             paint.setStrokeWidth(2.0f);
 
+            //STEP2: copy over recognition results into persons list
+            int count =1 ;
+            for (final Classifier.Recognition result : results) {
+              if (result.getTitle().contains("Person")) {
+                persons.add(new Person(count, result));
+                count++;
+
+              }
+            }
+
+
+            lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+            SocDist mySocdist;
+
+
+            //specify thresholds for minumumConfidence before store record or show results
             float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
             switch (MODE) {
               case TF_OD_API:
@@ -267,107 +284,150 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 break;
             }
 
+            //mappedREcognitons is a list of recognitions used in display
             final List<Classifier.Recognition> mappedRecognitions =
-                new LinkedList<Classifier.Recognition>();
-
-            int saveImageOnceFlag = 1;
-            String imageFileURL = "";
-            //cycling through all of the recognition detections in my image I am currently processing
-            for (final Classifier.Recognition result : results) {  //loop variable is result, represents one detection
-              final RectF location = result.getLocation();  //getting as  a rectangle the bounding box of the result detecgiton
-              if (location != null && result.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
-                canvas.drawRect(location, paint);  //draw in the canvas the bounding boxes-->
+                    new LinkedList<Classifier.Recognition>();
 
 
-                //==============================================================
-                //COVID: code to store image to CloudStore (if any results have result.getConfidence() > minimumConfidence
-                //  ONLY store one time regardless of number of recognition results.
-                if(saveImageOnceFlag == 1){
+            //Now cycle through the person and for each unique pair calculate distance
+            for (final Person person1 : persons)
+              for (final Person person2 : persons) {
+                //only process if diff person
+                if (person1.different(person2)) {
+                  //STEP 1: create SocDist object that measures distance between 2 persons and setups up label, risk, etc.
+                  mySocdist =  new SocDist(person1,
+                            person2,
+                            riskThresholdCaution_SocDist,
+                            riskThresholdHigh_SocDist);
 
-                  //set flag so know have already stored this image
-                  saveImageOnceFlag = 0;
-
-                  //CEMIL: code to store image (croppedBitmap) in CloudStore
-                  //imageFileURL store the URL
 
 
-                  //**************************************************
-                  //try writing out the image being processed to a FILE
-                  // File directory = Environment.getExternalStorageDirectory();
-                  ContextWrapper cw = new ContextWrapper(getApplicationContext());
-                  File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
-                  File dest = new File(directory, "croppedImage.png");
-                  File topLabelBox = new File(directory, "topLabelBoxImage.png");
 
-                  try {
-                    dest.createNewFile();
-                    FileOutputStream out = new FileOutputStream(dest);
-                    croppedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-                    out.flush();
-                    out.close();
-                    topLabelBox.createNewFile();
-                    FileOutputStream out2 = new FileOutputStream(topLabelBox);
-                    cropCopyBitmap.compress(Bitmap.CompressFormat.PNG, 90, out2);
-                    out2.flush();
-                    out2.close();
-                  } catch (Exception e) {
-                    e.printStackTrace();
+
+
+
+
+                    int saveImageOnceFlag = 1;
+                    String imageFileURL = "";
+                    if (mySocdist.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
+
+                      //draw bounding boxes of 2 persons
+                      canvas.drawRect(person1.result.getLocation(), paint);  //draw in the canvas the bounding boxes-->
+                      canvas.drawRect(person2.result.getLocation(), paint);  //draw in the canvas the bounding boxes-->
+
+
+                        //##################################################################
+                        //Store to Firebase Database  -- if we are ready since last record storage to make a new record
+                        if(CovidRecord.readyStoreRecord(MapsActivity.socDistRecordLastStoreTimestamp, MapsActivity.deltaSocDistRecordStoreTimeMS, MapsActivity.socDistRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaSocDistRecordStoreLocationM)) {
+                          Date d = new Date();
+                          ArrayList<Float> angles = new ArrayList<Float>();
+                          angles.add(0, 0.0f);
+                          angles.add(1, 0.0f);
+                          angles.add(2, 0.0f);
+
+                          ArrayList<Float> boundingBox = new ArrayList<Float>();
+                          boundingBox.add(0, person1.result.getLocation().left);
+                          boundingBox.add(1, person1.result.getLocation().top);
+                          boundingBox.add(2, person1.result.getLocation().right);
+                          boundingBox.add( 3, person1.result.getLocation().bottom);
+
+
+
+                          ArrayList<Float> boundingBox2 = new ArrayList<Float>();
+                          boundingBox.add(0, person2.result.getLocation().left);
+                          boundingBox.add(1, person2.result.getLocation().top);
+                          boundingBox.add(2, person2.result.getLocation().right);
+                          boundingBox.add( 3, person2.result.getLocation().bottom);
+
+
+                          CovidRecord myRecord = new CovidRecord(mySocdist.risk, mySocdist.getConfidence()*100,
+                                  new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                                  Timestamp.now(), imageFileURL, mySocdist.label,boundingBox, boundingBox2, angles, 0.0f,
+                                  MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, mySocdist.distance, "socDist");
+
+
+                          FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "covidRecord");
+                        }
+                        //###############################################
+
+                      /*
+                      //follwing code using to add person 1 of this pair to draw in overlay
+                        RectF location1 = new RectF(person1.result.getLocation());
+                        cropToFrameTransform.mapRect(location1);  //transforms using Matrix the bounding box to the correct transformed coordinates
+
+                        Classifier.Recognition result1 = new Classifier.Recognition(person1.result);
+                        result1.setLocation(location1); // reset the newly transformed rectangle (location) representing bounding box inside the result
+                        mappedRecognitions.add(result1);  //add the result to a linked list
+
+
+                        //for drawing person 2
+                        RectF location2 = new RectF(person2.result.getLocation());
+                        cropToFrameTransform.mapRect(location2);  //transforms using Matrix the bounding box to the correct transformed coordinates
+
+                        Classifier.Recognition result2 = new Classifier.Recognition(person2.result);
+                        result2.setLocation(location2); // reset the newly transformed rectangle (location) representing bounding box inside the result
+                        mappedRecognitions.add(result2);  //add the result to a linked list
+
+                        */
+
+                        //generate a new BIG bounding box that sourronds both people with the label
+                        // mysocDist.label + distance  and its confidence (caustion (10) - 92.3%)
+
+                        RectF location1 = new RectF(person1.result.getLocation());
+                        cropToFrameTransform.mapRect(location1);
+
+                        RectF location2 = new RectF(person2.result.getLocation());
+                        cropToFrameTransform.mapRect(location2);
+
+                        //RectF bigBox = new RectF(location1);
+                        //bigBox.union(location2);
+                        Classifier.Recognition socDistRecognition = new Classifier.Recognition(person1.result);
+                        socDistRecognition.setLocation(location1);
+                        socDistRecognition.setLocation(location2);
+                        socDistRecognition.setTitle(mySocdist.label + "- (" + mySocdist.confidence + ")");
+                        socDistRecognition.setConfidence(mySocdist.confidence);
+
+                        mappedRecognitions.add(socDistRecognition);  //add the result to a linked list
+
+
+
+
+
+                    }
+
+
                   }
-                  //**************************************************
-
                 }
 
-                //==========================================================================
-                //##################################################################
-                //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
-                  Date d = new Date();
-                  ArrayList<Float> angles = new ArrayList<Float>();
-                  angles.add(0, 0.0f);
-                  angles.add(1, 0.0f);
-                  angles.add(2, 0.0f);
-
-                  ArrayList<Float> boundingBox = new ArrayList<Float>();
-                  boundingBox.add(0, location.left);
-                  boundingBox.add(1, location.top);
-                  boundingBox.add(2, location.right);
-                  boundingBox.add( 3, location.bottom);
-
-                  CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
-                          new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                          Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
-                          MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "socDist");
-
-
-                  FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "covidRecord");
-                }
-                //###############################################
-
-                cropToFrameTransform.mapRect(location);  //transforms using Matrix the bounding box to the correct transformed coordinates
-
-                result.setLocation(location); // reset the newly transformed rectangle (location) representing bounding box inside the result
-                mappedRecognitions.add(result);  //add the result to a linked list
-
-
-              }
-            }
-
+            //after cycling through all pairs of persons we are ready to draw all the detected person boxes
+            // and their big box soc distancbox w/label (cautionketc) for each pari)
             tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
             trackingOverlay.postInvalidate();
 
             computingDetection = false;
 
             runOnUiThread(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    showFrameInfo(previewWidth + "x" + previewHeight);
-                    showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                    showInference(lastProcessingTimeMs + "ms");
-                  }
-                });
+                    new Runnable() {
+                      @Override
+                      public void run() {
+                        showFrameInfo(previewWidth + "x" + previewHeight);
+                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+                        showInference(lastProcessingTimeMs + "ms");
+                      }
+                    });
+
+
+
+
           }
         });
+
+
+
+
+
+
+
   }
 
   @Override

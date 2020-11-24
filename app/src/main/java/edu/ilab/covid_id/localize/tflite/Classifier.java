@@ -46,12 +46,12 @@ public interface Classifier {
     /**
      * Display name for the recognition.
      */
-    private final String title;
+    private String title;
 
     /**
      * A sortable score for how good the recognition is relative to others. Higher should be better.
      */
-    private final Float confidence;
+    private  Float confidence;
 
     /**
      * Optional location within the source image for the location of the recognized object.
@@ -77,6 +77,21 @@ public interface Classifier {
       this.location = location;
       this.maxTemp=maxTemp;
       this.maxTempLocation=maxTempLocation;
+    }
+
+    /**
+     * construtor that takes as input another recognition object
+     * @param r
+     */
+    public Recognition(Recognition r){
+      this.id = r.id;
+      this.title = r.title;
+      this.location  = new RectF(r.getLocation());
+      this.confidence  = r.confidence;
+      this.maxTemp = r.maxTemp;
+      if(r.maxTempLocation != null)
+        this.maxTempLocation = new Point(r.maxTempLocation);
+
     }
 
     public String getId() {
@@ -109,6 +124,13 @@ public interface Classifier {
 
     public void setMaxTempLocation(Point maxTempLocation) {
       this.maxTempLocation = maxTempLocation;
+    }
+
+    public void setConfidence(float  c) {
+      this.confidence =c;
+    }
+    public void setTitle(String t){
+      this.title = t;
     }
 
     public Point getMaxTempLocation() {
