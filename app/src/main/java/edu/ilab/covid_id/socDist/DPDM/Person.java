@@ -43,8 +43,11 @@ public class Person {
     float distance(Person person2){
 
         //current person, this object, has bounding box of this.result.getLocation()
+        //RectF current_person = this.result.getLocation();
 
         //2nd person's bounding box is person2.result.getLocation().left;
+        //RectF person_2 = person2.result.getLocation();
+
 
         return 1.0f;
     }

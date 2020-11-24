@@ -241,6 +241,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     readyForNextImage();
 
+    //create a drawing canvas that is associated with the image croppedBitmap that will be the transformed input image to the right size and orientation
+    final Canvas canvas = new Canvas(croppedBitmap);
+
+    //CROP and transform
+    //why working in portrait mode and not horizontal
+    //canvas.drawBitmap(rgbFrameBitmap,new Matrix(), null);   //need to only rotate it.
+    // canvas.drawBitmap(croppedBitmap, cropToFrameTransform, null); //try this later???
+    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);   ///crop and transform as necessary image
+    // For examining the actual TF input.
+    if (SAVE_PREVIEW_BITMAP) {
+      ImageUtils.saveBitmap(croppedBitmap);
+    }
 
     //Need to run in separate thread ---to process the image --going to call the model to do prediction
     // because of this must run in own thread.
@@ -379,11 +391,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         RectF location2 = new RectF(person2.result.getLocation());
                         cropToFrameTransform.mapRect(location2);
 
-                        //RectF bigBox = new RectF(location1);
-                        //bigBox.union(location2);
+                        RectF bigBox = new RectF(location1);
+                        bigBox.union(location2);
                         Classifier.Recognition socDistRecognition = new Classifier.Recognition(person1.result);
-                        socDistRecognition.setLocation(location1);
-                        socDistRecognition.setLocation(location2);
+                        socDistRecognition.setLocation(bigBox);
                         socDistRecognition.setTitle(mySocdist.label + "- (" + mySocdist.confidence + ")");
                         socDistRecognition.setConfidence(mySocdist.confidence);
 
