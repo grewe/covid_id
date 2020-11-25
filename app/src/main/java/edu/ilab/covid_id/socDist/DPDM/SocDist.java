@@ -15,8 +15,8 @@ public class SocDist {
     float confidence;  //confidence score related to confidences of 2 people detection
     // average (person1.confidence, person2.confidence)  or minimum
 
-    float distanceMinGood = 10.0f;
-    float distanceMinCaution = 6.0f;
+    float distanceMinGood = 200.0f;
+    float distanceMinCaution = 150.0f;
 
 
 

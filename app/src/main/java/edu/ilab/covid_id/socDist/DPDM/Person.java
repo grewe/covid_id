@@ -43,17 +43,27 @@ public class Person {
     float distance(Person person2){
 
         //current person, this object, has bounding box of this.result.getLocation()
-        //RectF current_person = this.result.getLocation();
+        RectF current_person = this.result.getLocation();
 
         //2nd person's bounding box is person2.result.getLocation().left;
-        //RectF person_2 = person2.result.getLocation();
+        RectF person_2 = person2.result.getLocation();
+        //storing the person1(top,right) coordinates
 
+        float x1 = current_person.right;
+        float y1 = current_person.top;
+        //System.out.println()
+        //Storing person2(top,left) coordinates
+        float x2 = person_2.left;
+        float y2 = person_2.top;
+        //result
 
-        return 1.0f;
+        float result = (float) Math.sqrt(Math.pow(x2 - x1, 2) +  Math.pow(y2 - y1, 2)* 1.0) ;
+        System.out.println("distance is " +result);
+        return result;
     }
 
     /**
-     * untiltiy function to measure iou between 2 person's bounding boxes
+     * utiltiy function to measure iou between 2 person's bounding boxes
      * @param person1Location
      * @param person2Location
      * @return
@@ -66,7 +76,7 @@ public class Person {
         float intersection_area = (float) intersection.width()*intersection.height();
 
         //intersection over union
-        //first caculuate the intersection
+        //first calculate the intersection
         RectF union = new RectF(person1Location);
         union.union(person2Location);
         float union_area = (float) union.width()*union.height();
