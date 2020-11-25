@@ -28,7 +28,9 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
@@ -109,6 +111,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                    //note this is instance of edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
   private BorderedText borderedText;
+
+//  private int riskThresholdHigh_SocDist_LSBDM;
+//  private int riskThresholdCaution_SocDist_LSBDM;
+
+//  protected void onCreate(final Bundle savedInstanceState) {
+//    LOGGER.d("onCreate " + this);
+//    super.onCreate(savedInstanceState);
+//    riskThresholdCaution_SocDist_LSBDM = 40;
+//    riskThresholdHigh_SocDist_LSBDM = 70;
+//    //safety check hardcoded defaults if out of range
+//    if (riskThresholdCaution_SocDist_LSBDM >= riskThresholdHigh_SocDist_LSBDM || riskThresholdCaution_SocDist_LSBDM < 0 || riskThresholdHigh_SocDist_LSBDM < 0 || riskThresholdCaution_SocDist_LSBDM > 100 || riskThresholdHigh_SocDist_LSBDM > 100) {
+//      riskThresholdHigh_SocDist_LSBDM = 100;
+//      riskThresholdCaution_SocDist_LSBDM = 70;
+//
+//    }
+//  }
 
 
   /**
@@ -252,6 +270,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
+//            //adding risk variable
+//            float risk = 90.0f;
+
 
             cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
             final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
@@ -332,6 +353,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   boundingBox.add(1, location.top);
                   boundingBox.add(2, location.right);
                   boundingBox.add( 3, location.bottom);
+
+                  //create a risk metric based on label + confidence as well as the Caution and High Rish thresholds (set in integers.xml)
+
+//                  String title = result.getTitle();
+//                  Log.d("DetectorActivity", title);
+//                  //high risk is mapped between [riskThresholdHigh_Mask to 100]
+//                  if(title.contains("Bad")) { // needs 'contains' method instead of "==" because title has /n nwline char at end of string
+//                    //based on both confidence value will set risk in range
+////                    Logger.i("Checking risk value ---"+ riskThresholdHigh_SocDist_LSBDM);
+//                    risk = riskThresholdHigh_SocDist_LSBDM + (100-riskThresholdHigh_SocDist_LSBDM) * result.getConfidence();
+//                    if( risk > 100.0) risk = 100.0f; //saftey
+//                  }
+//                  else if(title.contains("Good")) {  //range [0 to rishThresholCaution_Mask]
+//                    //based on both confidence value will set risk in range
+////                    Logger.i("Checking risk value ---"+ riskThresholdCaution_SocDist_LSBDM);
+//                    risk = riskThresholdCaution_SocDist_LSBDM - (riskThresholdCaution_SocDist_LSBDM) * result.getConfidence();
+//                    if( risk < 0 || risk > riskThresholdCaution_SocDist_LSBDM) risk = riskThresholdCaution_SocDist_LSBDM; //saftey
+//                  }
+//                  else {  //never should execute case --but, in case use default value of 90.0f
+//                    risk = 90.0f;
+//                  }
+
+//                  Log.d("DetectorActivity: ",  "risk" + risk);
 
                   CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
                           new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),

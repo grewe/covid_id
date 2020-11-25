@@ -33,6 +33,10 @@
     <integer name="riskThresholdHigh_SocDist">70</integer>
     <integer name="riskThresholdCaution_SocDist">40</integer>
 
+<!--    &lt;!&ndash; LSBDM SocDist Record Risk Values &ndash;&gt;-->
+<!--    <integer name="riskThresholdHigh_SocDist_LSBDM">70</integer>-->
+<!--    <integer name="riskThresholdCaution_SocDist_LSBDM">40</integer>-->
+
     <!-- Mask Record Risk Values -->
     <integer name="riskThresholdHigh_Mask">70</integer>
     <integer name="riskThresholdCaution_Mask">40</integer>
