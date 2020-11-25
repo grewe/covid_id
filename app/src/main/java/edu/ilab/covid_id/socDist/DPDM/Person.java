@@ -36,7 +36,9 @@ public class Person {
 
     /**
      * implmeent the clacluation of distance between 2 people, this person and person 2.
-     * where Person.result.getLocation() retrieves the bounding box of the person
+     * where Person.result.getLocation() retrieves the bounding box of the person.
+     * Note:  this is done by taking the upper right point of this.person
+     * and the upper.left of person 2 bounding box and measuring the 2D distance between them.
      * @param person2
      * @return
      */
@@ -60,6 +62,26 @@ public class Person {
         float result = (float) Math.sqrt(Math.pow(x2 - x1, 2) +  Math.pow(y2 - y1, 2)* 1.0) ;
         System.out.println("distance is " +result);
         return result;
+    }
+
+    /**
+     * This calculates 2D image distance based on the centroid of this.person bounding box
+     * and person 2 bounding box
+     * @param person2
+     * @return
+     */
+    float distanceCentroid(Person person2){
+        //get the centroid for person 1
+        float cx1 = this.result.getLocation().centerX();
+        float cy1 = this.result.getLocation().centerY();
+        //get the centroid for person 2
+        float cx2 = person2.result.getLocation().centerX();
+        float cy2 = person2.result.getLocation().centerY();
+
+        float result = (float) Math.sqrt(Math.pow(cx2 - cx1, 2) +  Math.pow(cy2 - cy1, 2)* 1.0) ;
+        System.out.println("distance is " +result);
+        return result;
+
     }
 
     /**

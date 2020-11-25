@@ -31,7 +31,7 @@ public class SocDist {
 
 
         //fist calculate the distance between 2 people
-        this.distance = person1.distance(person2);
+        this.distance = person1.distanceCentroid(person2);
 
 
 
