@@ -113,7 +113,7 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
     private BorderedText borderedText;
 
 
-    //Read in High and Caustion boundary values related to risk value
+    //Read in High and Caution boundary values related to risk value
     private int riskThresholdHigh_Mask;
     private int riskThresholdCaution_Mask;
 
@@ -344,7 +344,7 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
+                                if(CovidRecord.readyStoreRecord(MapsActivity.maskRecordLastStoreTimestamp, MapsActivity.deltaMaskRecordStoreTimeMS, MapsActivity.maskRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaMaskRecordStoreLocationM)) {
                                     Date d = new Date();
                                     ArrayList<Float> angles = new ArrayList<Float>();
                                     angles.add(0, 0.0f);
@@ -357,14 +357,16 @@ public class MaskActivity extends CameraActivity implements OnImageAvailableList
                                     boundingBox.add(2, location.right);
                                     boundingBox.add( 3, location.bottom);
 
-                                    //create a risk metric based on label + confidence as well as the Caution and High Rish thresholds (set in integers.xml)
+                                    //create a risk metric based on label + confidence as well as the Caution and High Risk thresholds (set in integers.xml)
 
                                     String title = result.getTitle();
                                     Log.d("MaskActivity", title);
                                     //high risk is mapped between [riskThresholdHigh_Mask to 100]
                                     if(title.contains("face_no_mask")) { // needs 'contains' method instead of "==" because title has /n nwline char at end of string
                                         //based on both confidence value will set risk in range
+                                        //LOGGER.i("----------------High-----------------" + riskThresholdHigh_Mask);
                                         risk = riskThresholdHigh_Mask + (100-riskThresholdHigh_Mask) * result.getConfidence();
+                                        //LOGGER.i("----------------Risk-----------------" + risk);
                                         if( risk > 100.0) risk = 100.0f; //saftey
                                     }
                                     else if(title.contains("face_with_mask_incorrect")) {  //range [rishThresholCaution_Mask to rishTHresholdHigh_Mask]

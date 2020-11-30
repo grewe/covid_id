@@ -2,7 +2,6 @@ package edu.ilab.covid_id.data;
 
 import android.graphics.Point;
 import android.location.Location;
-import android.util.Log;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
@@ -65,6 +64,24 @@ public class CovidRecord {
     private ArrayList<Float> boundingBox;
 
     /**
+     *FOR SocDIST ONly there is a second box representing teh second person's location
+     *  for the DirectPerson Based Measurement SocDist model
+     *  Represents the four corners of the bounding box
+     * 0: x, upper left
+     * 1: y, upper left
+     * 2: x, lower right
+     * 3: y, lower right
+     */
+    private ArrayList<Float> boundingBox2;
+
+
+    /**
+     * FOR SocDIst Only in DPDM mode (direct person distance measurement)
+     */
+    private float distance;
+
+
+    /**
      * For storing any misc info we might want to tack onto an object
      */
     private String info;
@@ -109,6 +126,8 @@ public class CovidRecord {
         this.filenameURL = null;
         this.info = null;
         this.boundingBox = null;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
         this.userEmailFirebase = null;
         this.userIDFirebase = null;
         this.recordType = "covidRecord";
@@ -116,6 +135,30 @@ public class CovidRecord {
         this.tempLocation = null;
     }
 
+
+    /**
+     *  constructor with all values given for the DPDM model fo the SocDist Subsystem
+     *  in this cases there are 2 boudning boxes to represewnt the 2 persons under considertaion
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox, ArrayList<Float> boundingBox2,
+                       ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase,
+                       String userIDFirebase, float distance, String recordType){
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+        this.recordType = recordType;
+        this.boundingBox2 = boundingBox2;
+        this.distance = distance;
+    }
 
     /**
      *  constructor with all values given
@@ -138,6 +181,8 @@ public class CovidRecord {
         this.recordType = recordType;
         this.maxTempC = maxTempC;
         this.tempLocation = tempLocation;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
     /**
      *  constructor with all values given
@@ -158,6 +203,8 @@ public class CovidRecord {
         this.userIDFirebase = userIDFirebase;
         this.userEmailFirebase = userEmailFirebase;
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
     /**
      *  constructor with all values except user info given --ANONYMOUS storage
@@ -175,6 +222,8 @@ public class CovidRecord {
         this.info = info;
         this.boundingBox = boundingBox;
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
 
     /**
@@ -199,6 +248,8 @@ public class CovidRecord {
         this.userEmailFirebase = userEmailFirebase;
         this.userIDFirebase = userIDFirebase;
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
 
     /**
@@ -220,6 +271,8 @@ public class CovidRecord {
         this.info = info;
         this.boundingBox = boundingBox;
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
     /**
      * Constructor that may be used for classification only
@@ -244,6 +297,8 @@ public class CovidRecord {
         this.userIDFirebase = userIDFirebase;
         this.userEmailFirebase = userEmailFirebase;
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
     /**
      * Constructor that may be used for classification only
@@ -266,6 +321,8 @@ public class CovidRecord {
         this.boundingBox.add(2, -1.0f);
         this.boundingBox.add(3, -1.0f);
         this.recordType = recordType;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
     }
 
     /**
@@ -401,7 +458,13 @@ public class CovidRecord {
         this.boundingBox = boundingBox;
     }
 
+    public ArrayList<Float> getBoundingBox2() {
+        return boundingBox2;
+    }
 
+    public void setBoundingBox2(ArrayList<Float> boundingBox2) {
+        this.boundingBox2 = boundingBox2;
+    }
 
     public String getUserIDFirebase(){ return userIDFirebase; }
 

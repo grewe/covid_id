@@ -27,7 +27,9 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
@@ -70,7 +72,7 @@ public class MouthNoseActivity extends CameraActivity implements OnImageAvailabl
     // Configuration values for the prepackaged SSD model.
     private static final int TF_OD_API_INPUT_SIZE = 512;    //this is the wxh of square input size to MODEL
     private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
-    private static final String TF_OD_API_MODEL_FILE = "mouthNoseDetector.tflite";   //name of input file for MODEL must be tflite format
+    private static final String TF_OD_API_MODEL_FILE = "mouthNoseDetector_new.tflite";   //name of input file for MODEL must be tflite format
     //TIP: if creating subclass for say mask detection make your detector
     //   file called maskdetect.flite and put in assets folder
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/mouthNoselabelmap.txt";  //LabelMap file listed classes--same order as training
@@ -105,6 +107,23 @@ public class MouthNoseActivity extends CameraActivity implements OnImageAvailabl
     //note this is instance of edu.ilab.covid_id.localize.tracking.MultiBoxTracker;
 
     private BorderedText borderedText;
+
+    //Read in High and Caution boundary values related to risk value
+    private int riskThresholdHigh_Mouth_Nose;
+    private int riskThresholdCaution_Mouth_Nose;
+
+    protected void onCreate(final Bundle savedInstanceState) {
+        LOGGER.d("onCreate " + this);
+        super.onCreate(savedInstanceState);
+        riskThresholdCaution_Mouth_Nose = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_Mouth_Nose);
+        riskThresholdHigh_Mouth_Nose = getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_Mouth_Nose);
+        //safety check hardcoded defaults if out of range
+        if (riskThresholdCaution_Mouth_Nose >= riskThresholdHigh_Mouth_Nose || riskThresholdCaution_Mouth_Nose < 0 || riskThresholdHigh_Mouth_Nose < 0 || riskThresholdCaution_Mouth_Nose > 100 || riskThresholdHigh_Mouth_Nose > 100) {
+            riskThresholdHigh_Mouth_Nose = 100;
+            riskThresholdCaution_Mouth_Nose = 70;
+
+        }
+    }
 
 
     /**
@@ -248,6 +267,8 @@ public class MouthNoseActivity extends CameraActivity implements OnImageAvailabl
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
+                        //risk
+                        float risk = 90.0f;
 
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);   //create canvas to draw bounding boxes inside of which will be displayed in OverlayView
@@ -313,10 +334,24 @@ public class MouthNoseActivity extends CameraActivity implements OnImageAvailabl
 
                                 }
 
+                                String title = result.getTitle();
+
+                                Log.d("MouthNoseActivity", title);
+                                //high risk is mapped between [riskThresholdHigh_Mouth to 100]
+                                if(title.contains("mouth") || title.contains("nose")) { // needs 'contains' method instead of "==" because title has /n nwline char at end of string
+                                    //based on both confidence value will set risk in range
+                                    LOGGER.i("----------------High-----------------" + riskThresholdCaution_Mouth_Nose);
+                                    risk = riskThresholdHigh_Mouth_Nose + (100-riskThresholdHigh_Mouth_Nose) * result.getConfidence();
+                                    LOGGER.i("----------------Risk-----------------" + risk);
+                                    if( risk > 100.0) risk = 100.0f; //safety
+                                }
+
+                                Log.d("MouthNoseActivity: ",  "risk" + risk);
+
                                 //==========================================================================
                                 //##################################################################
                                 //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                                if(CovidRecord.readyStoreRecord(MapsActivity.covidRecordLastStoreTimestamp, MapsActivity.deltaCovidRecordStoreTimeMS, MapsActivity.covidRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCovidRecordStoreLocationM)) {
+                                if(CovidRecord.readyStoreRecord(MapsActivity.maskRecordLastStoreTimestamp, MapsActivity.deltaMaskRecordStoreTimeMS, MapsActivity.maskRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaMaskRecordStoreLocationM)) {
                                     Date d = new Date();
                                     ArrayList<Float> angles = new ArrayList<Float>();
                                     angles.add(0, 0.0f);
@@ -329,7 +364,7 @@ public class MouthNoseActivity extends CameraActivity implements OnImageAvailabl
                                     boundingBox.add(2, location.right);
                                     boundingBox.add( 3, location.bottom);
 
-                                    CovidRecord myRecord = new CovidRecord(90.0f, result.getConfidence()*100,
+                                    CovidRecord myRecord = new CovidRecord(risk, result.getConfidence()*100,
                                             new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                                             Timestamp.now(), imageFileURL, result.getTitle(),boundingBox, angles, 0.0f,
                                             MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "mask");
