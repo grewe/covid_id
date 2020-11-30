@@ -53,14 +53,14 @@ public class ClassifierFloatMobileNet extends Classifier {
   @Override
   protected String getModelPath() {
     //return true ?  "catdog_model.tflite" : "flower_model.tflite";
-    return "flower_model.tflite";
+    return "crowd_model.tflite";
 
   }
 
   @Override
   protected String getLabelPath() {
      //return true ?  "catdog_label.txt" : "flower_labels.txt";
-     return "flower_labels.txt";
+     return "crowd_label.txt";
   }
 
 

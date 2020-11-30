@@ -530,27 +530,32 @@ public abstract class CameraActivity extends AppCompatActivity
 
     if (results != null && results.size() >= 3) {
       Recognition recognition = results.get(0);
+      Recognition recognition1 = results.get(1);
+      Recognition recognition2 = results.get(2);
+
+      float total_confidence = (recognition.getConfidence()+recognition1.getConfidence()+recognition2.getConfidence());
+
       if (recognition != null) {
         if (recognition.getTitle() != null) recognitionTextView.setText(recognition.getTitle());
         if (recognition.getConfidence() != null)
           recognitionValueTextView.setText(
-              String.format("%.2f", (100 * recognition.getConfidence())) + "%");
+              String.format("%.2f", (100 * recognition.getConfidence()/total_confidence)) + "%");
       }
 
-      Recognition recognition1 = results.get(1);
+
       if (recognition1 != null) {
-        if (recognition1.getTitle() != null) recognition1TextView.setText(recognition1.getTitle());
+        if (recognition1. getTitle() != null) recognition1TextView.setText(recognition1.getTitle());
         if (recognition1.getConfidence() != null)
           recognition1ValueTextView.setText(
-              String.format("%.2f", (100 * recognition1.getConfidence())) + "%");
+              String.format("%.2f", (100 * recognition1.getConfidence()/total_confidence)) + "%");
       }
 
-      Recognition recognition2 = results.get(2);
+
       if (recognition2 != null) {
         if (recognition2.getTitle() != null) recognition2TextView.setText(recognition2.getTitle());
         if (recognition2.getConfidence() != null)
           recognition2ValueTextView.setText(
-              String.format("%.2f", (100 * recognition2.getConfidence())) + "%");
+              String.format("%.2f", (100 * recognition2.getConfidence()/total_confidence)) + "%");
       }
     }
 //    if (results != null && results.size() >= 2) {
