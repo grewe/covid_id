@@ -187,9 +187,22 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                                                 angles.add(1, 0.0f);
                                                 angles.add(2, 0.0f);
 
-                                                CovidRecord myRecord = new CovidRecord(80.0f, results.get(0).getConfidence() * 100,
+                                                /*float rk = 0;
+                                                if(results.get(0).getTitle() == "Low") rk = 30.0f;
+                                                if(results.get(0).getTitle() == "Medium") rk = 50.0f;
+                                                if(results.get(0).getTitle() == "High") rk = 80.0f;*/
+
+                                                float rk =0;
+                                                if(results.get(0).getTitle().equals("Low")) rk = 30.0f;
+                                                else if (results.get(0).getTitle().equals("Medium")) rk = 50.0f;
+                                                else if (results.get(0).getTitle().equals("High")) rk = 80.0f;
+
+
+
+
+                                                CovidRecord myRecord = new CovidRecord(rk, results.get(0).getConfidence() * 100,
                                                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "covidRecord");
+                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowd");
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
                                                 FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation, "covidRecord" );
