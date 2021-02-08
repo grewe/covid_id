@@ -1,4 +1,4 @@
-package edu.ilab.covid_id.crowd;
+package edu.ilab.covid_id.crowd.CrowdLearn;
 
 /*
  * Copyright 2019 The TensorFlow Authors. All Rights Reserved.
@@ -24,7 +24,6 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 
@@ -35,7 +34,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import edu.ilab.covid_id.MapsActivity;
@@ -202,7 +200,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                                                 CovidRecord myRecord = new CovidRecord(rk, results.get(0).getConfidence() * 100,
                                                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowd");
+                                                        Timestamp.now(), ClassifierActivity.imageFileURL, results.get(0).getTitle(), angles, 0.0f, MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowdlearn");
 
                                                 //CEMIL ONLY FOR Classifier Activity --rotate the rgbFrameBitmap image ONLY if running in portrait mode 90 degree (or -90) ---test it out.
                                                 FirebaseStorageUtil.storeImageAndCovidRecord(rgbFrameBitmap, myRecord,MapsActivity.currentLocation, "covidRecord" );

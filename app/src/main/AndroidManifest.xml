@@ -84,11 +84,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".crowd.ClassifierActivity"
-            android:label="Crowd_label"
+            android:name=".crowd.CrowdLearn.ClassifierActivity"
+            android:label="crowdlearn"
             android:parentActivityName=".MapsActivity">
             <intent-filter>
-                <action android:name="edu.ilab.covid_id.crowd.ClassifierActivity" />
+                <action android:name="edu.ilab.covid_id.crowd.CrowdLearn.ClassifierActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".crowd.CrowdCount.DetectorActivity"
+            android:label="crowdcount"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.crowd.CrowdCount.DetectorActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

@@ -636,14 +636,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         crowdMeasureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.CrowdCount.DetectorActivity");
                 startActivity(intent);
             }
         });
         crowdLearnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent("edu.ilab.covid_id.crowd.ClassifierActivity");
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.CrowdLearn.ClassifierActivity");
                 startActivity(intent);
             }
         });

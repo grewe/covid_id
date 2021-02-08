@@ -1,4 +1,4 @@
-package edu.ilab.covid_id.crowd;
+package edu.ilab.covid_id.crowd.CrowdCount;
 
 /*
  * Copyright 2019 The TensorFlow Authors. All Rights Reserved.
@@ -16,7 +16,6 @@ package edu.ilab.covid_id.crowd;
  * limitations under the License.
  */
 
-import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
@@ -33,15 +32,13 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import edu.ilab.covid_id.crowd.CameraConnectionFragment;
-import edu.ilab.covid_id.classification.customview.AutoFitTextureView;
-import edu.ilab.covid_id.classification.env.Logger;
-
 import java.io.IOException;
 import java.util.List;
+
 import edu.ilab.covid_id.R;
+import edu.ilab.covid_id.localize.customview.AutoFitTextureView;
 import edu.ilab.covid_id.localize.env.ImageUtils;
-import edu.ilab.covid_id.crowd.CameraConnectionFragment;
+import edu.ilab.covid_id.localize.env.Logger;
 
 public class LegacyCameraConnectionFragment extends Fragment {
   private static final Logger LOGGER = new Logger();
@@ -98,12 +95,10 @@ public class LegacyCameraConnectionFragment extends Fragment {
             int orientation = getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
               camera.setDisplayOrientation(0);
-           //   parameters.setPreviewSize(previewSize.getHeight(), previewSize.getWidth()); //failed
             } else {
               // In portrait
               camera.setDisplayOrientation(90);
             }
-
             camera.setParameters(parameters);
             camera.setPreviewTexture(texture);
           } catch (IOException exception) {
@@ -112,6 +107,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
 
           camera.setPreviewCallbackWithBuffer(imageListener);
           Camera.Size s = camera.getParameters().getPreviewSize();
+
 
 
           //COVID - CHANGED base code so would alter width & height the camera display appropriate to device orientation
@@ -123,12 +119,15 @@ public class LegacyCameraConnectionFragment extends Fragment {
           if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             camera.addCallbackBuffer(new byte[ImageUtils.getYUVByteSize(s.width, s.height)]);
             textureView.setAspectRatio(s.width, s.height);
+
           } else {
             // In portrait
             camera.addCallbackBuffer(new byte[ImageUtils.getYUVByteSize(s.height, s.width)]);
             textureView.setAspectRatio(s.height, s.width);
 
           }
+
+
 
           camera.startPreview();
         }
@@ -148,15 +147,11 @@ public class LegacyCameraConnectionFragment extends Fragment {
   /** An additional thread for running tasks that shouldn't block the UI. */
   private HandlerThread backgroundThread;
 
-  @SuppressLint("ValidFragment")
   public LegacyCameraConnectionFragment(
           final Camera.PreviewCallback imageListener, final int layout, final Size desiredSize) {
     this.imageListener = imageListener;
     this.layout = layout;
     this.desiredSize = desiredSize;
-  }
-
-  public LegacyCameraConnectionFragment() {
   }
 
   @Override
@@ -185,9 +180,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
     // the SurfaceTextureListener).
 
     if (textureView.isAvailable()) {
-      if (camera != null) {
-        camera.startPreview();
-      }
+      camera.startPreview();
     } else {
       textureView.setSurfaceTextureListener(surfaceTextureListener);
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package edu.ilab.covid_id.crowd;
+package edu.ilab.covid_id.crowd.CrowdLearn;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

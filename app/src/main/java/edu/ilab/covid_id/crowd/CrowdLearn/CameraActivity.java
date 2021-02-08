@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package edu.ilab.covid_id.crowd;
+package edu.ilab.covid_id.crowd.CrowdLearn;
 
 import android.Manifest;
 import android.app.Fragment;
@@ -485,7 +485,7 @@ public abstract class CameraActivity extends AppCompatActivity
       fragment = camera2Fragment;
     } else {
       fragment =
-          new edu.ilab.covid_id.crowd.LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
+          new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
     }
 
     getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
