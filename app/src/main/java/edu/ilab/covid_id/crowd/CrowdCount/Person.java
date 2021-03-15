@@ -27,7 +27,7 @@ public class Person {
         float iou = measureIOU(this.result.getLocation(), person2.result.getLocation()); //look for iou code online
 
         //if the IOU is really high then likely the same person -
-        if (iou > 0.9)
+        if (iou > 0.5)
             return false;
 
         return true;

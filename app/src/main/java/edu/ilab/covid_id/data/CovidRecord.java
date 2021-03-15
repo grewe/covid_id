@@ -114,6 +114,12 @@ public class CovidRecord {
 
 
     /**
+     * only used in teh Crowd by Countg, this is the kraw # of unique person in the scen
+     */
+    private int countPersons;
+
+
+    /**
      * Default constructor with null or impossible values.
      */
     public CovidRecord() {
@@ -133,6 +139,33 @@ public class CovidRecord {
         this.recordType = "covidRecord";
         this.maxTempC = -1;
         this.tempLocation = null;
+        this.countPersons = -1;
+    }
+
+    /**
+     *  CrowdBy Count constructor with all values given and adidtionally has the count of # person s in scene
+     */
+    public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
+                       String filenameURL, String info, ArrayList<Float> boundingBox,
+                       ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase,
+                       String userIDFirebase, String recordType, double maxTempC, Point tempLocation, int countPersons) {
+        this.risk = risk;
+        this.certainty = certainty;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.orientationAngles = orientationAngles;
+        this.altitude = altitude;
+        this.filenameURL = filenameURL;
+        this.info = info;
+        this.boundingBox = boundingBox;
+        this.userIDFirebase = userIDFirebase;
+        this.userEmailFirebase = userEmailFirebase;
+        this.recordType = recordType;
+        this.maxTempC = maxTempC;
+        this.tempLocation = tempLocation;
+        this.boundingBox2 = null;
+        this.distance =-1.0f;
+        this.countPersons = countPersons;
     }
 
 
