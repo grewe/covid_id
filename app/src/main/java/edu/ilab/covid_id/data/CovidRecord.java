@@ -148,7 +148,7 @@ public class CovidRecord {
     public CovidRecord(float risk, float certainty, GeoPoint location, Timestamp timestamp,
                        String filenameURL, String info, ArrayList<Float> boundingBox,
                        ArrayList<Float> orientationAngles, float altitude, String userEmailFirebase,
-                       String userIDFirebase, String recordType, double maxTempC, Point tempLocation, int countPersons) {
+                       String userIDFirebase, String recordType, int countPersons) {
         this.risk = risk;
         this.certainty = certainty;
         this.location = location;
@@ -161,10 +161,6 @@ public class CovidRecord {
         this.userIDFirebase = userIDFirebase;
         this.userEmailFirebase = userEmailFirebase;
         this.recordType = recordType;
-        this.maxTempC = maxTempC;
-        this.tempLocation = tempLocation;
-        this.boundingBox2 = null;
-        this.distance =-1.0f;
         this.countPersons = countPersons;
     }
 
@@ -529,4 +525,7 @@ public class CovidRecord {
     public void setTempLocation(Point tempLocation) {
         this.tempLocation = tempLocation;
     }
+
+    public void setCountPersons(int countPersons) {this.countPersons = countPersons;}
+    public int getCountPersons(){ return countPersons;}
 }

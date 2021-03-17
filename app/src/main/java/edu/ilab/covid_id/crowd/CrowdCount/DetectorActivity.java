@@ -109,18 +109,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private BorderedText borderedText;
 
-  float riskThresholdHigh_SocDist;
-  float riskThresholdCaution_SocDist;
+  float riskThresholdHigh_crowd;
+  float riskThresholdCaution_crowd;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
-    this.riskThresholdHigh_SocDist =  getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_SocDist);
-    this.riskThresholdCaution_SocDist = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_SocDist);
+    this.riskThresholdHigh_crowd =  getApplicationContext().getResources().getInteger(R.integer.riskThresholdHigh_SocDist);
+    this.riskThresholdCaution_crowd = getApplicationContext().getResources().getInteger(R.integer.riskThresholdCaution_SocDist);
 
     //safety check hardcoded defaults if out of range
-    if (riskThresholdCaution_SocDist >= riskThresholdHigh_SocDist || riskThresholdCaution_SocDist < 0 || riskThresholdHigh_SocDist < 0 || riskThresholdCaution_SocDist > 100 || riskThresholdHigh_SocDist > 100) {
-      riskThresholdHigh_SocDist = 100;
-      riskThresholdCaution_SocDist = 70;
+    if (riskThresholdCaution_crowd >= riskThresholdHigh_crowd || riskThresholdCaution_crowd < 0 || riskThresholdHigh_crowd < 0 || riskThresholdCaution_crowd > 100 || riskThresholdHigh_crowd > 100) {
+      riskThresholdHigh_crowd = 100;
+      riskThresholdCaution_crowd = 70;
     }
     super.onCreate(savedInstanceState);
 
@@ -286,7 +286,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-            SocDist mySocdist;
+
 
 
             //specify thresholds for minumumConfidence before store record or show results
@@ -301,8 +301,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final List<Classifier.Recognition> mappedRecognitions =
                     new LinkedList<Classifier.Recognition>();
 
-            int counter  = 0;
-            float averageConfidence = 0.0f;
+
             //counter=0;
             //Now cycle through the person and for each unique pair calculate distance
             //for (final Person person1 : persons)  for(index1 0 to person.size)
@@ -331,10 +330,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               }
             }
 
-
+            int counter  = 0;
+            //float averageConfidence = 0.0f;
             //drawing person bounding box in canvas
             for(int i =0; i < new_persons.size(); i++)
             {
+              counter++;
               canvas.drawRect(new_persons.get(i).result.getLocation(), paint);
             }
 
@@ -346,17 +347,45 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             for(int i = 0; i < new_persons.size(); i++)
             {
               Person person = new_persons.get(i);
+              PersonCount cnt = new PersonCount(person, counter, riskThresholdCaution_crowd, riskThresholdHigh_crowd);
+
+              int saveImageOnceFlag = 1;
+              String imageFileURL = "";
+              String label = "";
+              if(CovidRecord.readyStoreRecord(MapsActivity.crowdRecordLastStoreTimestamp, MapsActivity.deltaCrowdRecordStoreTimeMS, MapsActivity.crowdRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaCrowdRecordStoreLocationM)) {
+                Date d = new Date();
+                ArrayList<Float> angles = new ArrayList<Float>();
+                angles.add(0, 0.0f);
+                angles.add(1, 0.0f);
+                angles.add(2, 0.0f);
+
+                ArrayList<Float> boundingBox = new ArrayList<Float>();
+                boundingBox.add(0, person.result.getLocation().left);
+                boundingBox.add(1, person.result.getLocation().top);
+                boundingBox.add(2, person.result.getLocation().right);
+                boundingBox.add( 3, person.result.getLocation().bottom);
+
+
+                CovidRecord myRecord = new CovidRecord(cnt.risk, cnt.getConfidence()*100,
+                        new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
+                        Timestamp.now(), imageFileURL, cnt.label ,boundingBox, angles, 0.0f,
+                        MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowd",counter);
+
+                Log.d("covidRecord", String.valueOf(myRecord.getCountPersons()));
+                FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "crowd");
+              }
+
               RectF location = new RectF(person.result.getLocation());
               cropToFrameTransform.mapRect(location);
 
               Classifier.Recognition crowdDetection = new Classifier.Recognition(person.result);
               crowdDetection.setLocation(location);
-              crowdDetection.setTitle("person");
+              crowdDetection.setTitle(cnt.label + " Person :- " + String.valueOf(i));
               crowdDetection.setConfidence(person.result.getConfidence());
 
               mappedRecognitions.add(crowdDetection);
             }
-
+  
             tracker.trackResults(mappedRecognitions, currTimestamp);
             trackingOverlay.postInvalidate();
 
@@ -371,128 +400,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         showInference(lastProcessingTimeMs + "ms");
                       }
                     });
-/*
-            for (int i = 0; i<persons.size()-1; i++) {
 
-              //STEP 1: draw the people
-              canvas.drawRect(persons.get(i).result.getLocation(), paint);
-
-              //STEP 2: count and update confidence...... (average, min)
-              //Crowd by Counting
-              //   specific to this image have a counter
-              counter += 1;
-              averageConfidence += persons.get(i).result.getConfidence();
-            }
-            if(counter != 0)
-             averageConfidence = averageConfidence / counter;
-
-            //STEP3
-
-              /*    int saveImageOnceFlag = 1;
-                  String imageFileURL = "";
-                  if (mySocdist.getConfidence() >= minimumConfidence) { //ONLY display if the result has a confidence > threshold
-
-                    //draw bounding boxes of 2 persons
-                    canvas.drawRect(person1.result.getLocation(), paint);  //draw in the canvas the bounding boxes-->
-                    canvas.drawRect(person2.result.getLocation(), paint);  //draw in the canvas the bounding boxes-->
-
-                    //STEP 3: reason over the count and map it to label (low, mid,high) as well as
-                    //           risk and confidence values. use therehsolds in xml fileand read in values
-                    //             for covid record make sure you store somewhere the raw count
-                    //     have coide record for CrowdCount --- use apporriate constructor
-
-                    //##################################################################
-                    //Store to Firebase Database  -- if we are ready since last record storage to make a new record
-                    if (CovidRecord.readyStoreRecord(MapsActivity.socDistRecordLastStoreTimestamp, MapsActivity.deltaSocDistRecordStoreTimeMS, MapsActivity.socDistRecordLastStoreLocation, MapsActivity.currentLocation, MapsActivity.deltaSocDistRecordStoreLocationM)) {
-                      Date d = new Date();
-                      ArrayList<Float> angles = new ArrayList<Float>();
-                      angles.add(0, 0.0f);
-                      angles.add(1, 0.0f);
-                      angles.add(2, 0.0f);
-
-                      ArrayList<Float> boundingBox = new ArrayList<Float>();
-                      boundingBox.add(0, person1.result.getLocation().left);
-                      boundingBox.add(1, person1.result.getLocation().top);
-                      boundingBox.add(2, person1.result.getLocation().right);
-                      boundingBox.add(3, person1.result.getLocation().bottom);
-
-
-                      ArrayList<Float> boundingBox2 = new ArrayList<Float>();
-                      boundingBox.add(0, person2.result.getLocation().left);
-                      boundingBox.add(1, person2.result.getLocation().top);
-                      boundingBox.add(2, person2.result.getLocation().right);
-                      boundingBox.add(3, person2.result.getLocation().bottom);
-
-
-                      CovidRecord myRecord = new CovidRecord(mySocdist.risk, mySocdist.getConfidence() * 100,
-                              new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
-                              Timestamp.now(), imageFileURL, mySocdist.label, boundingBox, boundingBox2, angles, 0.0f,
-                              MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, mySocdist.distance, "socDist");
-
-
-                      FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "covidRecord");
-                    }
-                    //###############################################
-
-                      /*
-                      //follwing code using to add person 1 of this pair to draw in overlay
-                        RectF location1 = new RectF(person1.result.getLocation());
-                        cropToFrameTransform.mapRect(location1);  //transforms using Matrix the bounding box to the correct transformed coordinates
-
-                        Classifier.Recognition result1 = new Classifier.Recognition(person1.result);
-                        result1.setLocation(location1); // reset the newly transformed rectangle (location) representing bounding box inside the result
-                        mappedRecognitions.add(result1);  //add the result to a linked list
-
-                        //for drawing person 2
-                        RectF location2 = new RectF(person2.result.getLocation());
-                        cropToFrameTransform.mapRect(location2);  //transforms using Matrix the bounding box to the correct transformed coordinates
-
-                        Classifier.Recognition result2 = new Classifier.Recognition(person2.result);
-                        result2.setLocation(location2); // reset the newly transformed rectangle (location) representing bounding box inside the result
-                        mappedRecognitions.add(result2);  //add the result to a linked lis
-                        */
-
-                    //generate a new BIG bounding box that sourronds both people with the label
-                    // mysocDist.label + distance  and its confidence (caustion (10) - 92.3%)
- /*
-                    RectF location1 = new RectF(person1.result.getLocation());
-                    cropToFrameTransform.mapRect(location1);
-
-                    RectF location2 = new RectF(person2.result.getLocation());
-                    cropToFrameTransform.mapRect(location2);
-
-                    RectF bigBox = new RectF(location1);
-                    bigBox.union(location2);
-                    Classifier.Recognition socDistRecognition = new Classifier.Recognition(person1.result);
-                    socDistRecognition.setLocation(bigBox);
-                    socDistRecognition.setTitle(mySocdist.label + "- (" + mySocdist.confidence + ")");
-                    socDistRecognition.setConfidence(mySocdist.confidence);
-
-                    mappedRecognitions.add(socDistRecognition);  //add the result to a linked list
-
-                  }
-
-                }
-              }
-
-              //after cycling through all pairs of persons we are ready to draw all the detected person boxes
-              // and their big box soc distancbox w/label (cautionketc) for each pari)
-              tracker.trackResults(mappedRecognitions, currTimestamp);  //DOES DRAWING:  OverlayView to dispaly the recognition bounding boxes that have been transformed and stored in LL mappedRecogntions
-              trackingOverlay.postInvalidate();
-
-              computingDetection = false;
-
-              runOnUiThread(
-                      new Runnable() {
-                        @Override
-                        public void run() {
-                          showFrameInfo(previewWidth + "x" + previewHeight);
-                          showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                          showInference(lastProcessingTimeMs + "ms");
-                        }
-                      });
-            }
-    */        }
+      }
         });
 
 
