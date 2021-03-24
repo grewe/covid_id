@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package edu.ilab.covid_id.crowd.CrowdCount;
+package edu.ilab.covid_id.crowd.CrowdFrameCount;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -39,7 +39,6 @@ import com.google.firebase.firestore.GeoPoint;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 

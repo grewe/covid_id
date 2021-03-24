@@ -104,6 +104,16 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".crowd.CrowdFrameCount.DetectorActivity"
+            android:label="crowdframecount"
+            android:parentActivityName=".MapsActivity">
+            <intent-filter>
+                <action android:name="edu.ilab.covid_id.crowd.CrowdFrameCount.DetectorActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".mask.MouthNoseActivity"
             android:label="@string/covid_id_mouthNose"
             android:parentActivityName=".MapsActivity">

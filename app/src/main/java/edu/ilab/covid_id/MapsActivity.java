@@ -171,6 +171,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button crowdLearnButton;
 
     /**
+     * Handle to the Crowd frame count launching button
+     */
+    private Button crowdFramecountButton;
+
+    /**
      * Handle to the button which refreshes markers
      */
     private Button refreshMarkersButton;
@@ -539,6 +544,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.crowdMeasureButton = findViewById(R.id.crowdButton_direct_person);
         //grab the handle to the crowd learn button
         this.crowdLearnButton = findViewById(R.id.crowdButton_classification);
+        //grab the handle to the crowd frame count button
+        this.crowdFramecountButton = findViewById(R.id.crowdButton_framecount);
         //grab the handle to expandible socDist button layout
         this.socDistButtonLayout = findViewById(R.id.socDistButton_layout);
         //grab the handle to social distancing measure button
@@ -644,6 +651,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent("edu.ilab.covid_id.crowd.CrowdLearn.ClassifierActivity");
+                startActivity(intent);
+            }
+        });
+        crowdFramecountButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Start new intent for framecount package....
+                Intent intent = new Intent("edu.ilab.covid_id.crowd.CrowdFrameCount.DetectorActivity");
                 startActivity(intent);
             }
         });
