@@ -104,7 +104,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".crowd.CrowdFrameCount.DetectorActivity"
+            android:name=".crowd.CrowdLearnDetect.DetectorActivity"
             android:label="crowdframecount"
             android:parentActivityName=".MapsActivity">
             <intent-filter>

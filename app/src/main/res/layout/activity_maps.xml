@@ -64,13 +64,13 @@
             android:id="@+id/crowdButton_classification"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Learn" />
+            android:text="Classify" />
 
         <Button
             android:id="@+id/crowdButton_framecount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="FrameCount" />
+            android:text="ClassifyDetect" />
 
     </LinearLayout>
 
