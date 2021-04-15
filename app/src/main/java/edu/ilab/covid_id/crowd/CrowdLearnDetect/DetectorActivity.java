@@ -69,7 +69,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 512;    //this is the wxh of square input size to MODEL
   private static final boolean TF_OD_API_IS_QUANTIZED = true;  //if its quantized or not. MUST be whatever the save tflite model is saved as
-  private static final String TF_OD_API_MODEL_FILE = "CriwdLearnDetect.tflite";   //name of input file for MODEL must be tflite format
+  private static final String TF_OD_API_MODEL_FILE = "CrowdLearnDetect.tflite";   //name of input file for MODEL must be tflite format
                                                                         //TIP: if creating subclass for say mask detection make your detector
                                                                         //   file called maskdetect.flite and put in assets folder
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/CrowdLearnDetect.txt";  //LabelMap file listed classes--same order as training
@@ -80,7 +80,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;   //Using Object Detection API
   // Minimum detection confidence to track a detection.
-  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.1f;   //a detected prediction must have value > threshold to be displayed
+  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.2f;   //a detected prediction must have value > threshold to be displayed
   private static final boolean MAINTAIN_ASPECT = false;  //if you want to keep aspect ration or not --THIS must be same as what is expected in model,done in training
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480); //for display ONLY specific to THIS activity
   private static final boolean SAVE_PREVIEW_BITMAP = false;  //specific to THIS activity
@@ -264,7 +264,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             LOGGER.i("Running detection on image " + currTimestamp);
             final long startTime = SystemClock.uptimeMillis();
             final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);  //performing detection on croppedBitmap
-            final List<Person> persons = new ArrayList<Person>();
+            //final List<Results> persons = new ArrayList<Results>();
 
             //STEP 1: create image to display and to save in backend record
             cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
@@ -274,14 +274,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             paint.setStyle(Style.STROKE);
             paint.setStrokeWidth(2.0f);
 
-            //STEP2: copy over recognition results into persons list
-            int count =1 ;
-            for (final Classifier.Recognition result : results) {
-              if (result.getTitle().contains("Person")) {
-                persons.add(new Person(count, result));
-                count++;
-              }
-            }
+
+
 
 
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
@@ -296,57 +290,50 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 break;
             }
 
+            //STEP2: copy over recognition results into persons list
+
+
+
             //mappedREcognitons is a list of recognitions used in display
             final List<Classifier.Recognition> mappedRecognitions =
                     new LinkedList<Classifier.Recognition>();
+
 
 
             //counter=0;
             //Now cycle through the person and for each unique pair calculate distance
             //for (final Person person1 : persons)  for(index1 0 to person.size)
 
-            //Unique person list from whole list
-            List<Person> new_persons = new ArrayList<Person>();
+            //Unique result list from whole list
 
-            //Cycle through whole original list and if person is unique in new list then add to thatlist
-            for(int i =0; i<persons.size(); i++)
-            {
-              Person temp = persons.get(i);
-              if (temp.result.getConfidence() < minimumConfidence)
-              {
-                continue;
-              }
-              boolean flag = true;
-              for(int j =0; j<new_persons.size(); j++) {
-                Person temp1 = new_persons.get(j);
-                if (temp.different(temp1) == false) {
-                  flag = false;
-                }
-              }
-              if(flag)
-              {
-                new_persons.add(temp);
+            //Getting result with confidence less than minimum confidence...
+            final List<Classifier.Recognition> new_result = new ArrayList<Classifier.Recognition>();
+            for (final Classifier.Recognition result : results) {
+              final RectF location = result.getLocation();
+              if (location != null && result.getConfidence() > minimumConfidence ) {
+                new_result.add(result);
               }
             }
 
-            int counter  = 0;
-            //float averageConfidence = 0.0f;
-            //drawing person bounding box in canvas
-            for(int i =0; i < new_persons.size(); i++)
+            //Counting low if low is more than 2 we will show it as medium. Beacuse in low it may contains more than 2 people.
+            int lowCnt = 0;
+            for(int i =0; i < new_result.size(); i++)
             {
-              counter++;
-              canvas.drawRect(new_persons.get(i).result.getLocation(), paint);
+              if (new_result.get(i).getTitle().equals("Low"))
+              {
+                lowCnt++;
+              }
+              canvas.drawRect(new_result.get(i).getLocation(), paint);
             }
 
-            Log.d("Person original", String.valueOf(persons.size()));
-            Log.d("new Person list size", String.valueOf(new_persons.size()));
+
 
 
             //Now Cycle through new list and add location of that person in Linkedist for drawing on layout view.
-            for(int i = 0; i < new_persons.size(); i++)
+            for(int i = 0; i < new_result.size(); i++)
             {
-              Person person = new_persons.get(i);
-              PersonCount cnt = new PersonCount(person, counter, riskThresholdCaution_crowd, riskThresholdHigh_crowd);
+              Classifier.Recognition result = new_result.get(i);
+              ResultCount cnt = new ResultCount(result, lowCnt, riskThresholdCaution_crowd, riskThresholdHigh_crowd);
 
               int saveImageOnceFlag = 1;
               String imageFileURL = "";
@@ -359,30 +346,30 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 angles.add(2, 0.0f);
 
                 ArrayList<Float> boundingBox = new ArrayList<Float>();
-                boundingBox.add(0, person.result.getLocation().left);
-                boundingBox.add(1, person.result.getLocation().top);
-                boundingBox.add(2, person.result.getLocation().right);
-                boundingBox.add( 3, person.result.getLocation().bottom);
+                boundingBox.add(0, result.getLocation().left);
+                boundingBox.add(1, result.getLocation().top);
+                boundingBox.add(2, result.getLocation().right);
+                boundingBox.add( 3, result.getLocation().bottom);
 
 
                 CovidRecord myRecord = new CovidRecord(cnt.risk, cnt.getConfidence()*100,
                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                         Timestamp.now(), imageFileURL, cnt.label ,boundingBox, angles, 0.0f,
-                        MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowd",counter);
+                        MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowdLearn");
 
                 Log.d("covidRecord", String.valueOf(myRecord.getCountPersons()));
                 FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "crowd");
               }
 
-              RectF location = new RectF(person.result.getLocation());
+              RectF location = new RectF(result.getLocation());
               cropToFrameTransform.mapRect(location);
 
-              Classifier.Recognition crowdDetection = new Classifier.Recognition(person.result);
-              crowdDetection.setLocation(location);
-              crowdDetection.setTitle(cnt.label + " Person :- " + String.valueOf(i));
-              crowdDetection.setConfidence(person.result.getConfidence());
+              Classifier.Recognition crowdDetection = new Classifier.Recognition(result);
+              result.setLocation(location);
+              result.setTitle(cnt.label);
+              result.setConfidence(result.getConfidence());
 
-              mappedRecognitions.add(crowdDetection);
+              mappedRecognitions.add(result);
             }
 
             tracker.trackResults(mappedRecognitions, currTimestamp);

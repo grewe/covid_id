@@ -216,14 +216,14 @@ public class TFLiteObjectDetectionEfficientDetCrowdLearn implements Classifier {
         Object[] inputArray = {imgData};
         Map<Integer, Object> outputMap = new HashMap<>();
 
-        outputMap.put(0, outputScores);         // [1,N] - Confidence Values
+        outputMap.put(4, outputScores);         // [1,N] - Confidence Values
         outputMap.put(6, rawDetectionBoxes);    // [1,M,4] - Non-max-suppressed bounding boxes
         outputMap.put(5, numDetections);        // [N] - Number of detections
         outputMap.put(1, outputLocations);      // [1,N,4] - Bounding Boxes
         outputMap.put(2, outputClasses);        // [1,N] - class index
         outputMap.put(7, rawDetectionScores);   // [1,M,C] - raw detection scores
         outputMap.put(3, detectionMulticlassScores); // [1,N,C] - detection multiclass scores
-        outputMap.put(4, detectionAnchorIndeces); // [1,N] detection anchor indeces
+        outputMap.put(0, detectionAnchorIndeces); // [1,N] detection anchor indeces
 
         Trace.endSection();
 

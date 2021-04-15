@@ -2,7 +2,9 @@ package edu.ilab.covid_id.crowd.CrowdLearnDetect;
 
 import android.util.Log;
 
-public class PersonCount {
+import edu.ilab.covid_id.localize.tflite.Classifier;
+
+public class ResultCount {
 
     String label;
     float risk;
@@ -13,26 +15,36 @@ public class PersonCount {
     int med_person = 7;
 
 
-    PersonCount(Person person, int total_persons, float riskThresholdCaution_crowd, float riskThresoldHigh_crowd)
+    ResultCount(Classifier.Recognition result, int lowCnt, float riskThresholdCaution_crowd, float riskThresoldHigh_crowd)
     {
         this.total_persons = total_persons;
+        this.label = result.getTitle();
 
-        if (this.total_persons < this.min_person)
-        {
-            this.label = "Low";
-        }
-        else if(this.total_persons < this.med_person)
+        if(lowCnt > 2)
         {
             this.label = "Med";
         }
         else
         {
-            this.label = "High";
+            this.label = result.getTitle();
         }
+
+//        if (this.total_persons < this.min_person)
+//        {
+//            this.label = "Low";
+//        }
+//        else if(this.total_persons < this.med_person)
+//        {
+//            this.label = "Med";
+//        }
+//        else
+//        {
+//            this.label = "High";
+//        }
 
         Log.d("PersonCount", label);
 
-        confidence = person.result.getConfidence();
+        confidence = result.getConfidence();
         if(label == "Low")
         {
             risk = riskThresoldHigh_crowd + (100-riskThresoldHigh_crowd) * confidence;
@@ -53,7 +65,7 @@ public class PersonCount {
             risk = 90f;
         }
 
-        Log.d("PersonCountRisk", "risk" + risk);
+        Log.d("ResultCountRisk", "risk" + risk);
 
     }
 
