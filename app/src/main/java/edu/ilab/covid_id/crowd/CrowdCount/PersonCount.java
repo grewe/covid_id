@@ -9,8 +9,8 @@ public class PersonCount {
     float confidence;
     int total_persons;
 
-    int min_person = 3;
-    int med_person = 7;
+    int min_person = 4;
+    int med_person = 8;
 
 
     PersonCount(Person person, int total_persons, float riskThresholdCaution_crowd, float riskThresoldHigh_crowd)
@@ -24,7 +24,7 @@ public class PersonCount {
         else if(this.total_persons < this.med_person)
         {
             this.label = "Med";
-        }
+        }   
         else
         {
             this.label = "High";

@@ -61,16 +61,19 @@
             android:text="Count" />
 
         <Button
-            android:id="@+id/crowdButton_classification"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Classify" />
-
-        <Button
             android:id="@+id/crowdButton_framecount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ClassifyDetect" />
+
+        <Button
+            android:id="@+id/crowdButton_classification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:text="Classify" />
+
+
 
     </LinearLayout>
 

@@ -20,7 +20,7 @@ public class ResultCount {
         this.total_persons = total_persons;
         this.label = result.getTitle();
 
-        if(lowCnt > 2)
+        if(lowCnt > 1)
         {
             this.label = "Med";
         }

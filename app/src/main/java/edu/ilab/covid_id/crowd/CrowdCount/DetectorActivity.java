@@ -380,7 +380,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
               Classifier.Recognition crowdDetection = new Classifier.Recognition(person.result);
               crowdDetection.setLocation(location);
-              crowdDetection.setTitle(cnt.label + " Person :- " + String.valueOf(i));
+              crowdDetection.setTitle(cnt.label + " Person " + String.valueOf(i+1));
               crowdDetection.setConfidence(person.result.getConfidence());
 
               mappedRecognitions.add(crowdDetection);
