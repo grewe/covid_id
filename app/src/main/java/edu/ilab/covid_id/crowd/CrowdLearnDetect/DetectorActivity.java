@@ -355,7 +355,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 CovidRecord myRecord = new CovidRecord(cnt.risk, cnt.getConfidence()*100,
                         new GeoPoint(MapsActivity.currentLocation.getLatitude(), MapsActivity.currentLocation.getLongitude()),
                         Timestamp.now(), imageFileURL, cnt.label ,boundingBox, angles, 0.0f,
-                        MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowdLearn");
+                        MapsActivity.userEmailFirebase, MapsActivity.userIdFirebase, "crowd");
 
                 Log.d("covidRecord", String.valueOf(myRecord.getCountPersons()));
                 FirebaseStorageUtil.storeImageAndCovidRecord(cropCopyBitmap, myRecord, MapsActivity.currentLocation, "crowd");
